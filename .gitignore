@@ -5,3 +5,7 @@ dist
 coverage
 .turbo
 prisma/dev.db
+.next
+admin/.next
+.env.local
+admin/.env.local

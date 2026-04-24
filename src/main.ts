@@ -37,13 +37,17 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter(isProduction));
 
+  const allowedOrigins = [
+    'https://ultrasparkcleaning.co.uk',
+    'https://www.ultrasparkcleaning.co.uk',
+    configService.get<string>('app.adminUrl') ?? 'https://admin.ultrasparkcleaning.co.uk',
+    'https://ultraspark-admin.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:5173',
+  ];
+
   app.enableCors({
-    origin: [
-      'https://ultrasparkcleaning.co.uk',
-      'https://www.ultrasparkcleaning.co.uk',
-      'http://localhost:3000',
-      'http://localhost:5173',
-    ],
+    origin: allowedOrigins,
     credentials: false,
     methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
