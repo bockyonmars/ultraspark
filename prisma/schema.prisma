@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+enum QuoteRequestStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  ACCEPTED
+  DECLINED
+  ARCHIVED
+}
+
+enum BookingRequestStatus {
+  NEW
+  CONTACTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum EmailLogStatus {
+  SENT
+  FAILED
+}
+
+enum AnalyticsEventType {
+  CONTACT_SUBMITTED
+  QUOTE_SUBMITTED
+  BOOKING_SUBMITTED
+}
+
+enum AuditAction {
+  CONTACT_CREATED
+  CONTACT_STATUS_UPDATED
+  QUOTE_CREATED
+  QUOTE_STATUS_UPDATED
+  BOOKING_CREATED
+  BOOKING_STATUS_UPDATED
+  ADMIN_LOGIN
+}
+
+model AdminUser {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  firstName    String
+  lastName     String
+  passwordHash String
+  isActive     Boolean     @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  auditLogs    AuditLog[]
+}
+
+model Customer {
+  id              String            @id @default(cuid())
+  firstName       String?
+  lastName        String?
+  email           String?           @unique
+  phone           String?           @unique
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  contactMessages ContactMessage[]
+  quoteRequests   QuoteRequest[]
+  bookingRequests BookingRequest[]
+}
+
+model Service {
+  id              String           @id @default(cuid())
+  name            String           @unique
+  slug            String           @unique
+  description     String?
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  quoteRequests   QuoteRequest[]
+  bookingRequests BookingRequest[]
+}
+
+model ContactMessage {
+  id          String               @id @default(cuid())
+  customerId  String
+  subject     String?
+  message     String
+  source      String?
+  status      ContactMessageStatus @default(NEW)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  customer    Customer             @relation(fields: [customerId], references: [id])
+  emailLogs   EmailLog[]
+}
+
+model QuoteRequest {
+  id                 String             @id @default(cuid())
+  customerId         String
+  serviceId          String
+  postcode           String?
+  propertyType       String?
+  bedrooms           Int?
+  bathrooms          Int?
+  preferredDate      DateTime?
+  details            String
+  status             QuoteRequestStatus @default(NEW)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  customer           Customer           @relation(fields: [customerId], references: [id])
+  service            Service            @relation(fields: [serviceId], references: [id])
+  emailLogs          EmailLog[]
+}
+
+model BookingRequest {
+  id                 String               @id @default(cuid())
+  customerId         String
+  serviceId          String
+  postcode           String?
+  address            String?
+  propertyType       String?
+  bedrooms           Int?
+  bathrooms          Int?
+  preferredDate      DateTime?
+  preferredTime      String?
+  details            String?
+  status             BookingRequestStatus @default(NEW)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  customer           Customer             @relation(fields: [customerId], references: [id])
+  service            Service              @relation(fields: [serviceId], references: [id])
+  emailLogs          EmailLog[]
+}
+
+model EmailLog {
+  id               String         @id @default(cuid())
+  type             String
+  recipient        String
+  subject          String
+  status           EmailLogStatus
+  provider         String         @default("resend")
+  providerMessageId String?
+  errorMessage     String?
+  contactMessageId String?
+  quoteRequestId   String?
+  bookingRequestId String?
+  createdAt        DateTime       @default(now())
+  contactMessage   ContactMessage? @relation(fields: [contactMessageId], references: [id])
+  quoteRequest     QuoteRequest?   @relation(fields: [quoteRequestId], references: [id])
+  bookingRequest   BookingRequest? @relation(fields: [bookingRequestId], references: [id])
+}
+
+model AnalyticsEvent {
+  id         String             @id @default(cuid())
+  type       AnalyticsEventType
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime           @default(now())
+}
+
+model AuditLog {
+  id          String       @id @default(cuid())
+  adminUserId String?
+  action      AuditAction
+  entityType  String
+  entityId    String
+  description String
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+  adminUser   AdminUser?   @relation(fields: [adminUserId], references: [id])
+}
