@@ -42,6 +42,7 @@ async function bootstrap() {
     'https://www.ultrasparkcleaning.co.uk',
     configService.get<string>('app.adminUrl') ?? 'https://admin.ultrasparkcleaning.co.uk',
     'https://ultraspark-admin.onrender.com',
+    'https://ultraspark.onrender.com',
     'http://localhost:3000',
     'http://localhost:5173',
   ];
