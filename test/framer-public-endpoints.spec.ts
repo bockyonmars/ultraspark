@@ -34,9 +34,18 @@ type ServiceRecord = {
 
 const serviceSeeds: ServiceRecord[] = [
   {
-    id: 'svc-regular',
-    name: 'Regular Home Cleaning',
-    slug: 'regular-home-cleaning',
+    id: 'svc-home',
+    name: 'Home Cleaning',
+    slug: 'home-cleaning',
+    description: null,
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'svc-office',
+    name: 'Office Cleaning',
+    slug: 'office-cleaning',
     description: null,
     isActive: true,
     createdAt: new Date(),
@@ -51,7 +60,33 @@ const serviceSeeds: ServiceRecord[] = [
     createdAt: new Date(),
     updatedAt: new Date(),
   },
+  {
+    id: 'svc-end',
+    name: 'End of Tenancy Cleaning',
+    slug: 'end-of-tenancy-cleaning',
+    description: null,
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 'svc-airbnb',
+    name: 'AirBnB Cleaning',
+    slug: 'airbnb-cleaning',
+    description: null,
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
 ];
+
+const framerServiceValues = [
+  { value: 'Home Cleaning', expectedSlug: 'home-cleaning' },
+  { value: 'Office Cleaning', expectedSlug: 'office-cleaning' },
+  { value: 'Deep Cleaning', expectedSlug: 'deep-cleaning' },
+  { value: 'End of Tenancy Cleaning', expectedSlug: 'end-of-tenancy-cleaning' },
+  { value: 'AirBnB Cleaning', expectedSlug: 'airbnb-cleaning' },
+] as const;
 
 function createPrismaMock() {
   const customers: CustomerRecord[] = [];
@@ -260,7 +295,7 @@ describe('Framer public endpoint handlers', () => {
       'Full Name': 'Ada Lovelace',
       'Email Address': 'ada@example.com',
       'Phone Number': '+447700900111',
-      'Service Type': 'Deep Cleaning',
+      'Service Type': 'Home Cleaning',
       Date: '2026-05-02T09:00:00.000Z',
       Time: '09:00',
       Address: '12 River Road, London',
@@ -268,7 +303,7 @@ describe('Framer public endpoint handlers', () => {
     });
 
     expect(bookingResponse.success).toBe(true);
-    expect(bookingResponse.data.service.name).toBe('Deep Cleaning');
+    expect(bookingResponse.data.service.name).toBe('Home Cleaning');
 
     const listResponse = await bookingController.findAll();
     expect(listResponse.data).toEqual(
@@ -281,22 +316,25 @@ describe('Framer public endpoint handlers', () => {
     );
   });
 
-  it('accepts a booking from camelCase payload fields', async () => {
-    const response = await bookingController.create({
-      fullName: 'Grace Hopper',
-      email: 'grace@example.com',
-      phone: '+447700900222',
-      serviceType: 'regular-home-cleaning',
-      date: '2026-05-03T11:00:00.000Z',
-      time: '11:00',
-      address: '24 Dock Lane, London',
-      additionalNotes: 'Use eco products if possible.',
-    });
+  it.each(framerServiceValues)(
+    'accepts booking serviceType "$value"',
+    async ({ value, expectedSlug }) => {
+      const response = await bookingController.create({
+        fullName: 'Grace Hopper',
+        email: 'grace@example.com',
+        phone: '+447700900222',
+        serviceType: value,
+        date: '2026-05-03T11:00:00.000Z',
+        time: '11:00',
+        address: '24 Dock Lane, London',
+        additionalNotes: 'Use eco products if possible.',
+      });
 
-    expect(response.success).toBe(true);
-    expect(response.data.customer.firstName).toBe('Grace');
-    expect(response.data.service.slug).toBe('regular-home-cleaning');
-  });
+      expect(response.success).toBe(true);
+      expect(response.data.customer.firstName).toBe('Grace');
+      expect(response.data.service.slug).toBe(expectedSlug);
+    },
+  );
 
   it('fails clearly when the booking serviceType is invalid', async () => {
     await expect(

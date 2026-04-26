@@ -34,8 +34,9 @@ export class ServicesService {
 
   async findDefaultQuoteService(): Promise<Service | null> {
     const preferred =
-      (await this.findByReference('Regular Home Cleaning')) ??
-      (await this.findByReference('regular-home-cleaning'));
+      (await this.findByReference('Home Cleaning')) ??
+      (await this.findByReference('home-cleaning')) ??
+      (await this.findByReference('home_cleaning'));
 
     if (preferred) {
       return preferred;
