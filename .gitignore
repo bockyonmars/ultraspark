@@ -9,3 +9,4 @@ prisma/dev.db
 admin/.next
 .env.local
 admin/.env.local
+.env
