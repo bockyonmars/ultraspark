@@ -11,7 +11,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentAdmin } from '../../common/decorators/current-admin.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CreateQuoteRequestDto } from './dto/create-quote-request.dto';
 import { UpdateQuoteRequestStatusDto } from './dto/update-quote-request-status.dto';
 import { QuoteRequestsService } from './quote-requests.service';
 
@@ -23,8 +22,8 @@ export class QuoteRequestsController {
   @Public()
   @Post('quotes')
   @ApiOperation({ summary: 'Submit public quote request' })
-  async create(@Body() createDto: CreateQuoteRequestDto) {
-    const quoteRequest = await this.quoteRequestsService.create(createDto);
+  async create(@Body() payload: Record<string, unknown>) {
+    const quoteRequest = await this.quoteRequestsService.createPublic(payload);
 
     return {
       success: true,

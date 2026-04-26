@@ -32,9 +32,10 @@ export class CreateBookingRequestDto {
   @MaxLength(30)
   phone?: string;
 
-  @ApiProperty({ example: 'service_cuid_here' })
+  @ApiPropertyOptional({ example: 'service_cuid_here' })
+  @IsOptional()
   @IsString()
-  serviceId!: string;
+  serviceId?: string;
 
   @ApiPropertyOptional({ example: '221B Baker Street' })
   @IsOptional()

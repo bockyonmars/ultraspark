@@ -4,6 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ContactMessageStatus } from '@prisma/client';
+import {
+  assertRequiredFields,
+  getStringValue,
+  PayloadRecord,
+  splitFullName,
+} from '../../common/utils/public-form-payload.util';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CustomersService } from '../customers/customers.service';
@@ -22,7 +28,43 @@ export class ContactMessagesService {
     private readonly auditLogsService: AuditLogsService,
   ) {}
 
+  async createPublic(payload: PayloadRecord) {
+    const fullName = getStringValue(payload, ['fullName', 'Full Name']);
+    const nameParts = splitFullName(fullName);
+    const email = getStringValue(payload, ['email', 'Email', 'Email Address']);
+    const phone = getStringValue(payload, ['phone', 'Phone Number']);
+    const message = getStringValue(payload, ['message', 'Message']);
+
+    assertRequiredFields(
+      [
+        { label: 'fullName', value: fullName },
+        { label: 'email', value: email },
+        { label: 'message', value: message },
+      ],
+      'Contact submission is missing required fields',
+    );
+
+    return this.create({
+      firstName: getStringValue(payload, ['firstName']) ?? nameParts.firstName ?? 'N/A',
+      lastName: getStringValue(payload, ['lastName']) ?? nameParts.lastName ?? 'N/A',
+      email,
+      phone,
+      subject: getStringValue(payload, ['subject', 'Subject']) ?? 'Framer contact form',
+      message: message!,
+      source: getStringValue(payload, ['source', 'Source']) ?? 'framer-contact-us',
+    });
+  }
+
   async create(createDto: CreateContactMessageDto) {
+    assertRequiredFields(
+      [
+        { label: 'firstName', value: createDto.firstName },
+        { label: 'lastName', value: createDto.lastName ?? 'N/A' },
+        { label: 'message', value: createDto.message },
+      ],
+      'Contact submission is missing required fields',
+    );
+
     if (!createDto.email && !createDto.phone) {
       throw new BadRequestException('Email or phone is required');
     }

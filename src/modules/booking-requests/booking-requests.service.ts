@@ -4,6 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { BookingRequestStatus } from '@prisma/client';
+import {
+  assertRequiredFields,
+  combineDetails,
+  getNumberValue,
+  getStringValue,
+  PayloadRecord,
+  splitFullName,
+} from '../../common/utils/public-form-payload.util';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CustomersService } from '../customers/customers.service';
@@ -24,15 +32,83 @@ export class BookingRequestsService {
     private readonly auditLogsService: AuditLogsService,
   ) {}
 
-  async create(createDto: CreateBookingRequestDto) {
+  async createPublic(payload: PayloadRecord) {
+    const fullName = getStringValue(payload, ['fullName', 'Full Name']);
+    const nameParts = splitFullName(fullName);
+    const email = getStringValue(payload, ['email', 'Email', 'Email Address']);
+    const phone = getStringValue(payload, ['phone', 'Phone Number']);
+    const serviceType = getStringValue(payload, ['serviceType', 'Service Type']);
+    const date = getStringValue(payload, ['preferredDate', 'date', 'Date']);
+    const time = getStringValue(payload, ['preferredTime', 'time', 'Time']);
+    const address = getStringValue(payload, ['address', 'Address']);
+    const additionalNotes = getStringValue(payload, ['additionalNotes', 'Additional Notes']);
+
+    assertRequiredFields(
+      [
+        { label: 'fullName', value: fullName },
+        { label: 'serviceType', value: serviceType ?? getStringValue(payload, ['serviceId']) },
+        { label: 'date', value: date },
+        { label: 'time', value: time },
+        { label: 'address', value: address },
+      ],
+      'Booking submission is missing required fields',
+    );
+
+    if (!email && !phone) {
+      throw new BadRequestException('Booking submission requires an email or phone number');
+    }
+
+    return this.create({
+      firstName: getStringValue(payload, ['firstName']) ?? nameParts.firstName ?? 'N/A',
+      lastName: getStringValue(payload, ['lastName']) ?? nameParts.lastName ?? 'N/A',
+      email,
+      phone,
+      serviceId: getStringValue(payload, ['serviceId']),
+      serviceType,
+      address,
+      postcode: getStringValue(payload, ['postcode', 'Postcode']),
+      propertyType: getStringValue(payload, ['propertyType', 'Property Type']),
+      bedrooms: getNumberValue(payload, ['bedrooms', 'Bedrooms']),
+      bathrooms: getNumberValue(payload, ['bathrooms', 'Bathrooms']),
+      preferredDate: date,
+      preferredTime: time,
+      details: combineDetails([
+        additionalNotes ? `Additional notes: ${additionalNotes}` : undefined,
+        getStringValue(payload, ['details']),
+      ]),
+    });
+  }
+
+  async create(createDto: CreateBookingRequestDto & { serviceType?: string }) {
+    assertRequiredFields(
+      [
+        { label: 'firstName', value: createDto.firstName },
+        { label: 'lastName', value: createDto.lastName ?? 'N/A' },
+        { label: 'preferredDate', value: createDto.preferredDate },
+        { label: 'preferredTime', value: createDto.preferredTime },
+        { label: 'address', value: createDto.address },
+      ],
+      'Booking submission is missing required fields',
+    );
+
     if (!createDto.email && !createDto.phone) {
       throw new BadRequestException('Email or phone is required');
     }
 
-    const service = await this.servicesService.findById(createDto.serviceId);
+    if (!createDto.serviceId && !createDto.serviceType) {
+      throw new BadRequestException('Booking submission requires serviceType or serviceId');
+    }
+
+    let service = createDto.serviceId
+      ? await this.servicesService.findById(createDto.serviceId)
+      : undefined;
+
+    if (!service && createDto.serviceType) {
+      service = await this.servicesService.findByReference(createDto.serviceType);
+    }
 
     if (!service) {
-      throw new NotFoundException('Service not found');
+      throw new NotFoundException('No service matched the provided serviceType/serviceId');
     }
 
     const customer = await this.customersService.createOrMatch({

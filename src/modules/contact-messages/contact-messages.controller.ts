@@ -11,7 +11,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentAdmin } from '../../common/decorators/current-admin.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CreateContactMessageDto } from './dto/create-contact-message.dto';
 import { UpdateContactMessageStatusDto } from './dto/update-contact-message-status.dto';
 import { ContactMessagesService } from './contact-messages.service';
 
@@ -23,8 +22,8 @@ export class ContactMessagesController {
   @Public()
   @Post('contact')
   @ApiOperation({ summary: 'Submit public contact form' })
-  async create(@Body() createDto: CreateContactMessageDto) {
-    const contactMessage = await this.contactMessagesService.create(createDto);
+  async create(@Body() payload: Record<string, unknown>) {
+    const contactMessage = await this.contactMessagesService.createPublic(payload);
 
     return {
       success: true,

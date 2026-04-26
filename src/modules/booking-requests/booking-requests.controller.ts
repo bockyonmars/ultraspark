@@ -11,7 +11,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentAdmin } from '../../common/decorators/current-admin.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CreateBookingRequestDto } from './dto/create-booking-request.dto';
 import { UpdateBookingRequestStatusDto } from './dto/update-booking-request-status.dto';
 import { BookingRequestsService } from './booking-requests.service';
 
@@ -23,8 +22,8 @@ export class BookingRequestsController {
   @Public()
   @Post('bookings')
   @ApiOperation({ summary: 'Submit public booking request' })
-  async create(@Body() createDto: CreateBookingRequestDto) {
-    const bookingRequest = await this.bookingRequestsService.create(createDto);
+  async create(@Body() payload: Record<string, unknown>) {
+    const bookingRequest = await this.bookingRequestsService.createPublic(payload);
 
     return {
       success: true,

@@ -32,9 +32,10 @@ export class CreateQuoteRequestDto {
   @MaxLength(30)
   phone?: string;
 
-  @ApiProperty({ example: 'service_cuid_here' })
+  @ApiPropertyOptional({ example: 'service_cuid_here' })
+  @IsOptional()
   @IsString()
-  serviceId!: string;
+  serviceId?: string;
 
   @ApiPropertyOptional({ example: 'SW1A 1AA' })
   @IsOptional()
