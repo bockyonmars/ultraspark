@@ -10,3 +10,8 @@ admin/.next
 .env.local
 admin/.env.local
 .env
+frontend/.env*
+!frontend/.env.example
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
