@@ -4,7 +4,7 @@ import { ButtonLink } from "./Buttons";
 
 const navItems = [
   { label: "Home", href: "/" },
-  { label: "Services", href: "/#services" },
+  { label: "Services", href: "/services" },
   { label: "Contact Us", href: "/contact-us" },
 ];
 
@@ -26,6 +26,8 @@ export function SiteLayout({
 }
 
 export function Header() {
+  const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+
   return (
     <header>
       <div className="topbar">
@@ -51,11 +53,20 @@ export function Header() {
           <img src="/images/ultraspark-logo.png" alt="UltraSpark Cleaning" />
         </a>
         <div className="nav-links">
-          {navItems.map((item) => (
-            <a key={item.label} href={item.href}>
-              {item.label}
-            </a>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+
+            return (
+              <a
+                key={item.label}
+                href={item.href}
+                className={isActive ? "active" : undefined}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {item.label}
+              </a>
+            );
+          })}
         </div>
         <ButtonLink href="/book-now" className="nav-book">
           Book now
@@ -101,7 +112,7 @@ export function Footer() {
         <div>
           <h3>Company</h3>
           <a href="/">Home</a>
-          <a href="/#services">Services</a>
+          <a href="/services">Services</a>
           <a href="/#about">About Us</a>
           <a href="/contact-us">Contact Us</a>
         </div>

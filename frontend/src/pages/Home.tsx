@@ -14,26 +14,31 @@ const services = [
     title: "Home Cleaning",
     text: "Regular cleaning to keep your home fresh, spotless, and comfortable.",
     icon: HomeIcon,
+    href: "/services#home-cleaning",
   },
   {
     title: "Office Cleaning",
     text: "Professional cleaning to maintain a clean and productive workspace.",
     icon: Building2,
+    href: "/services#office-cleaning",
   },
   {
     title: "Deep Cleaning",
     text: "Thorough, detailed cleaning for hard-to-reach areas and deep sanitation.",
     icon: Sparkles,
+    href: "/services#deep-cleaning",
   },
   {
     title: "Airbnb Cleaning",
     text: "Fast, reliable cleaning between guest stays to keep your property guest-ready.",
     icon: Bed,
+    href: "/services#airbnb-cleaning",
   },
   {
     title: "End of Tenancy Cleaning",
     text: "Comprehensive cleaning to ensure your property is spotless for the next tenant.",
     icon: KeyRound,
+    href: "/services#end-of-tenancy-cleaning",
   },
 ];
 
@@ -103,7 +108,7 @@ export default function Home() {
                 </span>
                 <h3>{service.title}</h3>
                 <p>{service.text}</p>
-                <a href="/get-quote" className="learn-more">
+                <a href={service.href} className="learn-more">
                   Learn more <span aria-hidden="true">-&gt;</span>
                 </a>
               </article>
