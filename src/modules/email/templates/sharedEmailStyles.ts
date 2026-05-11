@@ -45,6 +45,7 @@ export const emailColors = {
   border: '#32433b',
   pale: '#101814',
   surface: '#17201c',
+  primarySurface: '#1d2521',
   surfaceMuted: '#1d2a24',
   ctaSurface: '#1b3328',
   white: '#ffffff',
@@ -123,21 +124,8 @@ function renderPlainDetails(details: DetailItem[] = []) {
   return details.map((item) => `${item.label}: ${item.value}`).join('\n');
 }
 
-function renderWatermarkBackground(watermarkLogoUrl: string) {
-  const escapedUrl = escapeAttribute(watermarkLogoUrl);
-
-  return [
-    `background-color:${emailColors.surface}`,
-    `background-image:linear-gradient(rgba(23,32,28,0.985),rgba(23,32,28,0.985)),url('${escapedUrl}')`,
-    'background-repeat:no-repeat,no-repeat',
-    'background-position:center center,center center',
-    'background-size:100% 100%,280px auto',
-  ].join(';');
-}
-
 export function renderEmailLayout(input: LayoutInput) {
   const logoUrl = templateValue(input.variables, 'logoUrl');
-  const watermarkLogoUrl = input.variables.watermarkLogoUrl?.trim() || logoUrl;
   const companyPhone = templateValue(input.variables, 'companyPhone');
   const companyEmail = templateValue(input.variables, 'companyEmail');
   const companyWebsite = templateValue(input.variables, 'companyWebsite');
@@ -172,6 +160,31 @@ export function renderEmailLayout(input: LayoutInput) {
       `,
     )
     .join('');
+  const primaryMessageBlock = `
+    <tr>
+      <td class="email-primary-wrap" style="padding:20px 32px 22px 32px;">
+        <table class="email-primary-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${emailColors.primarySurface}" style="border-collapse:separate;background:${emailColors.primarySurface};background-color:${emailColors.primarySurface};border:1px solid ${emailColors.border};border-radius:16px;box-shadow:0 0 0 1px rgba(34,197,94,0.08);">
+          <tr>
+            <td class="email-primary-inner" style="padding:24px 24px 22px 24px;">
+              <div class="email-eyebrow" style="font-family:Inter,Arial,sans-serif;font-size:12px;line-height:18px;letter-spacing:0.14em;text-transform:uppercase;${textColorStyle(emailColors.greenDark)};font-weight:700;margin-bottom:9px;">
+                ${escapeHtml(input.eyebrow)}
+              </div>
+              <h1 class="email-title" style="margin:0 0 14px 0;font-family:Inter,Arial,sans-serif;font-size:27px;line-height:33px;${textColorStyle(emailColors.heading)};font-weight:700;letter-spacing:0;">
+                ${escapeHtml(input.title)}
+              </h1>
+              <p class="email-intro" style="margin:0 0 13px 0;font-family:Inter,Arial,sans-serif;font-size:16px;line-height:25px;${textColorStyle(emailColors.text)};font-weight:600;">
+                ${renderMultiline(input.intro)}
+              </p>
+              ${bodyParagraphs}
+              <p class="email-closing-text" style="margin:4px 0 0 0;font-family:Inter,Arial,sans-serif;font-size:15px;line-height:24px;${textColorStyle(emailColors.text)};">
+                ${renderMultiline(input.closing)}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  `;
 
   return `
     <!doctype html>
@@ -193,10 +206,10 @@ export function renderEmailLayout(input: LayoutInput) {
             .email-card { border-radius: 18px !important; }
             .email-header { padding: 20px 22px 14px 22px !important; }
             .email-logo { width: 108px !important; max-width: 108px !important; }
-            .email-hero { padding: 18px 22px 8px 22px !important; }
+            .email-primary-wrap { padding: 18px 22px 20px 22px !important; }
+            .email-primary-inner { padding: 20px 18px 18px 18px !important; }
             .email-eyebrow { margin-bottom: 8px !important; font-size: 11px !important; line-height: 16px !important; }
-            .email-title { font-size: 24px !important; line-height: 30px !important; }
-            .email-copy { padding: 4px 22px 8px 22px !important; }
+            .email-title { margin-bottom: 12px !important; font-size: 23px !important; line-height: 29px !important; }
             .email-intro { margin-bottom: 12px !important; font-size: 16px !important; line-height: 25px !important; }
             .email-body-text { margin-bottom: 13px !important; font-size: 15px !important; line-height: 24px !important; }
             .email-details-wrap { padding: 0 22px 20px 22px !important; }
@@ -209,9 +222,7 @@ export function renderEmailLayout(input: LayoutInput) {
             .email-detail-value { padding: 0 0 10px 0 !important; border-bottom: 1px solid ${emailColors.border} !important; font-size: 14px !important; line-height: 21px !important; }
             .email-cta-wrap { padding: 0 22px 24px 22px !important; }
             .email-cta-inner { padding: 18px 18px !important; }
-            .email-closing { padding: 0 22px 28px 22px !important; }
             .email-footer { padding: 22px !important; }
-            .email-body-shell { background-size: 100% 100%,230px auto !important; }
           }
           @media (prefers-color-scheme: dark) {
             .email-bg,
@@ -219,6 +230,7 @@ export function renderEmailLayout(input: LayoutInput) {
             .email-card,
             .email-header,
             .email-body-shell { background-color: ${emailColors.surface} !important; }
+            .email-primary-card { background: ${emailColors.primarySurface} !important; background-color: ${emailColors.primarySurface} !important; }
             .email-details-card { background: ${emailColors.surfaceMuted} !important; background-color: ${emailColors.surfaceMuted} !important; }
             .email-intro,
             .email-body-text,
@@ -248,26 +260,9 @@ export function renderEmailLayout(input: LayoutInput) {
                   </td>
                 </tr>
                 <tr>
-                  <td class="email-body-shell" bgcolor="${emailColors.surface}" style="padding:0;${renderWatermarkBackground(watermarkLogoUrl)};overflow:hidden;">
+                  <td class="email-body-shell" bgcolor="${emailColors.surface}" style="padding:0;background:${emailColors.surface};background-color:${emailColors.surface};overflow:hidden;">
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
-                      <tr>
-                        <td class="email-hero" style="padding:20px 32px 8px 32px;">
-                          <div class="email-eyebrow" style="font-family:Inter,Arial,sans-serif;font-size:12px;line-height:18px;letter-spacing:0.14em;text-transform:uppercase;${textColorStyle(emailColors.greenDark)};font-weight:700;margin-bottom:9px;">
-                            ${escapeHtml(input.eyebrow)}
-                          </div>
-                          <h1 class="email-title" style="margin:0;font-family:Inter,Arial,sans-serif;font-size:27px;line-height:33px;${textColorStyle(emailColors.heading)};font-weight:700;letter-spacing:0;">
-                            ${escapeHtml(input.title)}
-                          </h1>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td class="email-copy" style="padding:4px 32px 10px 32px;">
-                          <p class="email-intro" style="margin:0 0 13px 0;font-family:Inter,Arial,sans-serif;font-size:16px;line-height:25px;${textColorStyle(emailColors.text)};font-weight:600;">
-                            ${renderMultiline(input.intro)}
-                          </p>
-                          ${bodyParagraphs}
-                        </td>
-                      </tr>
+                      ${primaryMessageBlock}
                       ${detailsBlock}
                       <tr>
                         <td class="email-cta-wrap" style="padding:0 32px 28px 32px;">
@@ -289,13 +284,6 @@ export function renderEmailLayout(input: LayoutInput) {
                               </td>
                             </tr>
                           </table>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td class="email-closing" style="padding:0 32px 32px 32px;">
-                          <p class="email-closing-text" style="margin:0;font-family:Inter,Arial,sans-serif;font-size:15px;line-height:24px;${textColorStyle(emailColors.text)};">
-                            ${renderMultiline(input.closing)}
-                          </p>
                         </td>
                       </tr>
                     </table>
