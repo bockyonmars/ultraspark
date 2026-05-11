@@ -35,19 +35,29 @@ const placeholders: Record<PlaceholderKey, string> = {
 
 export const emailColors = {
   green: '#22c55e',
-  greenDark: '#22c55e',
-  greenSoft: '#173728',
+  greenDark: '#16a34a',
+  greenSoft: '#dcfce7',
   navy: '#0f1714',
-  text: '#dde7e2',
-  heading: '#f8fafc',
-  muted: '#aab7b1',
+  text: '#1f2933',
+  heading: '#0f172a',
+  muted: '#52635b',
   softMuted: '#c8d3ce',
-  border: '#32433b',
-  pale: '#101814',
-  surface: '#17201c',
-  primarySurface: '#1d2521',
-  surfaceMuted: '#1d2a24',
-  ctaSurface: '#1b3328',
+  border: '#cfe2d8',
+  pale: '#eef8f1',
+  surface: '#f8fbf7',
+  primarySurface: '#ffffff',
+  surfaceMuted: '#f0f8f2',
+  ctaSurface: '#e6f8ed',
+  darkBg: '#0f1714',
+  darkSurface: '#17201c',
+  darkPrimarySurface: '#1d2521',
+  darkSurfaceMuted: '#1d2a24',
+  darkCtaSurface: '#1b3328',
+  darkBorder: '#32433b',
+  darkHeading: '#f8fafc',
+  darkText: '#dde7e2',
+  darkMuted: '#aab7b1',
+  darkSoftMuted: '#c8d3ce',
   white: '#ffffff',
 };
 
@@ -193,13 +203,13 @@ export function renderEmailLayout(input: LayoutInput) {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="x-apple-disable-message-reformatting" />
-        <meta name="color-scheme" content="dark light" />
-        <meta name="supported-color-schemes" content="dark light" />
+        <meta name="color-scheme" content="light dark" />
+        <meta name="supported-color-schemes" content="light dark" />
         <title>${escapeHtml(input.title)}</title>
         <style>
           :root {
-            color-scheme: dark light;
-            supported-color-schemes: dark light;
+            color-scheme: light dark;
+            supported-color-schemes: light dark;
           }
           @media only screen and (max-width: 600px) {
             .email-outer { padding: 16px 10px !important; }
@@ -226,26 +236,48 @@ export function renderEmailLayout(input: LayoutInput) {
           }
           @media (prefers-color-scheme: dark) {
             .email-bg,
-            .email-outer { background: ${emailColors.navy} !important; background-color: ${emailColors.navy} !important; }
+            .email-outer { background: ${emailColors.darkBg} !important; background-color: ${emailColors.darkBg} !important; }
             .email-card,
             .email-header,
-            .email-body-shell { background-color: ${emailColors.surface} !important; }
-            .email-primary-card { background: ${emailColors.primarySurface} !important; background-color: ${emailColors.primarySurface} !important; }
-            .email-details-card { background: ${emailColors.surfaceMuted} !important; background-color: ${emailColors.surfaceMuted} !important; }
+            .email-body-shell { background: ${emailColors.darkSurface} !important; background-color: ${emailColors.darkSurface} !important; }
+            .email-primary-card { background: ${emailColors.darkPrimarySurface} !important; background-color: ${emailColors.darkPrimarySurface} !important; border-color: ${emailColors.darkBorder} !important; }
+            .email-details-card { background: ${emailColors.darkSurfaceMuted} !important; background-color: ${emailColors.darkSurfaceMuted} !important; border-color: ${emailColors.darkBorder} !important; }
+            .email-cta-card { background: ${emailColors.darkCtaSurface} !important; background-color: ${emailColors.darkCtaSurface} !important; border-color: ${emailColors.darkBorder} !important; }
             .email-intro,
             .email-body-text,
             .email-detail-value,
             .email-cta-text,
-            .email-closing-text { color: ${emailColors.text} !important; -webkit-text-fill-color: ${emailColors.text} !important; }
-            .email-title { color: ${emailColors.heading} !important; -webkit-text-fill-color: ${emailColors.heading} !important; }
-            .email-detail-label { color: ${emailColors.muted} !important; -webkit-text-fill-color: ${emailColors.muted} !important; }
+            .email-closing-text { color: ${emailColors.darkText} !important; -webkit-text-fill-color: ${emailColors.darkText} !important; }
+            .email-title { color: ${emailColors.darkHeading} !important; -webkit-text-fill-color: ${emailColors.darkHeading} !important; }
+            .email-detail-label { color: ${emailColors.darkMuted} !important; -webkit-text-fill-color: ${emailColors.darkMuted} !important; }
             .email-eyebrow,
-            .email-detail-heading { color: ${emailColors.greenDark} !important; -webkit-text-fill-color: ${emailColors.greenDark} !important; }
+            .email-detail-heading { color: ${emailColors.green} !important; -webkit-text-fill-color: ${emailColors.green} !important; }
             .email-footer-title,
             .email-footer-link,
             .email-button { color: ${emailColors.white} !important; -webkit-text-fill-color: ${emailColors.white} !important; }
-            .email-footer-muted { color: ${emailColors.softMuted} !important; -webkit-text-fill-color: ${emailColors.softMuted} !important; }
+            .email-footer-muted { color: ${emailColors.darkSoftMuted} !important; -webkit-text-fill-color: ${emailColors.darkSoftMuted} !important; }
           }
+          [data-ogsc] .email-bg,
+          [data-ogsc] .email-outer { background: ${emailColors.darkBg} !important; background-color: ${emailColors.darkBg} !important; }
+          [data-ogsc] .email-card,
+          [data-ogsc] .email-header,
+          [data-ogsc] .email-body-shell { background: ${emailColors.darkSurface} !important; background-color: ${emailColors.darkSurface} !important; }
+          [data-ogsc] .email-primary-card { background: ${emailColors.darkPrimarySurface} !important; background-color: ${emailColors.darkPrimarySurface} !important; border-color: ${emailColors.darkBorder} !important; }
+          [data-ogsc] .email-details-card { background: ${emailColors.darkSurfaceMuted} !important; background-color: ${emailColors.darkSurfaceMuted} !important; border-color: ${emailColors.darkBorder} !important; }
+          [data-ogsc] .email-cta-card { background: ${emailColors.darkCtaSurface} !important; background-color: ${emailColors.darkCtaSurface} !important; border-color: ${emailColors.darkBorder} !important; }
+          [data-ogsc] .email-intro,
+          [data-ogsc] .email-body-text,
+          [data-ogsc] .email-detail-value,
+          [data-ogsc] .email-cta-text,
+          [data-ogsc] .email-closing-text { color: ${emailColors.darkText} !important; -webkit-text-fill-color: ${emailColors.darkText} !important; }
+          [data-ogsc] .email-title { color: ${emailColors.darkHeading} !important; -webkit-text-fill-color: ${emailColors.darkHeading} !important; }
+          [data-ogsc] .email-detail-label { color: ${emailColors.darkMuted} !important; -webkit-text-fill-color: ${emailColors.darkMuted} !important; }
+          [data-ogsc] .email-eyebrow,
+          [data-ogsc] .email-detail-heading { color: ${emailColors.green} !important; -webkit-text-fill-color: ${emailColors.green} !important; }
+          [data-ogsc] .email-footer-title,
+          [data-ogsc] .email-footer-link,
+          [data-ogsc] .email-button { color: ${emailColors.white} !important; -webkit-text-fill-color: ${emailColors.white} !important; }
+          [data-ogsc] .email-footer-muted { color: ${emailColors.darkSoftMuted} !important; -webkit-text-fill-color: ${emailColors.darkSoftMuted} !important; }
         </style>
       </head>
       <body class="email-bg" style="margin:0;padding:0;background:${emailColors.pale};background-color:${emailColors.pale};-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
@@ -266,7 +298,7 @@ export function renderEmailLayout(input: LayoutInput) {
                       ${detailsBlock}
                       <tr>
                         <td class="email-cta-wrap" style="padding:0 32px 28px 32px;">
-                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${emailColors.ctaSurface}" style="border-collapse:collapse;background:${emailColors.ctaSurface};background-color:${emailColors.ctaSurface};border:1px solid ${emailColors.border};border-radius:16px;">
+                          <table class="email-cta-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${emailColors.ctaSurface}" style="border-collapse:collapse;background:${emailColors.ctaSurface};background-color:${emailColors.ctaSurface};border:1px solid ${emailColors.border};border-radius:16px;">
                             <tr>
                               <td class="email-cta-inner" style="padding:19px 22px;">
                                 <p class="email-cta-text" style="margin:0 0 14px 0;font-family:Inter,Arial,sans-serif;font-size:15px;line-height:23px;${textColorStyle(emailColors.text)};font-weight:600;">

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 import {
   Bar,
   BarChart,
@@ -15,32 +15,44 @@ import {
   XAxis,
   YAxis,
   Cell,
-} from 'recharts';
+} from "recharts";
 import {
   CalendarCheck2,
   ClipboardList,
   FileText,
+  LifeBuoy,
   NotebookPen,
   Users,
   Waves,
-} from 'lucide-react';
-import { api } from '@/lib/api';
-import { useApiData } from '@/lib/use-api-data';
-import { ChartCard } from '@/components/shared/chart-card';
-import { DataTable } from '@/components/shared/data-table';
-import { ErrorState } from '@/components/shared/error-state';
-import { LoadingSpinner } from '@/components/shared/loading-spinner';
-import { StatCard } from '@/components/shared/stat-card';
-import { StatusBadge } from '@/components/shared/status-badge';
-import type { AnalyticsOverview, BookingRequest, ContactMessage, QuoteRequest } from '@/types/api';
+} from "lucide-react";
+import { api } from "@/lib/api";
+import { useApiData } from "@/lib/use-api-data";
+import { ChartCard } from "@/components/shared/chart-card";
+import { DataTable } from "@/components/shared/data-table";
+import { ErrorState } from "@/components/shared/error-state";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
+import { StatCard } from "@/components/shared/stat-card";
+import { StatusBadge } from "@/components/shared/status-badge";
+import type {
+  AnalyticsOverview,
+  BookingRequest,
+  ContactMessage,
+  QuoteRequest,
+} from "@/types/api";
 import {
   aggregateByStatus,
   getConfirmedBookings,
   getPendingRequests,
   groupRecordsByDay,
   mergeRecentSubmissions,
-} from '@/lib/dashboard-data';
-import { formatDate, formatDateTime, getName, safeNumber, toTitleCase } from '@/lib/utils';
+} from "@/lib/dashboard-data";
+import {
+  formatDate,
+  formatDateTime,
+  getName,
+  safeNumber,
+  toTitleCase,
+} from "@/lib/utils";
 
 type DashboardPayload = {
   overview: AnalyticsOverview;
@@ -49,39 +61,43 @@ type DashboardPayload = {
   bookings: BookingRequest[];
 };
 
-const chartColors = ['#1f6b47', '#6ba17d', '#d59b38', '#7e8f86', '#c94f4f'];
+const chartColors = ["#1f6b47", "#6ba17d", "#d59b38", "#7e8f86", "#c94f4f"];
 
 export default function DashboardPage() {
-  const { data, isLoading, error } = useApiData<DashboardPayload>(
-    async () => {
-      const [overview, contacts, quotes, bookings] = await Promise.all([
-        api.get<AnalyticsOverview>('/analytics/overview'),
-        api.get<ContactMessage[]>('/contact-messages'),
-        api.get<QuoteRequest[]>('/quotes'),
-        api.get<BookingRequest[]>('/bookings'),
-      ]);
-      return { overview, contacts, quotes, bookings };
-    },
-    [],
-  );
+  const { data, isLoading, error } = useApiData<DashboardPayload>(async () => {
+    const [overview, contacts, quotes, bookings] = await Promise.all([
+      api.get<AnalyticsOverview>("/analytics/overview"),
+      api.get<ContactMessage[]>("/contact-messages"),
+      api.get<QuoteRequest[]>("/quotes"),
+      api.get<BookingRequest[]>("/bookings"),
+    ]);
+    return { overview, contacts, quotes, bookings };
+  }, []);
 
   const derived = useMemo(() => {
     const contacts = data?.contacts ?? [];
     const quotes = data?.quotes ?? [];
     const bookings = data?.bookings ?? [];
     const overview = data?.overview;
-    const leadsOverTime = groupRecordsByDay([...contacts, ...quotes, ...bookings], 14);
+    const leadsOverTime = groupRecordsByDay(
+      [...contacts, ...quotes, ...bookings],
+      14,
+    );
     const requestsByType = [
-      { name: 'Contacts', value: contacts.length },
-      { name: 'Quotes', value: quotes.length },
-      { name: 'Bookings', value: bookings.length },
+      { name: "Contacts", value: contacts.length },
+      { name: "Quotes", value: quotes.length },
+      { name: "Bookings", value: bookings.length },
     ];
     const quoteStatuses =
-      overview?.quotesByStatus?.map((item) => ({ name: item.status, value: item.total })) ??
-      aggregateByStatus(quotes);
+      overview?.quotesByStatus?.map((item) => ({
+        name: item.status,
+        value: item.total,
+      })) ?? aggregateByStatus(quotes);
     const bookingStatuses =
-      overview?.bookingsByStatus?.map((item) => ({ name: item.status, value: item.total })) ??
-      aggregateByStatus(bookings);
+      overview?.bookingsByStatus?.map((item) => ({
+        name: item.status,
+        value: item.total,
+      })) ?? aggregateByStatus(bookings);
     return {
       leadsOverTime,
       requestsByType,
@@ -99,7 +115,8 @@ export default function DashboardPage() {
   }, [data]);
 
   if (isLoading) return <LoadingSpinner label="Loading dashboard..." />;
-  if (error || !data) return <ErrorState description={error ?? 'Unable to load dashboard'} />;
+  if (error || !data)
+    return <ErrorState description={error ?? "Unable to load dashboard"} />;
 
   const totalLeads =
     safeNumber(data.overview?.totalContactMessages) +
@@ -157,10 +174,25 @@ export default function DashboardPage() {
           description="Items still needing active handling"
           icon={Users}
         />
+        <StatCard
+          title="Open support tickets"
+          value={safeNumber(data.overview?.openSupportTickets)}
+          description="Support cases currently needing follow-up"
+          icon={LifeBuoy}
+        />
+        <StatCard
+          title="Urgent tickets"
+          value={safeNumber(data.overview?.urgentSupportTickets)}
+          description="Priority support cases marked urgent"
+          icon={LifeBuoy}
+        />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
-        <ChartCard title="Leads over time" description="Daily lead mix across the last 14 days">
+        <ChartCard
+          title="Leads over time"
+          description="Daily lead mix across the last 14 days"
+        >
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={derived.leadsOverTime}>
@@ -169,15 +201,33 @@ export default function DashboardPage() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="contact" stroke="#1f6b47" strokeWidth={2} />
-                <Line type="monotone" dataKey="quote" stroke="#d59b38" strokeWidth={2} />
-                <Line type="monotone" dataKey="booking" stroke="#1f4d8c" strokeWidth={2} />
+                <Line
+                  type="monotone"
+                  dataKey="contact"
+                  stroke="#1f6b47"
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="quote"
+                  stroke="#d59b38"
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="booking"
+                  stroke="#1f4d8c"
+                  strokeWidth={2}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </ChartCard>
 
-        <ChartCard title="Requests by type" description="Current request totals by channel">
+        <ChartCard
+          title="Requests by type"
+          description="Current request totals by channel"
+        >
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={derived.requestsByType}>
@@ -197,9 +247,17 @@ export default function DashboardPage() {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={derived.quoteStatuses} dataKey="value" nameKey="name" outerRadius={90}>
+                <Pie
+                  data={derived.quoteStatuses}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={90}
+                >
                   {derived.quoteStatuses.map((entry, index) => (
-                    <Cell key={entry.name} fill={chartColors[index % chartColors.length]} />
+                    <Cell
+                      key={entry.name}
+                      fill={chartColors[index % chartColors.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -212,9 +270,17 @@ export default function DashboardPage() {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={derived.bookingStatuses} dataKey="value" nameKey="name" outerRadius={90}>
+                <Pie
+                  data={derived.bookingStatuses}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={90}
+                >
                   {derived.bookingStatuses.map((entry, index) => (
-                    <Cell key={entry.name} fill={chartColors[index % chartColors.length]} />
+                    <Cell
+                      key={entry.name}
+                      fill={chartColors[index % chartColors.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -250,28 +316,30 @@ export default function DashboardPage() {
           emptyDescription="New website leads will appear here."
           columns={[
             {
-              key: 'lead',
-              title: 'Lead',
+              key: "lead",
+              title: "Lead",
               render: (row) => (
                 <div>
                   <p className="font-medium">{getName(row)}</p>
-                  <p className="text-xs text-slate-500">{toTitleCase(row.type)}</p>
+                  <p className="text-xs text-slate-500">
+                    {toTitleCase(row.type)}
+                  </p>
                 </div>
               ),
             },
             {
-              key: 'service',
-              title: 'Service',
-              render: (row) => row.service?.name ?? 'General enquiry',
+              key: "service",
+              title: "Service",
+              render: (row) => row.service?.name ?? "General enquiry",
             },
             {
-              key: 'status',
-              title: 'Status',
+              key: "status",
+              title: "Status",
               render: (row) => <StatusBadge status={row.status} />,
             },
             {
-              key: 'createdAt',
-              title: 'Created',
+              key: "createdAt",
+              title: "Created",
               render: (row) => formatDateTime(row.createdAt),
             },
           ]}
@@ -284,28 +352,32 @@ export default function DashboardPage() {
           emptyDescription="Booking requests will appear here once customers start submitting them."
           columns={[
             {
-              key: 'customer',
-              title: 'Customer',
+              key: "customer",
+              title: "Customer",
               render: (row) => (
                 <div>
-                  <p className="font-medium">{getName(row.customer ?? undefined)}</p>
-                  <p className="text-xs text-slate-500">{row.customer?.phone ?? 'No phone'}</p>
+                  <p className="font-medium">
+                    {getName(row.customer ?? undefined)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {row.customer?.phone ?? "No phone"}
+                  </p>
                 </div>
               ),
             },
             {
-              key: 'service',
-              title: 'Service',
-              render: (row) => row.service?.name ?? 'Unknown',
+              key: "service",
+              title: "Service",
+              render: (row) => row.service?.name ?? "Unknown",
             },
             {
-              key: 'date',
-              title: 'Preferred date',
+              key: "date",
+              title: "Preferred date",
               render: (row) => formatDate(row.preferredDate),
             },
             {
-              key: 'status',
-              title: 'Status',
+              key: "status",
+              title: "Status",
               render: (row) => <StatusBadge status={row.status} />,
             },
           ]}
@@ -318,28 +390,32 @@ export default function DashboardPage() {
           emptyDescription="Quote requests will appear here as they arrive."
           columns={[
             {
-              key: 'customer',
-              title: 'Customer',
+              key: "customer",
+              title: "Customer",
               render: (row) => (
                 <div>
-                  <p className="font-medium">{getName(row.customer ?? undefined)}</p>
-                  <p className="text-xs text-slate-500">{row.customer?.email ?? 'No email'}</p>
+                  <p className="font-medium">
+                    {getName(row.customer ?? undefined)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {row.customer?.email ?? "No email"}
+                  </p>
                 </div>
               ),
             },
             {
-              key: 'service',
-              title: 'Service',
-              render: (row) => row.service?.name ?? 'Unknown',
+              key: "service",
+              title: "Service",
+              render: (row) => row.service?.name ?? "Unknown",
             },
             {
-              key: 'date',
-              title: 'Preferred date',
+              key: "date",
+              title: "Preferred date",
               render: (row) => formatDate(row.preferredDate),
             },
             {
-              key: 'status',
-              title: 'Status',
+              key: "status",
+              title: "Status",
               render: (row) => <StatusBadge status={row.status} />,
             },
           ]}

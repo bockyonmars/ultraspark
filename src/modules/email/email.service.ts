@@ -1,12 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { EmailLogStatus } from '@prisma/client';
-import { Resend } from 'resend';
-import { PrismaService } from '../prisma.service';
-import { bookingRequestResponseTemplate } from './templates/bookingRequestResponse';
-import { contactFormResponseTemplate } from './templates/contactFormResponse';
-import { quoteRequestResponseTemplate } from './templates/quoteRequestResponse';
-import type { EmailTemplateVariables } from './templates/types';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { EmailLogStatus } from "@prisma/client";
+import { Resend } from "resend";
+import { PrismaService } from "../prisma.service";
+import { bookingRequestResponseTemplate } from "./templates/bookingRequestResponse";
+import { contactFormResponseTemplate } from "./templates/contactFormResponse";
+import { quoteRequestResponseTemplate } from "./templates/quoteRequestResponse";
+import {
+  adminTicketAlertTemplate,
+  customerTicketConfirmationTemplate,
+  customerTicketReplyTemplate,
+  customerTicketResolvedTemplate,
+} from "./templates/supportTicketTemplates";
+import type { EmailTemplateVariables } from "./templates/types";
 
 type SendEmailInput = {
   type: string;
@@ -17,6 +23,7 @@ type SendEmailInput = {
   contactMessageId?: string;
   quoteRequestId?: string;
   bookingRequestId?: string;
+  supportTicketId?: string;
 };
 
 @Injectable()
@@ -29,7 +36,7 @@ export class EmailService {
     private readonly configService: ConfigService,
   ) {
     this.resend = new Resend(
-      this.configService.get<string>('app.resendApiKey'),
+      this.configService.get<string>("app.resendApiKey"),
     );
   }
 
@@ -42,14 +49,14 @@ export class EmailService {
     contactMessageId: string;
   }) {
     return this.sendEmail({
-      type: 'ADMIN_CONTACT_ALERT',
+      type: "ADMIN_CONTACT_ALERT",
       recipient: this.configService.getOrThrow<string>(
-        'app.adminNotificationEmail',
+        "app.adminNotificationEmail",
       ),
       subject: `New contact message from ${payload.customerName}`,
       contactMessageId: payload.contactMessageId,
-      html: `<p>A new contact message was submitted.</p><p><strong>Name:</strong> ${payload.customerName}</p><p><strong>Email:</strong> ${payload.customerEmail ?? 'N/A'}</p><p><strong>Phone:</strong> ${payload.customerPhone ?? 'N/A'}</p><p><strong>Subject:</strong> ${payload.subject ?? 'General enquiry'}</p><p><strong>Message:</strong><br />${payload.message}</p>`,
-      text: `A new contact message was submitted.\nName: ${payload.customerName}\nEmail: ${payload.customerEmail ?? 'N/A'}\nPhone: ${payload.customerPhone ?? 'N/A'}\nSubject: ${payload.subject ?? 'General enquiry'}\nMessage: ${payload.message}`,
+      html: `<p>A new contact message was submitted.</p><p><strong>Name:</strong> ${payload.customerName}</p><p><strong>Email:</strong> ${payload.customerEmail ?? "N/A"}</p><p><strong>Phone:</strong> ${payload.customerPhone ?? "N/A"}</p><p><strong>Subject:</strong> ${payload.subject ?? "General enquiry"}</p><p><strong>Message:</strong><br />${payload.message}</p>`,
+      text: `A new contact message was submitted.\nName: ${payload.customerName}\nEmail: ${payload.customerEmail ?? "N/A"}\nPhone: ${payload.customerPhone ?? "N/A"}\nSubject: ${payload.subject ?? "General enquiry"}\nMessage: ${payload.message}`,
     });
   }
 
@@ -62,14 +69,14 @@ export class EmailService {
     quoteRequestId: string;
   }) {
     return this.sendEmail({
-      type: 'ADMIN_QUOTE_ALERT',
+      type: "ADMIN_QUOTE_ALERT",
       recipient: this.configService.getOrThrow<string>(
-        'app.adminNotificationEmail',
+        "app.adminNotificationEmail",
       ),
       subject: `New quote request for ${payload.serviceName}`,
       quoteRequestId: payload.quoteRequestId,
-      html: `<p>A new quote request was submitted.</p><p><strong>Name:</strong> ${payload.customerName}</p><p><strong>Email:</strong> ${payload.customerEmail ?? 'N/A'}</p><p><strong>Phone:</strong> ${payload.customerPhone ?? 'N/A'}</p><p><strong>Service:</strong> ${payload.serviceName}</p><p><strong>Details:</strong><br />${payload.details}</p>`,
-      text: `A new quote request was submitted.\nName: ${payload.customerName}\nEmail: ${payload.customerEmail ?? 'N/A'}\nPhone: ${payload.customerPhone ?? 'N/A'}\nService: ${payload.serviceName}\nDetails: ${payload.details}`,
+      html: `<p>A new quote request was submitted.</p><p><strong>Name:</strong> ${payload.customerName}</p><p><strong>Email:</strong> ${payload.customerEmail ?? "N/A"}</p><p><strong>Phone:</strong> ${payload.customerPhone ?? "N/A"}</p><p><strong>Service:</strong> ${payload.serviceName}</p><p><strong>Details:</strong><br />${payload.details}</p>`,
+      text: `A new quote request was submitted.\nName: ${payload.customerName}\nEmail: ${payload.customerEmail ?? "N/A"}\nPhone: ${payload.customerPhone ?? "N/A"}\nService: ${payload.serviceName}\nDetails: ${payload.details}`,
     });
   }
 
@@ -83,14 +90,14 @@ export class EmailService {
     bookingRequestId: string;
   }) {
     return this.sendEmail({
-      type: 'ADMIN_BOOKING_ALERT',
+      type: "ADMIN_BOOKING_ALERT",
       recipient: this.configService.getOrThrow<string>(
-        'app.adminNotificationEmail',
+        "app.adminNotificationEmail",
       ),
       subject: `New booking request for ${payload.serviceName}`,
       bookingRequestId: payload.bookingRequestId,
-      html: `<p>A new booking request was submitted.</p><p><strong>Name:</strong> ${payload.customerName}</p><p><strong>Email:</strong> ${payload.customerEmail ?? 'N/A'}</p><p><strong>Phone:</strong> ${payload.customerPhone ?? 'N/A'}</p><p><strong>Service:</strong> ${payload.serviceName}</p><p><strong>Preferred date:</strong> ${payload.preferredDate ?? 'Flexible'}</p><p><strong>Preferred time:</strong> ${payload.preferredTime ?? 'Flexible'}</p>`,
-      text: `A new booking request was submitted.\nName: ${payload.customerName}\nEmail: ${payload.customerEmail ?? 'N/A'}\nPhone: ${payload.customerPhone ?? 'N/A'}\nService: ${payload.serviceName}\nPreferred date: ${payload.preferredDate ?? 'Flexible'}\nPreferred time: ${payload.preferredTime ?? 'Flexible'}`,
+      html: `<p>A new booking request was submitted.</p><p><strong>Name:</strong> ${payload.customerName}</p><p><strong>Email:</strong> ${payload.customerEmail ?? "N/A"}</p><p><strong>Phone:</strong> ${payload.customerPhone ?? "N/A"}</p><p><strong>Service:</strong> ${payload.serviceName}</p><p><strong>Preferred date:</strong> ${payload.preferredDate ?? "Flexible"}</p><p><strong>Preferred time:</strong> ${payload.preferredTime ?? "Flexible"}</p>`,
+      text: `A new booking request was submitted.\nName: ${payload.customerName}\nEmail: ${payload.customerEmail ?? "N/A"}\nPhone: ${payload.customerPhone ?? "N/A"}\nService: ${payload.serviceName}\nPreferred date: ${payload.preferredDate ?? "Flexible"}\nPreferred time: ${payload.preferredTime ?? "Flexible"}`,
     });
   }
 
@@ -104,13 +111,13 @@ export class EmailService {
     const template = contactFormResponseTemplate({
       ...this.getTemplateCompanyVariables(),
       customerName: payload.customerName,
-      phoneNumber: payload.customerPhone ?? 'Not provided',
+      phoneNumber: payload.customerPhone ?? "Not provided",
       email: payload.recipient,
       message: payload.message,
     });
 
     return this.sendEmail({
-      type: 'CUSTOMER_CONTACT_CONFIRMATION',
+      type: "CUSTOMER_CONTACT_CONFIRMATION",
       recipient: payload.recipient,
       subject: template.subject,
       contactMessageId: payload.contactMessageId,
@@ -135,17 +142,17 @@ export class EmailService {
       ...this.getTemplateCompanyVariables(),
       customerName: payload.customerName,
       serviceType: payload.serviceName,
-      requestedDate: payload.requestedDate ?? 'Not specified',
-      requestedTime: payload.requestedTime ?? 'Not specified',
-      location: payload.location ?? 'Not provided',
-      propertyType: payload.propertyType ?? 'Not provided',
-      quoteDetails: payload.quoteDetails ?? 'Not provided',
-      phoneNumber: payload.customerPhone ?? 'Not provided',
+      requestedDate: payload.requestedDate ?? "Not specified",
+      requestedTime: payload.requestedTime ?? "Not specified",
+      location: payload.location ?? "Not provided",
+      propertyType: payload.propertyType ?? "Not provided",
+      quoteDetails: payload.quoteDetails ?? "Not provided",
+      phoneNumber: payload.customerPhone ?? "Not provided",
       email: payload.recipient,
     });
 
     return this.sendEmail({
-      type: 'CUSTOMER_QUOTE_CONFIRMATION',
+      type: "CUSTOMER_QUOTE_CONFIRMATION",
       recipient: payload.recipient,
       subject: template.subject,
       quoteRequestId: payload.quoteRequestId,
@@ -168,15 +175,15 @@ export class EmailService {
       ...this.getTemplateCompanyVariables(),
       customerName: payload.customerName,
       serviceType: payload.serviceName,
-      requestedDate: payload.requestedDate ?? 'Not specified',
-      requestedTime: payload.requestedTime ?? 'Not specified',
-      location: payload.location ?? 'Not provided',
-      phoneNumber: payload.customerPhone ?? 'Not provided',
+      requestedDate: payload.requestedDate ?? "Not specified",
+      requestedTime: payload.requestedTime ?? "Not specified",
+      location: payload.location ?? "Not provided",
+      phoneNumber: payload.customerPhone ?? "Not provided",
       email: payload.recipient,
     });
 
     return this.sendEmail({
-      type: 'CUSTOMER_BOOKING_CONFIRMATION',
+      type: "CUSTOMER_BOOKING_CONFIRMATION",
       recipient: payload.recipient,
       subject: template.subject,
       bookingRequestId: payload.bookingRequestId,
@@ -185,27 +192,148 @@ export class EmailService {
     });
   }
 
+  async sendAdminSupportTicketAlert(payload: {
+    ticketNumber: string;
+    customerName: string;
+    customerEmail?: string | null;
+    customerPhone?: string | null;
+    category: string;
+    priority: string;
+    subject: string;
+    description: string;
+    supportTicketId: string;
+  }) {
+    const template = adminTicketAlertTemplate({
+      ...this.getTemplateCompanyVariables(),
+      ticketNumber: payload.ticketNumber,
+      customerName: payload.customerName,
+      email: payload.customerEmail ?? "N/A",
+      phoneNumber: payload.customerPhone ?? "N/A",
+      category: payload.category,
+      priority: payload.priority,
+      subject: payload.subject,
+      message: payload.description,
+    });
+
+    return this.sendEmail({
+      type: "ADMIN_SUPPORT_TICKET_ALERT",
+      recipient: this.configService.getOrThrow<string>(
+        "app.adminNotificationEmail",
+      ),
+      subject: template.subject,
+      supportTicketId: payload.supportTicketId,
+      html: template.html,
+      text: template.text,
+    });
+  }
+
+  async sendCustomerSupportTicketConfirmation(payload: {
+    recipient: string;
+    customerName: string;
+    ticketNumber: string;
+    category: string;
+    priority: string;
+    status: string;
+    subject: string;
+    supportTicketId: string;
+  }) {
+    const template = customerTicketConfirmationTemplate({
+      ...this.getTemplateCompanyVariables(),
+      customerName: payload.customerName,
+      email: payload.recipient,
+      ticketNumber: payload.ticketNumber,
+      category: payload.category,
+      priority: payload.priority,
+      status: payload.status,
+      subject: payload.subject,
+    });
+
+    return this.sendEmail({
+      type: "CUSTOMER_SUPPORT_TICKET_CONFIRMATION",
+      recipient: payload.recipient,
+      subject: template.subject,
+      supportTicketId: payload.supportTicketId,
+      html: template.html,
+      text: template.text,
+    });
+  }
+
+  async sendCustomerSupportTicketReply(payload: {
+    recipient: string;
+    customerName: string;
+    ticketNumber: string;
+    status: string;
+    subject: string;
+    replyMessage: string;
+    supportTicketId: string;
+  }) {
+    const template = customerTicketReplyTemplate({
+      ...this.getTemplateCompanyVariables(),
+      customerName: payload.customerName,
+      email: payload.recipient,
+      ticketNumber: payload.ticketNumber,
+      status: payload.status,
+      subject: payload.subject,
+      replyMessage: payload.replyMessage,
+    });
+
+    return this.sendEmail({
+      type: "CUSTOMER_SUPPORT_TICKET_REPLY",
+      recipient: payload.recipient,
+      subject: template.subject,
+      supportTicketId: payload.supportTicketId,
+      html: template.html,
+      text: template.text,
+    });
+  }
+
+  async sendCustomerSupportTicketResolved(payload: {
+    recipient: string;
+    customerName: string;
+    ticketNumber: string;
+    subject: string;
+    supportTicketId: string;
+  }) {
+    const template = customerTicketResolvedTemplate({
+      ...this.getTemplateCompanyVariables(),
+      customerName: payload.customerName,
+      email: payload.recipient,
+      ticketNumber: payload.ticketNumber,
+      status: "RESOLVED",
+      subject: payload.subject,
+    });
+
+    return this.sendEmail({
+      type: "CUSTOMER_SUPPORT_TICKET_RESOLVED",
+      recipient: payload.recipient,
+      subject: template.subject,
+      supportTicketId: payload.supportTicketId,
+      html: template.html,
+      text: template.text,
+    });
+  }
+
   private getTemplateCompanyVariables(): EmailTemplateVariables {
     const companyWebsite = this.trimTrailingSlash(
-      this.configService.get<string>('app.frontendUrl') ??
-        '{{company_website}}',
+      this.configService.get<string>("app.frontendUrl") ??
+        "{{company_website}}",
     );
     const companyEmail =
-      this.configService.get<string>('app.adminNotificationEmail') ??
+      this.configService.get<string>("app.adminNotificationEmail") ??
       this.extractEmailAddress(
-        this.configService.get<string>('app.emailFrom') ?? '',
+        this.configService.get<string>("app.emailFrom") ?? "",
       ) ??
-      '{{company_email}}';
+      "{{company_email}}";
     const logoUrl =
-      this.configService.get<string>('app.emailLogoUrl') ??
-      (companyWebsite.includes('{{')
-        ? '{{logo_url}}'
+      this.configService.get<string>("app.emailLogoUrl") ??
+      (companyWebsite.includes("{{")
+        ? "{{logo_url}}"
         : `${companyWebsite}/images/ultraspark-logo.png`);
 
     return {
       companyPhone:
-        this.configService.get<string>('app.companyPhone') ??
-        '+44 07445 948269',
+        this.configService.get<string>("app.companyPhone") ??
+        "+44 07445 948269",
       companyEmail,
       companyWebsite,
       logoUrl,
@@ -214,17 +342,17 @@ export class EmailService {
   }
 
   private trimTrailingSlash(value: string) {
-    return value.replace(/\/+$/, '');
+    return value.replace(/\/+$/, "");
   }
 
   private extractEmailAddress(value: string) {
     const match = value.match(/<([^>]+)>/);
 
-    return match?.[1] ?? (value.includes('@') ? value : undefined);
+    return match?.[1] ?? (value.includes("@") ? value : undefined);
   }
 
   private async sendEmail(input: SendEmailInput) {
-    const emailFrom = this.configService.getOrThrow<string>('app.emailFrom');
+    const emailFrom = this.configService.getOrThrow<string>("app.emailFrom");
 
     try {
       const response = await this.resend.emails.send({
@@ -245,13 +373,14 @@ export class EmailService {
           contactMessageId: input.contactMessageId,
           quoteRequestId: input.quoteRequestId,
           bookingRequestId: input.bookingRequestId,
+          supportTicketId: input.supportTicketId,
         },
       });
 
       return response;
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Email send failed';
+        error instanceof Error ? error.message : "Email send failed";
       this.logger.error(message);
 
       await this.prisma.emailLog.create({
@@ -264,6 +393,7 @@ export class EmailService {
           contactMessageId: input.contactMessageId,
           quoteRequestId: input.quoteRequestId,
           bookingRequestId: input.bookingRequestId,
+          supportTicketId: input.supportTicketId,
         },
       });
 

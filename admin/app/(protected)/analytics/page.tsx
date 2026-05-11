@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 import {
   Bar,
   BarChart,
@@ -14,22 +14,28 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
-import { Users, Repeat, ChartColumn } from 'lucide-react';
-import { api } from '@/lib/api';
-import { useApiData } from '@/lib/use-api-data';
-import { ChartCard } from '@/components/shared/chart-card';
-import { ErrorState } from '@/components/shared/error-state';
-import { LoadingSpinner } from '@/components/shared/loading-spinner';
-import { StatCard } from '@/components/shared/stat-card';
-import type { AnalyticsOverview, BookingRequest, ContactMessage, Customer, QuoteRequest } from '@/types/api';
+} from "recharts";
+import { ChartColumn, LifeBuoy, Repeat, Siren, Users } from "lucide-react";
+import { api } from "@/lib/api";
+import { useApiData } from "@/lib/use-api-data";
+import { ChartCard } from "@/components/shared/chart-card";
+import { ErrorState } from "@/components/shared/error-state";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
+import { StatCard } from "@/components/shared/stat-card";
+import type {
+  AnalyticsOverview,
+  BookingRequest,
+  ContactMessage,
+  Customer,
+  QuoteRequest,
+} from "@/types/api";
 import {
   aggregateByStatus,
   aggregateServices,
   getRepeatCustomerCount,
   groupRecordsByDay,
-} from '@/lib/dashboard-data';
-import { safeNumber } from '@/lib/utils';
+} from "@/lib/dashboard-data";
+import { safeNumber } from "@/lib/utils";
 
 type AnalyticsPayload = {
   overview: AnalyticsOverview;
@@ -39,20 +45,21 @@ type AnalyticsPayload = {
   bookings: BookingRequest[];
 };
 
+const chartColors = ["#1f6b47", "#6ba17d", "#d59b38", "#1f4d8c", "#c94f4f"];
+
 export default function AnalyticsPage() {
-  const { data, isLoading, error } = useApiData<AnalyticsPayload>(
-    async () => {
-      const [overview, customers, contacts, quotes, bookings] = await Promise.all([
-        api.get<AnalyticsOverview>('/analytics/overview'),
-        api.get<Customer[]>('/customers'),
-        api.get<ContactMessage[]>('/contact-messages'),
-        api.get<QuoteRequest[]>('/quotes'),
-        api.get<BookingRequest[]>('/bookings'),
-      ]);
-      return { overview, customers, contacts, quotes, bookings };
-    },
-    [],
-  );
+  const { data, isLoading, error } = useApiData<AnalyticsPayload>(async () => {
+    const [overview, customers, contacts, quotes, bookings] = await Promise.all(
+      [
+        api.get<AnalyticsOverview>("/analytics/overview"),
+        api.get<Customer[]>("/customers"),
+        api.get<ContactMessage[]>("/contact-messages"),
+        api.get<QuoteRequest[]>("/quotes"),
+        api.get<BookingRequest[]>("/bookings"),
+      ],
+    );
+    return { overview, customers, contacts, quotes, bookings };
+  }, []);
 
   const derived = useMemo(() => {
     const contacts = data?.contacts ?? [];
@@ -75,43 +82,106 @@ export default function AnalyticsPage() {
         contacts: item.total,
       })),
       funnel: [
-        { value: contacts.length + quotes.length + bookings.length, name: 'Requested' },
         {
-          value:
-            quotes.filter((item) => ['CONTACTED', 'QUOTED', 'ACCEPTED'].includes(item.status ?? '')).length +
-            bookings.filter((item) => ['CONTACTED', 'CONFIRMED', 'COMPLETED'].includes(item.status ?? '')).length,
-          name: 'Contacted',
+          value: contacts.length + quotes.length + bookings.length,
+          name: "Requested",
         },
         {
           value:
-            quotes.filter((item) => item.status === 'ACCEPTED').length +
-            bookings.filter((item) => ['CONFIRMED', 'COMPLETED'].includes(item.status ?? '')).length,
-          name: 'Confirmed / Completed',
+            quotes.filter((item) =>
+              ["CONTACTED", "QUOTED", "ACCEPTED"].includes(item.status ?? ""),
+            ).length +
+            bookings.filter((item) =>
+              ["CONTACTED", "CONFIRMED", "COMPLETED"].includes(
+                item.status ?? "",
+              ),
+            ).length,
+          name: "Contacted",
+        },
+        {
+          value:
+            quotes.filter((item) => item.status === "ACCEPTED").length +
+            bookings.filter((item) =>
+              ["CONFIRMED", "COMPLETED"].includes(item.status ?? ""),
+            ).length,
+          name: "Confirmed / Completed",
         },
       ],
       services: aggregateServices(quotes, bookings).slice(0, 6),
       statusDistribution: [
-        ...aggregateByStatus(quotes).map((item) => ({ ...item, group: 'Quotes' })),
-        ...aggregateByStatus(bookings).map((item) => ({ ...item, group: 'Bookings' })),
+        ...aggregateByStatus(quotes).map((item) => ({
+          ...item,
+          group: "Quotes",
+        })),
+        ...aggregateByStatus(bookings).map((item) => ({
+          ...item,
+          group: "Bookings",
+        })),
       ],
+      supportStatusDistribution:
+        data?.overview.supportTicketsByStatus?.map((item) => ({
+          name: item.status,
+          value: item.total,
+        })) ?? [],
+      supportCategoryDistribution:
+        data?.overview.supportTicketsByCategory?.map((item) => ({
+          name: item.category,
+          value: item.total,
+        })) ?? [],
       repeatCustomers: getRepeatCustomerCount(customers),
     };
   }, [data]);
 
   if (isLoading) return <LoadingSpinner label="Loading analytics..." />;
-  if (error || !data) return <ErrorState description={error ?? 'Unable to load analytics'} />;
+  if (error || !data)
+    return <ErrorState description={error ?? "Unable to load analytics"} />;
 
   return (
     <div className="space-y-6">
       <section className="dashboard-grid">
-        <StatCard title="Total customers" value={safeNumber(data.overview.totalCustomers)} description="Matched customer profiles in the CRM" icon={Users} />
-        <StatCard title="Repeat customers" value={derived.repeatCustomers} description="Customers with more than one request record" icon={Repeat} />
-        <StatCard title="Quote requests" value={safeNumber(data.overview.totalQuoteRequests)} description="Quote request volume to date" icon={ChartColumn} />
-        <StatCard title="Booking requests" value={safeNumber(data.overview.totalBookingRequests)} description="Booking request volume to date" icon={ChartColumn} />
+        <StatCard
+          title="Total customers"
+          value={safeNumber(data.overview.totalCustomers)}
+          description="Matched customer profiles in the CRM"
+          icon={Users}
+        />
+        <StatCard
+          title="Repeat customers"
+          value={derived.repeatCustomers}
+          description="Customers with more than one request record"
+          icon={Repeat}
+        />
+        <StatCard
+          title="Quote requests"
+          value={safeNumber(data.overview.totalQuoteRequests)}
+          description="Quote request volume to date"
+          icon={ChartColumn}
+        />
+        <StatCard
+          title="Booking requests"
+          value={safeNumber(data.overview.totalBookingRequests)}
+          description="Booking request volume to date"
+          icon={ChartColumn}
+        />
+        <StatCard
+          title="Support tickets"
+          value={safeNumber(data.overview.totalSupportTickets)}
+          description="Customer service cases created"
+          icon={LifeBuoy}
+        />
+        <StatCard
+          title="Urgent tickets"
+          value={safeNumber(data.overview.urgentSupportTickets)}
+          description="Tickets needing priority attention"
+          icon={Siren}
+        />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
-        <ChartCard title="Lead volume trend" description="Combined contact, quote, and booking volume">
+        <ChartCard
+          title="Lead volume trend"
+          description="Combined contact, quote, and booking volume"
+        >
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={derived.leadTrend}>
@@ -119,19 +189,32 @@ export default function AnalyticsPage() {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="total" stroke="#1f6b47" strokeWidth={2} />
+                <Line
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#1f6b47"
+                  strokeWidth={2}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </ChartCard>
 
-        <ChartCard title="Conversion funnel" description="Request to contacted to confirmed/completed">
+        <ChartCard
+          title="Conversion funnel"
+          description="Request to contacted to confirmed/completed"
+        >
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <FunnelChart>
                 <Tooltip />
                 <Funnel dataKey="value" data={derived.funnel} isAnimationActive>
-                  <LabelList position="right" fill="#102117" stroke="none" dataKey="name" />
+                  <LabelList
+                    position="right"
+                    fill="#102117"
+                    stroke="none"
+                    dataKey="name"
+                  />
                 </Funnel>
               </FunnelChart>
             </ResponsiveContainer>
@@ -187,7 +270,11 @@ export default function AnalyticsPage() {
         <ChartCard title="Most requested services">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={derived.services} layout="vertical" margin={{ left: 20 }}>
+              <BarChart
+                data={derived.services}
+                layout="vertical"
+                margin={{ left: 20 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" />
                 <YAxis type="category" dataKey="name" width={140} />
@@ -207,6 +294,44 @@ export default function AnalyticsPage() {
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey="value" fill="#1f6b47" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <ChartCard title="Support tickets by status">
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={derived.supportStatusDistribution}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#1f6b47" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+
+        <ChartCard title="Support tickets by category">
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={derived.supportCategoryDistribution}
+                layout="vertical"
+                margin={{ left: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" />
+                <YAxis type="category" dataKey="name" width={150} />
+                <Tooltip />
+                <Bar
+                  dataKey="value"
+                  fill={chartColors[1]}
+                  radius={[0, 8, 8, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>

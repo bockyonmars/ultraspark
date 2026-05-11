@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Customer } from '@prisma/client';
-import { PrismaService } from '../prisma.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { Customer } from "@prisma/client";
+import { PrismaService } from "../prisma.service";
 
 type CustomerInput = {
   firstName?: string;
@@ -18,15 +18,12 @@ export class CustomersService {
     const phone = input.phone?.trim();
 
     if (!email && !phone) {
-      throw new Error('Either email or phone is required');
+      throw new Error("Either email or phone is required");
     }
 
     const existing = await this.prisma.customer.findFirst({
       where: {
-        OR: [
-          ...(email ? [{ email }] : []),
-          ...(phone ? [{ phone }] : []),
-        ],
+        OR: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
       },
     });
 
@@ -54,13 +51,14 @@ export class CustomersService {
 
   findAll() {
     return this.prisma.customer.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         _count: {
           select: {
             contactMessages: true,
             quoteRequests: true,
             bookingRequests: true,
+            supportTickets: true,
           },
         },
       },
@@ -72,21 +70,24 @@ export class CustomersService {
       where: { id },
       include: {
         contactMessages: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         },
         quoteRequests: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           include: { service: true },
         },
         bookingRequests: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           include: { service: true },
+        },
+        supportTickets: {
+          orderBy: { createdAt: "desc" },
         },
       },
     });
 
     if (!customer) {
-      throw new NotFoundException('Customer not found');
+      throw new NotFoundException("Customer not found");
     }
 
     return customer;
