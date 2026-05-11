@@ -1,6 +1,25 @@
-import { Mail, MessageCircle } from "lucide-react";
+import { Mail } from "lucide-react";
 import { ReactNode } from "react";
 import { ButtonLink } from "./Buttons";
+
+// WhatsApp SVG Icon
+function WhatsAppIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 15a6 6 0 0 0-6-6H9a6 6 0 0 0 0 12h6a6 6 0 0 0 6-6" />
+      <path d="M6 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6" />
+    </svg>
+  );
+}
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -39,9 +58,9 @@ export function Header() {
         </a>
         <a href="https://wa.me/447445948269" className="topbar-link" target="_blank" rel="noopener noreferrer" aria-label="Chat with UltraSpark on WhatsApp">
           <span className="topbar-icon" aria-hidden="true">
-            <MessageCircle size={16} />
+            <WhatsAppIcon />
           </span>
-          Chat on WhatsApp
+          +44 07445 948269
         </a>
         <ButtonLink href="/get-quote" variant="secondary" className="topbar-cta">
           Get a quote
