@@ -115,6 +115,18 @@ function renderPlainDetails(details: DetailItem[] = []) {
   return details.map((item) => `${item.label}: ${item.value}`).join('\n');
 }
 
+function renderWatermarkBackground(watermarkLogoUrl: string) {
+  const escapedUrl = escapeAttribute(watermarkLogoUrl);
+
+  return [
+    `background-color:${emailColors.white}`,
+    `background-image:linear-gradient(rgba(255,255,255,0.94),rgba(255,255,255,0.94)),url('${escapedUrl}')`,
+    'background-repeat:no-repeat,no-repeat',
+    'background-position:center center,center center',
+    'background-size:100% 100%,280px auto',
+  ].join(';');
+}
+
 export function renderEmailLayout(input: LayoutInput) {
   const logoUrl = templateValue(input.variables, 'logoUrl');
   const watermarkLogoUrl = input.variables.watermarkLogoUrl?.trim() || logoUrl;
@@ -185,8 +197,7 @@ export function renderEmailLayout(input: LayoutInput) {
             .email-cta-inner { padding: 18px 18px !important; }
             .email-closing { padding: 0 22px 28px 22px !important; }
             .email-footer { padding: 22px !important; }
-            .email-watermark { top: 78px !important; right: -18px !important; width: 230px !important; height: 230px !important; }
-            .email-watermark img { width: 230px !important; max-width: 230px !important; }
+            .email-body-shell { background-size: 100% 100%,230px auto !important; }
           }
         </style>
       </head>
@@ -202,11 +213,8 @@ export function renderEmailLayout(input: LayoutInput) {
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:0;background:${emailColors.white};position:relative;overflow:hidden;">
-                    <div class="email-watermark" style="position:absolute;right:-14px;top:72px;width:280px;height:280px;opacity:0.04;line-height:0;mso-hide:all;">
-                      <img src="${escapeAttribute(watermarkLogoUrl)}" width="280" alt="" style="display:block;width:280px;max-width:280px;height:auto;border:0;outline:none;text-decoration:none;" />
-                    </div>
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;position:relative;z-index:2;">
+                  <td class="email-body-shell" style="padding:0;${renderWatermarkBackground(watermarkLogoUrl)};overflow:hidden;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
                       <tr>
                         <td class="email-hero" style="padding:20px 32px 8px 32px;">
                           <div class="email-eyebrow" style="font-family:Inter,Arial,sans-serif;font-size:12px;line-height:18px;letter-spacing:0.14em;text-transform:uppercase;color:${emailColors.greenDark};font-weight:700;margin-bottom:9px;">
