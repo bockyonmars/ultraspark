@@ -45,13 +45,18 @@ export class ContactMessagesService {
     );
 
     return this.create({
-      firstName: getStringValue(payload, ['firstName']) ?? nameParts.firstName ?? 'N/A',
-      lastName: getStringValue(payload, ['lastName']) ?? nameParts.lastName ?? 'N/A',
+      firstName:
+        getStringValue(payload, ['firstName']) ?? nameParts.firstName ?? 'N/A',
+      lastName:
+        getStringValue(payload, ['lastName']) ?? nameParts.lastName ?? 'N/A',
       email,
       phone,
-      subject: getStringValue(payload, ['subject', 'Subject']) ?? 'Framer contact form',
+      subject:
+        getStringValue(payload, ['subject', 'Subject']) ??
+        'Framer contact form',
       message: message!,
-      source: getStringValue(payload, ['source', 'Source']) ?? 'framer-contact-us',
+      source:
+        getStringValue(payload, ['source', 'Source']) ?? 'framer-contact-us',
     });
   }
 
@@ -90,7 +95,9 @@ export class ContactMessagesService {
 
     await Promise.allSettled([
       this.emailService.sendAdminContactAlert({
-        customerName: `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() || 'Customer',
+        customerName:
+          `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() ||
+          'Customer',
         customerEmail: customer.email,
         customerPhone: customer.phone,
         subject: createDto.subject,
@@ -102,6 +109,8 @@ export class ContactMessagesService {
             this.emailService.sendCustomerContactConfirmation({
               recipient: customer.email,
               customerName: customer.firstName ?? 'there',
+              customerPhone: customer.phone,
+              message: createDto.message,
               contactMessageId: contactMessage.id,
             }),
           ]
@@ -138,7 +147,11 @@ export class ContactMessagesService {
     });
   }
 
-  async updateStatus(id: string, updateDto: UpdateContactMessageStatusDto, adminUserId?: string) {
+  async updateStatus(
+    id: string,
+    updateDto: UpdateContactMessageStatusDto,
+    adminUserId?: string,
+  ) {
     const existing = await this.prisma.contactMessage.findUnique({
       where: { id },
     });
