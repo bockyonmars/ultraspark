@@ -37,16 +37,25 @@ export class BookingRequestsService {
     const nameParts = splitFullName(fullName);
     const email = getStringValue(payload, ['email', 'Email', 'Email Address']);
     const phone = getStringValue(payload, ['phone', 'Phone Number']);
-    const serviceType = getStringValue(payload, ['serviceType', 'Service Type']);
+    const serviceType = getStringValue(payload, [
+      'serviceType',
+      'Service Type',
+    ]);
     const date = getStringValue(payload, ['preferredDate', 'date', 'Date']);
     const time = getStringValue(payload, ['preferredTime', 'time', 'Time']);
     const address = getStringValue(payload, ['address', 'Address']);
-    const additionalNotes = getStringValue(payload, ['additionalNotes', 'Additional Notes']);
+    const additionalNotes = getStringValue(payload, [
+      'additionalNotes',
+      'Additional Notes',
+    ]);
 
     assertRequiredFields(
       [
         { label: 'fullName', value: fullName },
-        { label: 'serviceType', value: serviceType ?? getStringValue(payload, ['serviceId']) },
+        {
+          label: 'serviceType',
+          value: serviceType ?? getStringValue(payload, ['serviceId']),
+        },
         { label: 'date', value: date },
         { label: 'time', value: time },
         { label: 'address', value: address },
@@ -55,12 +64,16 @@ export class BookingRequestsService {
     );
 
     if (!email && !phone) {
-      throw new BadRequestException('Booking submission requires an email or phone number');
+      throw new BadRequestException(
+        'Booking submission requires an email or phone number',
+      );
     }
 
     return this.create({
-      firstName: getStringValue(payload, ['firstName']) ?? nameParts.firstName ?? 'N/A',
-      lastName: getStringValue(payload, ['lastName']) ?? nameParts.lastName ?? 'N/A',
+      firstName:
+        getStringValue(payload, ['firstName']) ?? nameParts.firstName ?? 'N/A',
+      lastName:
+        getStringValue(payload, ['lastName']) ?? nameParts.lastName ?? 'N/A',
       email,
       phone,
       serviceId: getStringValue(payload, ['serviceId']),
@@ -96,7 +109,9 @@ export class BookingRequestsService {
     }
 
     if (!createDto.serviceId && !createDto.serviceType) {
-      throw new BadRequestException('Booking submission requires serviceType or serviceId');
+      throw new BadRequestException(
+        'Booking submission requires serviceType or serviceId',
+      );
     }
 
     let service = createDto.serviceId
@@ -104,11 +119,15 @@ export class BookingRequestsService {
       : undefined;
 
     if (!service && createDto.serviceType) {
-      service = await this.servicesService.findByReference(createDto.serviceType);
+      service = await this.servicesService.findByReference(
+        createDto.serviceType,
+      );
     }
 
     if (!service) {
-      throw new NotFoundException('No service matched the provided serviceType/serviceId');
+      throw new NotFoundException(
+        'No service matched the provided serviceType/serviceId',
+      );
     }
 
     const customer = await this.customersService.createOrMatch({
@@ -127,7 +146,9 @@ export class BookingRequestsService {
         propertyType: createDto.propertyType,
         bedrooms: createDto.bedrooms,
         bathrooms: createDto.bathrooms,
-        preferredDate: createDto.preferredDate ? new Date(createDto.preferredDate) : undefined,
+        preferredDate: createDto.preferredDate
+          ? new Date(createDto.preferredDate)
+          : undefined,
         preferredTime: createDto.preferredTime,
         details: createDto.details,
       },
@@ -139,7 +160,9 @@ export class BookingRequestsService {
 
     await Promise.allSettled([
       this.emailService.sendAdminBookingAlert({
-        customerName: `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() || 'Customer',
+        customerName:
+          `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() ||
+          'Customer',
         customerEmail: customer.email,
         customerPhone: customer.phone,
         serviceName: service.name,
@@ -152,7 +175,11 @@ export class BookingRequestsService {
             this.emailService.sendCustomerBookingConfirmation({
               recipient: customer.email,
               customerName: customer.firstName ?? 'there',
+              customerPhone: customer.phone,
               serviceName: service.name,
+              requestedDate: createDto.preferredDate,
+              requestedTime: createDto.preferredTime,
+              location: createDto.address,
               bookingRequestId: bookingRequest.id,
             }),
           ]
@@ -208,7 +235,11 @@ export class BookingRequestsService {
     return bookingRequest;
   }
 
-  async updateStatus(id: string, updateDto: UpdateBookingRequestStatusDto, adminUserId?: string) {
+  async updateStatus(
+    id: string,
+    updateDto: UpdateBookingRequestStatusDto,
+    adminUserId?: string,
+  ) {
     const existing = await this.prisma.bookingRequest.findUnique({
       where: { id },
     });

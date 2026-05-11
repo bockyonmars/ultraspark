@@ -93,10 +93,10 @@ function renderDetails(details: DetailItem[] = []) {
     .map(
       (item) => `
         <tr>
-          <td style="padding:12px 0;border-bottom:1px solid ${emailColors.border};font-family:Inter,Arial,sans-serif;font-size:13px;line-height:20px;color:${emailColors.muted};width:42%;vertical-align:top;">
+          <td class="email-detail-label" style="padding:11px 0;border-bottom:1px solid ${emailColors.border};font-family:Inter,Arial,sans-serif;font-size:13px;line-height:20px;color:${emailColors.muted};width:42%;vertical-align:top;">
             ${escapeHtml(item.label)}
           </td>
-          <td style="padding:12px 0;border-bottom:1px solid ${emailColors.border};font-family:Inter,Arial,sans-serif;font-size:14px;line-height:20px;color:${emailColors.text};font-weight:600;vertical-align:top;">
+          <td class="email-detail-value" style="padding:11px 0;border-bottom:1px solid ${emailColors.border};font-family:Inter,Arial,sans-serif;font-size:14px;line-height:21px;color:${emailColors.text};font-weight:600;vertical-align:top;">
             ${renderMultiline(item.value)}
           </td>
         </tr>
@@ -125,15 +125,15 @@ export function renderEmailLayout(input: LayoutInput) {
   const detailsBlock = detailsHtml
     ? `
       <tr>
-        <td style="padding:0 32px 24px 32px;">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:${emailColors.pale};border:1px solid ${emailColors.border};border-radius:16px;">
+        <td class="email-details-wrap" style="padding:0 32px 22px 32px;">
+          <table class="email-details-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:${emailColors.pale};border:1px solid ${emailColors.border};border-radius:16px;">
             <tr>
-              <td style="padding:20px 22px 6px 22px;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:18px;letter-spacing:0.08em;text-transform:uppercase;color:${emailColors.greenDark};font-weight:700;">
+              <td class="email-detail-heading" style="padding:18px 22px 5px 22px;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:18px;letter-spacing:0.08em;text-transform:uppercase;color:${emailColors.greenDark};font-weight:700;">
                 ${escapeHtml(input.detailsTitle ?? 'Request details')}
               </td>
             </tr>
             <tr>
-              <td style="padding:0 22px 14px 22px;">
+              <td class="email-details-inner" style="padding:0 22px 13px 22px;">
                 ${detailsHtml}
               </td>
             </tr>
@@ -146,7 +146,7 @@ export function renderEmailLayout(input: LayoutInput) {
   const bodyParagraphs = input.body
     .map(
       (paragraph) => `
-        <p style="margin:0 0 16px 0;font-family:Inter,Arial,sans-serif;font-size:16px;line-height:25px;color:${emailColors.text};">
+        <p class="email-body-text" style="margin:0 0 14px 0;font-family:Inter,Arial,sans-serif;font-size:16px;line-height:25px;color:${emailColors.text};">
           ${renderMultiline(paragraph)}
         </p>
       `,
@@ -161,37 +161,65 @@ export function renderEmailLayout(input: LayoutInput) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="x-apple-disable-message-reformatting" />
         <title>${escapeHtml(input.title)}</title>
+        <style>
+          @media only screen and (max-width: 600px) {
+            .email-outer { padding: 16px 10px !important; }
+            .email-card { border-radius: 18px !important; }
+            .email-header { padding: 20px 22px 14px 22px !important; }
+            .email-logo { width: 108px !important; max-width: 108px !important; }
+            .email-hero { padding: 18px 22px 8px 22px !important; }
+            .email-eyebrow { margin-bottom: 8px !important; font-size: 11px !important; line-height: 16px !important; }
+            .email-title { font-size: 24px !important; line-height: 30px !important; }
+            .email-copy { padding: 4px 22px 8px 22px !important; }
+            .email-intro { margin-bottom: 12px !important; font-size: 16px !important; line-height: 25px !important; }
+            .email-body-text { margin-bottom: 13px !important; font-size: 15px !important; line-height: 24px !important; }
+            .email-details-wrap { padding: 0 22px 20px 22px !important; }
+            .email-details-card { border-radius: 14px !important; }
+            .email-detail-heading { padding: 16px 18px 4px 18px !important; font-size: 12px !important; line-height: 17px !important; }
+            .email-details-inner { padding: 0 18px 12px 18px !important; }
+            .email-detail-label,
+            .email-detail-value { display: block !important; width: 100% !important; font-size: 13px !important; line-height: 19px !important; }
+            .email-detail-label { padding: 10px 0 2px 0 !important; border-bottom: 0 !important; }
+            .email-detail-value { padding: 0 0 10px 0 !important; border-bottom: 1px solid ${emailColors.border} !important; font-size: 14px !important; line-height: 21px !important; }
+            .email-cta-wrap { padding: 0 22px 24px 22px !important; }
+            .email-cta-inner { padding: 18px 18px !important; }
+            .email-closing { padding: 0 22px 28px 22px !important; }
+            .email-footer { padding: 22px !important; }
+            .email-watermark { top: 78px !important; right: -18px !important; width: 230px !important; height: 230px !important; }
+            .email-watermark img { width: 230px !important; max-width: 230px !important; }
+          }
+        </style>
       </head>
       <body style="margin:0;padding:0;background:${emailColors.pale};-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
         ${renderPreviewText(input.previewText)}
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:${emailColors.pale};">
           <tr>
-            <td align="center" style="padding:32px 14px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;max-width:640px;background:${emailColors.white};border-radius:22px;overflow:hidden;border:1px solid ${emailColors.border};">
+            <td class="email-outer" align="center" style="padding:22px 14px;">
+              <table class="email-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;max-width:640px;background:${emailColors.white};border-radius:22px;overflow:hidden;border:1px solid ${emailColors.border};">
                 <tr>
-                  <td style="padding:30px 32px 26px 32px;background:${emailColors.white};border-bottom:4px solid ${emailColors.green};">
-                    <img src="${escapeAttribute(logoUrl)}" width="116" alt="UltraSpark Cleaning" style="display:block;width:116px;max-width:116px;height:auto;border:0;outline:none;text-decoration:none;" />
+                  <td class="email-header" style="padding:22px 32px 15px 32px;background:${emailColors.white};border-bottom:1px solid ${emailColors.greenSoft};">
+                    <img class="email-logo" src="${escapeAttribute(logoUrl)}" width="116" alt="UltraSpark Cleaning" style="display:block;width:116px;max-width:116px;height:auto;border:0;outline:none;text-decoration:none;" />
                   </td>
                 </tr>
                 <tr>
                   <td style="padding:0;background:${emailColors.white};position:relative;overflow:hidden;">
-                    <div style="position:absolute;right:-86px;top:42px;width:300px;height:300px;opacity:0.045;line-height:0;mso-hide:all;">
-                      <img src="${escapeAttribute(watermarkLogoUrl)}" width="300" alt="" style="display:block;width:300px;max-width:300px;height:auto;border:0;outline:none;text-decoration:none;" />
+                    <div class="email-watermark" style="position:absolute;right:-14px;top:72px;width:280px;height:280px;opacity:0.04;line-height:0;mso-hide:all;">
+                      <img src="${escapeAttribute(watermarkLogoUrl)}" width="280" alt="" style="display:block;width:280px;max-width:280px;height:auto;border:0;outline:none;text-decoration:none;" />
                     </div>
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;position:relative;z-index:2;">
                       <tr>
-                        <td style="padding:32px 32px 10px 32px;">
-                          <div style="font-family:Inter,Arial,sans-serif;font-size:12px;line-height:18px;letter-spacing:0.14em;text-transform:uppercase;color:${emailColors.greenDark};font-weight:700;margin-bottom:12px;">
+                        <td class="email-hero" style="padding:20px 32px 8px 32px;">
+                          <div class="email-eyebrow" style="font-family:Inter,Arial,sans-serif;font-size:12px;line-height:18px;letter-spacing:0.14em;text-transform:uppercase;color:${emailColors.greenDark};font-weight:700;margin-bottom:9px;">
                             ${escapeHtml(input.eyebrow)}
                           </div>
-                          <h1 style="margin:0;font-family:Inter,Arial,sans-serif;font-size:28px;line-height:34px;color:${emailColors.navy};font-weight:700;letter-spacing:0;">
+                          <h1 class="email-title" style="margin:0;font-family:Inter,Arial,sans-serif;font-size:27px;line-height:33px;color:${emailColors.navy};font-weight:700;letter-spacing:0;">
                             ${escapeHtml(input.title)}
                           </h1>
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding:10px 32px 12px 32px;">
-                          <p style="margin:0 0 16px 0;font-family:Inter,Arial,sans-serif;font-size:17px;line-height:26px;color:${emailColors.text};font-weight:600;">
+                        <td class="email-copy" style="padding:4px 32px 10px 32px;">
+                          <p class="email-intro" style="margin:0 0 13px 0;font-family:Inter,Arial,sans-serif;font-size:16px;line-height:25px;color:${emailColors.text};font-weight:600;">
                             ${renderMultiline(input.intro)}
                           </p>
                           ${bodyParagraphs}
@@ -199,10 +227,10 @@ export function renderEmailLayout(input: LayoutInput) {
                       </tr>
                       ${detailsBlock}
                       <tr>
-                        <td style="padding:0 32px 30px 32px;">
+                        <td class="email-cta-wrap" style="padding:0 32px 28px 32px;">
                           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:${emailColors.greenSoft};border-radius:16px;">
                             <tr>
-                              <td style="padding:20px 22px;">
+                              <td class="email-cta-inner" style="padding:19px 22px;">
                                 <p style="margin:0 0 14px 0;font-family:Inter,Arial,sans-serif;font-size:15px;line-height:23px;color:${emailColors.text};font-weight:600;">
                                   ${renderMultiline(input.nextStep)}
                                 </p>
@@ -221,7 +249,7 @@ export function renderEmailLayout(input: LayoutInput) {
                         </td>
                       </tr>
                       <tr>
-                        <td style="padding:0 32px 34px 32px;">
+                        <td class="email-closing" style="padding:0 32px 32px 32px;">
                           <p style="margin:0;font-family:Inter,Arial,sans-serif;font-size:15px;line-height:24px;color:${emailColors.text};">
                             ${renderMultiline(input.closing)}
                           </p>
@@ -231,7 +259,7 @@ export function renderEmailLayout(input: LayoutInput) {
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:24px 32px;background:${emailColors.navy};">
+                  <td class="email-footer" style="padding:24px 32px;background:${emailColors.navy};">
                     <p style="margin:0 0 10px 0;font-family:Inter,Arial,sans-serif;font-size:15px;line-height:22px;color:${emailColors.white};font-weight:700;">
                       UltraSpark Cleaning
                     </p>

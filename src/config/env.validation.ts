@@ -18,7 +18,12 @@ export function validateEnv(config: EnvShape) {
   const missing = requiredEnvVars.filter((key) => !config[key]);
 
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    throw new Error(
+      [
+        `Missing required environment variables: ${missing.join(', ')}`,
+        'Create a local .env file from .env.example and fill in the missing values before starting the API.',
+      ].join('\n'),
+    );
   }
 
   return config;

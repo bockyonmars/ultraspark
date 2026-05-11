@@ -1,4 +1,4 @@
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -15,7 +15,7 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const isProduction = configService.get<string>('app.nodeEnv') === 'production';
-  const port = configService.get<number>('app.port', 4000);
+  const port = process.env.PORT || 4000;
 
   app.setGlobalPrefix('api');
   app.enableVersioning({
@@ -64,6 +64,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(port);
+  Logger.log(`Server running on port ${port}`);
 }
 
 void bootstrap();

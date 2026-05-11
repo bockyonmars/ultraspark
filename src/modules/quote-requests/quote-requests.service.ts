@@ -38,8 +38,15 @@ export class QuoteRequestsService {
     const email = getStringValue(payload, ['email', 'Email', 'Email Address']);
     const phone = getStringValue(payload, ['phone', 'Phone Number']);
     const address = getStringValue(payload, ['address', 'Address']);
-    const additionalNotes = getStringValue(payload, ['additionalNotes', 'Additional Notes']);
-    const rawDetails = getStringValue(payload, ['details', 'message', 'Message']);
+    const additionalNotes = getStringValue(payload, [
+      'additionalNotes',
+      'Additional Notes',
+    ]);
+    const rawDetails = getStringValue(payload, [
+      'details',
+      'message',
+      'Message',
+    ]);
 
     assertRequiredFields(
       [
@@ -50,12 +57,16 @@ export class QuoteRequestsService {
     );
 
     if (!email && !phone) {
-      throw new BadRequestException('Quote submission requires an email or phone number');
+      throw new BadRequestException(
+        'Quote submission requires an email or phone number',
+      );
     }
 
     return this.create({
-      firstName: getStringValue(payload, ['firstName']) ?? nameParts.firstName ?? 'N/A',
-      lastName: getStringValue(payload, ['lastName']) ?? nameParts.lastName ?? 'N/A',
+      firstName:
+        getStringValue(payload, ['firstName']) ?? nameParts.firstName ?? 'N/A',
+      lastName:
+        getStringValue(payload, ['lastName']) ?? nameParts.lastName ?? 'N/A',
       email,
       phone,
       serviceId: getStringValue(payload, ['serviceId']),
@@ -93,7 +104,9 @@ export class QuoteRequestsService {
       : undefined;
 
     if (!service && createDto.serviceType) {
-      service = await this.servicesService.findByReference(createDto.serviceType);
+      service = await this.servicesService.findByReference(
+        createDto.serviceType,
+      );
     }
 
     if (!service) {
@@ -123,7 +136,9 @@ export class QuoteRequestsService {
         propertyType: createDto.propertyType,
         bedrooms: createDto.bedrooms,
         bathrooms: createDto.bathrooms,
-        preferredDate: createDto.preferredDate ? new Date(createDto.preferredDate) : undefined,
+        preferredDate: createDto.preferredDate
+          ? new Date(createDto.preferredDate)
+          : undefined,
         details: createDto.details,
       },
       include: {
@@ -134,7 +149,9 @@ export class QuoteRequestsService {
 
     await Promise.allSettled([
       this.emailService.sendAdminQuoteAlert({
-        customerName: `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() || 'Customer',
+        customerName:
+          `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim() ||
+          'Customer',
         customerEmail: customer.email,
         customerPhone: customer.phone,
         serviceName: service.name,
@@ -146,7 +163,12 @@ export class QuoteRequestsService {
             this.emailService.sendCustomerQuoteConfirmation({
               recipient: customer.email,
               customerName: customer.firstName ?? 'there',
+              customerPhone: customer.phone,
               serviceName: service.name,
+              requestedDate: createDto.preferredDate,
+              location: createDto.postcode,
+              propertyType: createDto.propertyType,
+              quoteDetails: createDto.details,
               quoteRequestId: quoteRequest.id,
             }),
           ]
@@ -202,7 +224,11 @@ export class QuoteRequestsService {
     return quoteRequest;
   }
 
-  async updateStatus(id: string, updateDto: UpdateQuoteRequestStatusDto, adminUserId?: string) {
+  async updateStatus(
+    id: string,
+    updateDto: UpdateQuoteRequestStatusDto,
+    adminUserId?: string,
+  ) {
     const existing = await this.prisma.quoteRequest.findUnique({
       where: { id },
     });

@@ -37,11 +37,18 @@ NestJS backend for the UltraSpark Cleaning Framer website. It supports the curre
 
 ## Environment
 
-Copy `.env.example` to `.env` and set the values:
+The backend reads environment variables from a local `.env` file. The real
+`.env` file is ignored by git, so do not commit it and do not paste production
+secrets into `.env.example`.
+
+If you do not already have a `.env` file, create one from the safe template:
 
 ```bash
-cp .env.example .env
+test -f .env || cp .env.example .env
 ```
+
+If `.env` already exists, do not overwrite it. Open `.env.example` and copy only
+the missing keys into your local `.env`.
 
 Required variables:
 
@@ -61,6 +68,38 @@ Optional seed variables:
 
 - `SEED_ADMIN_EMAIL`
 - `SEED_ADMIN_PASSWORD`
+
+For local Supabase development, replace `YOUR_ENCODED_PASSWORD` in
+`DATABASE_URL` with your URL-encoded Supabase database password. For example,
+encode special characters such as `@`, `#`, `/`, and spaces before placing the
+password in the connection string.
+
+Minimum local `.env` shape:
+
+```dotenv
+DATABASE_URL=postgresql://postgres.aqoaypumjfxbrlwjtgad:YOUR_ENCODED_PASSWORD@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+
+JWT_SECRET=ultraspark-local-jwt-secret-change-later-123456789
+JWT_EXPIRES_IN=1d
+
+RESEND_API_KEY=your_resend_key_here
+
+EMAIL_FROM=UltraSpark Cleaning <info@ultrasparkcleaning.co.uk>
+ADMIN_NOTIFICATION_EMAIL=info@ultrasparkcleaning.co.uk
+
+FRONTEND_URL=https://ultrasparkcleaning.co.uk
+ADMIN_URL=https://ultraspark.onrender.com
+API_URL=http://localhost:4000
+
+NODE_ENV=development
+PORT=4000
+
+SEED_ADMIN_EMAIL=info@ultrasparkcleaning.co.uk
+SEED_ADMIN_PASSWORD=ChangeMe123!
+```
+
+If `npm run start:dev` reports missing variables such as `JWT_SECRET` or
+`JWT_EXPIRES_IN`, your local `.env` is missing those lines.
 
 ## Local Development
 
