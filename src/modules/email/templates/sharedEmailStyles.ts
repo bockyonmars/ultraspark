@@ -35,16 +35,18 @@ const placeholders: Record<PlaceholderKey, string> = {
 
 export const emailColors = {
   green: '#22c55e',
-  greenDark: '#16a34a',
-  greenSoft: '#dcfce7',
-  navy: '#0f172a',
-  text: '#1f2933',
-  muted: '#4b5563',
-  softMuted: '#cbd5e1',
-  border: '#e5e7eb',
-  pale: '#eef7f1',
-  surface: '#f8fbf7',
-  surfaceMuted: '#f1f8f2',
+  greenDark: '#22c55e',
+  greenSoft: '#173728',
+  navy: '#0f1714',
+  text: '#dde7e2',
+  heading: '#f8fafc',
+  muted: '#aab7b1',
+  softMuted: '#c8d3ce',
+  border: '#32433b',
+  pale: '#101814',
+  surface: '#17201c',
+  surfaceMuted: '#1d2a24',
+  ctaSurface: '#1b3328',
   white: '#ffffff',
 };
 
@@ -126,7 +128,7 @@ function renderWatermarkBackground(watermarkLogoUrl: string) {
 
   return [
     `background-color:${emailColors.surface}`,
-    `background-image:linear-gradient(rgba(248,251,247,0.96),rgba(248,251,247,0.96)),url('${escapedUrl}')`,
+    `background-image:linear-gradient(rgba(23,32,28,0.985),rgba(23,32,28,0.985)),url('${escapedUrl}')`,
     'background-repeat:no-repeat,no-repeat',
     'background-position:center center,center center',
     'background-size:100% 100%,280px auto',
@@ -178,13 +180,13 @@ export function renderEmailLayout(input: LayoutInput) {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="x-apple-disable-message-reformatting" />
-        <meta name="color-scheme" content="light dark" />
-        <meta name="supported-color-schemes" content="light dark" />
+        <meta name="color-scheme" content="dark light" />
+        <meta name="supported-color-schemes" content="dark light" />
         <title>${escapeHtml(input.title)}</title>
         <style>
           :root {
-            color-scheme: light dark;
-            supported-color-schemes: light dark;
+            color-scheme: dark light;
+            supported-color-schemes: dark light;
           }
           @media only screen and (max-width: 600px) {
             .email-outer { padding: 16px 10px !important; }
@@ -218,12 +220,12 @@ export function renderEmailLayout(input: LayoutInput) {
             .email-header,
             .email-body-shell { background-color: ${emailColors.surface} !important; }
             .email-details-card { background: ${emailColors.surfaceMuted} !important; background-color: ${emailColors.surfaceMuted} !important; }
-            .email-title,
             .email-intro,
             .email-body-text,
             .email-detail-value,
             .email-cta-text,
             .email-closing-text { color: ${emailColors.text} !important; -webkit-text-fill-color: ${emailColors.text} !important; }
+            .email-title { color: ${emailColors.heading} !important; -webkit-text-fill-color: ${emailColors.heading} !important; }
             .email-detail-label { color: ${emailColors.muted} !important; -webkit-text-fill-color: ${emailColors.muted} !important; }
             .email-eyebrow,
             .email-detail-heading { color: ${emailColors.greenDark} !important; -webkit-text-fill-color: ${emailColors.greenDark} !important; }
@@ -253,7 +255,7 @@ export function renderEmailLayout(input: LayoutInput) {
                           <div class="email-eyebrow" style="font-family:Inter,Arial,sans-serif;font-size:12px;line-height:18px;letter-spacing:0.14em;text-transform:uppercase;${textColorStyle(emailColors.greenDark)};font-weight:700;margin-bottom:9px;">
                             ${escapeHtml(input.eyebrow)}
                           </div>
-                          <h1 class="email-title" style="margin:0;font-family:Inter,Arial,sans-serif;font-size:27px;line-height:33px;${textColorStyle(emailColors.navy)};font-weight:700;letter-spacing:0;">
+                          <h1 class="email-title" style="margin:0;font-family:Inter,Arial,sans-serif;font-size:27px;line-height:33px;${textColorStyle(emailColors.heading)};font-weight:700;letter-spacing:0;">
                             ${escapeHtml(input.title)}
                           </h1>
                         </td>
@@ -269,7 +271,7 @@ export function renderEmailLayout(input: LayoutInput) {
                       ${detailsBlock}
                       <tr>
                         <td class="email-cta-wrap" style="padding:0 32px 28px 32px;">
-                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${emailColors.greenSoft}" style="border-collapse:collapse;background:${emailColors.greenSoft};background-color:${emailColors.greenSoft};border-radius:16px;">
+                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${emailColors.ctaSurface}" style="border-collapse:collapse;background:${emailColors.ctaSurface};background-color:${emailColors.ctaSurface};border:1px solid ${emailColors.border};border-radius:16px;">
                             <tr>
                               <td class="email-cta-inner" style="padding:19px 22px;">
                                 <p class="email-cta-text" style="margin:0 0 14px 0;font-family:Inter,Arial,sans-serif;font-size:15px;line-height:23px;${textColorStyle(emailColors.text)};font-weight:600;">
