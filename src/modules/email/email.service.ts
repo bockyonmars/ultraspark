@@ -3,6 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { EmailLogStatus } from '@prisma/client';
 import { Resend } from 'resend';
 import { PrismaService } from '../prisma.service';
+import { bookingRequestResponseTemplate } from './templates/bookingRequestResponse';
+import { contactFormResponseTemplate } from './templates/contactFormResponse';
+import { quoteRequestResponseTemplate } from './templates/quoteRequestResponse';
+import type { EmailTemplateVariables } from './templates/types';
 
 type SendEmailInput = {
   type: string;
@@ -24,7 +28,9 @@ export class EmailService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    this.resend = new Resend(this.configService.get<string>('app.resendApiKey'));
+    this.resend = new Resend(
+      this.configService.get<string>('app.resendApiKey'),
+    );
   }
 
   async sendAdminContactAlert(payload: {
@@ -37,7 +43,9 @@ export class EmailService {
   }) {
     return this.sendEmail({
       type: 'ADMIN_CONTACT_ALERT',
-      recipient: this.configService.getOrThrow<string>('app.adminNotificationEmail'),
+      recipient: this.configService.getOrThrow<string>(
+        'app.adminNotificationEmail',
+      ),
       subject: `New contact message from ${payload.customerName}`,
       contactMessageId: payload.contactMessageId,
       html: `<p>A new contact message was submitted.</p><p><strong>Name:</strong> ${payload.customerName}</p><p><strong>Email:</strong> ${payload.customerEmail ?? 'N/A'}</p><p><strong>Phone:</strong> ${payload.customerPhone ?? 'N/A'}</p><p><strong>Subject:</strong> ${payload.subject ?? 'General enquiry'}</p><p><strong>Message:</strong><br />${payload.message}</p>`,
@@ -55,7 +63,9 @@ export class EmailService {
   }) {
     return this.sendEmail({
       type: 'ADMIN_QUOTE_ALERT',
-      recipient: this.configService.getOrThrow<string>('app.adminNotificationEmail'),
+      recipient: this.configService.getOrThrow<string>(
+        'app.adminNotificationEmail',
+      ),
       subject: `New quote request for ${payload.serviceName}`,
       quoteRequestId: payload.quoteRequestId,
       html: `<p>A new quote request was submitted.</p><p><strong>Name:</strong> ${payload.customerName}</p><p><strong>Email:</strong> ${payload.customerEmail ?? 'N/A'}</p><p><strong>Phone:</strong> ${payload.customerPhone ?? 'N/A'}</p><p><strong>Service:</strong> ${payload.serviceName}</p><p><strong>Details:</strong><br />${payload.details}</p>`,
@@ -74,7 +84,9 @@ export class EmailService {
   }) {
     return this.sendEmail({
       type: 'ADMIN_BOOKING_ALERT',
-      recipient: this.configService.getOrThrow<string>('app.adminNotificationEmail'),
+      recipient: this.configService.getOrThrow<string>(
+        'app.adminNotificationEmail',
+      ),
       subject: `New booking request for ${payload.serviceName}`,
       bookingRequestId: payload.bookingRequestId,
       html: `<p>A new booking request was submitted.</p><p><strong>Name:</strong> ${payload.customerName}</p><p><strong>Email:</strong> ${payload.customerEmail ?? 'N/A'}</p><p><strong>Phone:</strong> ${payload.customerPhone ?? 'N/A'}</p><p><strong>Service:</strong> ${payload.serviceName}</p><p><strong>Preferred date:</strong> ${payload.preferredDate ?? 'Flexible'}</p><p><strong>Preferred time:</strong> ${payload.preferredTime ?? 'Flexible'}</p>`,
@@ -85,48 +97,130 @@ export class EmailService {
   async sendCustomerContactConfirmation(payload: {
     recipient: string;
     customerName: string;
+    customerPhone?: string | null;
+    message: string;
     contactMessageId: string;
   }) {
+    const template = contactFormResponseTemplate({
+      ...this.getTemplateCompanyVariables(),
+      customerName: payload.customerName,
+      phoneNumber: payload.customerPhone ?? 'Not provided',
+      email: payload.recipient,
+      message: payload.message,
+    });
+
     return this.sendEmail({
       type: 'CUSTOMER_CONTACT_CONFIRMATION',
       recipient: payload.recipient,
-      subject: 'We received your message',
+      subject: template.subject,
       contactMessageId: payload.contactMessageId,
-      html: `<p>Hi ${payload.customerName},</p><p>Thanks for contacting UltraSpark Cleaning. We have received your message and will reply shortly.</p>`,
-      text: `Hi ${payload.customerName},\n\nThanks for contacting UltraSpark Cleaning. We have received your message and will reply shortly.`,
+      html: template.html,
+      text: template.text,
     });
   }
 
   async sendCustomerQuoteConfirmation(payload: {
     recipient: string;
     customerName: string;
+    customerPhone?: string | null;
     serviceName: string;
+    requestedDate?: string | null;
+    requestedTime?: string | null;
+    location?: string | null;
+    propertyType?: string | null;
+    quoteDetails?: string | null;
     quoteRequestId: string;
   }) {
+    const template = quoteRequestResponseTemplate({
+      ...this.getTemplateCompanyVariables(),
+      customerName: payload.customerName,
+      serviceType: payload.serviceName,
+      requestedDate: payload.requestedDate ?? 'Not specified',
+      requestedTime: payload.requestedTime ?? 'Not specified',
+      location: payload.location ?? 'Not provided',
+      propertyType: payload.propertyType ?? 'Not provided',
+      quoteDetails: payload.quoteDetails ?? 'Not provided',
+      phoneNumber: payload.customerPhone ?? 'Not provided',
+      email: payload.recipient,
+    });
+
     return this.sendEmail({
       type: 'CUSTOMER_QUOTE_CONFIRMATION',
       recipient: payload.recipient,
-      subject: 'Your quote request has been received',
+      subject: template.subject,
       quoteRequestId: payload.quoteRequestId,
-      html: `<p>Hi ${payload.customerName},</p><p>Thanks for requesting a quote for ${payload.serviceName}. Our team will review the details and get back to you soon.</p>`,
-      text: `Hi ${payload.customerName},\n\nThanks for requesting a quote for ${payload.serviceName}. Our team will review the details and get back to you soon.`,
+      html: template.html,
+      text: template.text,
     });
   }
 
   async sendCustomerBookingConfirmation(payload: {
     recipient: string;
     customerName: string;
+    customerPhone?: string | null;
     serviceName: string;
+    requestedDate?: string | null;
+    requestedTime?: string | null;
+    location?: string | null;
     bookingRequestId: string;
   }) {
+    const template = bookingRequestResponseTemplate({
+      ...this.getTemplateCompanyVariables(),
+      customerName: payload.customerName,
+      serviceType: payload.serviceName,
+      requestedDate: payload.requestedDate ?? 'Not specified',
+      requestedTime: payload.requestedTime ?? 'Not specified',
+      location: payload.location ?? 'Not provided',
+      phoneNumber: payload.customerPhone ?? 'Not provided',
+      email: payload.recipient,
+    });
+
     return this.sendEmail({
       type: 'CUSTOMER_BOOKING_CONFIRMATION',
       recipient: payload.recipient,
-      subject: 'Your booking request has been received',
+      subject: template.subject,
       bookingRequestId: payload.bookingRequestId,
-      html: `<p>Hi ${payload.customerName},</p><p>Thanks for your booking request for ${payload.serviceName}. We will contact you shortly to confirm the details.</p>`,
-      text: `Hi ${payload.customerName},\n\nThanks for your booking request for ${payload.serviceName}. We will contact you shortly to confirm the details.`,
+      html: template.html,
+      text: template.text,
     });
+  }
+
+  private getTemplateCompanyVariables(): EmailTemplateVariables {
+    const companyWebsite = this.trimTrailingSlash(
+      this.configService.get<string>('app.frontendUrl') ??
+        '{{company_website}}',
+    );
+    const companyEmail =
+      this.configService.get<string>('app.adminNotificationEmail') ??
+      this.extractEmailAddress(
+        this.configService.get<string>('app.emailFrom') ?? '',
+      ) ??
+      '{{company_email}}';
+    const logoUrl =
+      this.configService.get<string>('app.emailLogoUrl') ??
+      (companyWebsite.includes('{{')
+        ? '{{logo_url}}'
+        : `${companyWebsite}/images/ultraspark-logo.png`);
+
+    return {
+      companyPhone:
+        this.configService.get<string>('app.companyPhone') ??
+        '+44 07445 948269',
+      companyEmail,
+      companyWebsite,
+      logoUrl,
+      watermarkLogoUrl: logoUrl,
+    };
+  }
+
+  private trimTrailingSlash(value: string) {
+    return value.replace(/\/+$/, '');
+  }
+
+  private extractEmailAddress(value: string) {
+    const match = value.match(/<([^>]+)>/);
+
+    return match?.[1] ?? (value.includes('@') ? value : undefined);
   }
 
   private async sendEmail(input: SendEmailInput) {
@@ -156,7 +250,8 @@ export class EmailService {
 
       return response;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Email send failed';
+      const message =
+        error instanceof Error ? error.message : 'Email send failed';
       this.logger.error(message);
 
       await this.prisma.emailLog.create({

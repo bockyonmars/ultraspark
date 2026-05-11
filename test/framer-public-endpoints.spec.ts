@@ -94,7 +94,9 @@ function createPrismaMock() {
   const quoteRequests: Array<Record<string, any>> = [];
   const bookingRequests: Array<Record<string, any>> = [];
 
-  const findCustomer = (where: { OR?: Array<{ email?: string; phone?: string }> }) => {
+  const findCustomer = (where: {
+    OR?: Array<{ email?: string; phone?: string }>;
+  }) => {
     return customers.find((customer) =>
       (where.OR ?? []).some(
         (candidate) =>
@@ -126,12 +128,17 @@ function createPrismaMock() {
     },
     service: {
       findMany: jest.fn(async () => serviceSeeds),
-      findUnique: jest.fn(async ({ where }: any) => serviceSeeds.find((service) => service.id === where.id) ?? null),
+      findUnique: jest.fn(
+        async ({ where }: any) =>
+          serviceSeeds.find((service) => service.id === where.id) ?? null,
+      ),
     },
     bookingRequest: {
       create: jest.fn(async ({ data, include }: any) => {
         const customer = customers.find((item) => item.id === data.customerId)!;
-        const service = serviceSeeds.find((item) => item.id === data.serviceId)!;
+        const service = serviceSeeds.find(
+          (item) => item.id === data.serviceId,
+        )!;
         const record = {
           id: `booking-${bookingRequests.length + 1}`,
           status: 'NEW',
@@ -156,7 +163,9 @@ function createPrismaMock() {
           ? {
               ...record,
               customer: customers.find((item) => item.id === record.customerId),
-              service: serviceSeeds.find((item) => item.id === record.serviceId),
+              service: serviceSeeds.find(
+                (item) => item.id === record.serviceId,
+              ),
               emailLogs: [],
             }
           : null;
@@ -166,7 +175,9 @@ function createPrismaMock() {
     quoteRequest: {
       create: jest.fn(async ({ data, include }: any) => {
         const customer = customers.find((item) => item.id === data.customerId)!;
-        const service = serviceSeeds.find((item) => item.id === data.serviceId)!;
+        const service = serviceSeeds.find(
+          (item) => item.id === data.serviceId,
+        )!;
         const record = {
           id: `quote-${quoteRequests.length + 1}`,
           status: 'NEW',
@@ -191,7 +202,9 @@ function createPrismaMock() {
           ? {
               ...record,
               customer: customers.find((item) => item.id === record.customerId),
-              service: serviceSeeds.find((item) => item.id === record.serviceId),
+              service: serviceSeeds.find(
+                (item) => item.id === record.serviceId,
+              ),
               emailLogs: [],
             }
           : null;
@@ -316,6 +329,40 @@ describe('Framer public endpoint handlers', () => {
     );
   });
 
+  it('accepts a booking from canonical public API fields', async () => {
+    const bookingResponse = await bookingController.create({
+      fullName: 'Priya Shah',
+      email: 'priya.booking@example.com',
+      phone: '+447700900444',
+      serviceType: 'Deep Cleaning',
+      preferredDate: '2026-05-20T10:00:00.000Z',
+      preferredTime: '10:00',
+      address: '19 Market Street, London',
+      postcode: 'E1 6AN',
+      propertyType: 'Flat',
+      bedrooms: '2',
+      bathrooms: '1',
+      details: 'Please include inside the oven.',
+      additionalNotes: 'Concierge can provide access.',
+    });
+
+    expect(bookingResponse.success).toBe(true);
+    expect(bookingResponse.data.customer.firstName).toBe('Priya');
+    expect(bookingResponse.data.service.name).toBe('Deep Cleaning');
+    expect(bookingResponse.data.address).toBe('19 Market Street, London');
+    expect(bookingResponse.data.postcode).toBe('E1 6AN');
+    expect(bookingResponse.data.propertyType).toBe('Flat');
+    expect(bookingResponse.data.bedrooms).toBe(2);
+    expect(bookingResponse.data.bathrooms).toBe(1);
+    expect(bookingResponse.data.preferredTime).toBe('10:00');
+    expect(bookingResponse.data.details).toContain(
+      'Concierge can provide access.',
+    );
+    expect(bookingResponse.data.details).toContain(
+      'Please include inside the oven.',
+    );
+  });
+
   it.each(framerServiceValues)(
     'accepts booking serviceType "$value"',
     async ({ value, expectedSlug }) => {
@@ -374,6 +421,37 @@ describe('Framer public endpoint handlers', () => {
     );
   });
 
+  it('accepts a quote submission from canonical public API fields', async () => {
+    const quoteResponse = await quoteController.create({
+      fullName: 'Daniel Brooks',
+      email: 'daniel.quote@example.com',
+      phone: '+447700900555',
+      serviceType: 'Office Cleaning',
+      address: '88 King Street, London',
+      propertyType: 'Office',
+      bedrooms: '0',
+      bathrooms: '2',
+      preferredDate: '2026-05-21T09:00:00.000Z',
+      details: 'Weekly cleaning for a small office.',
+      additionalNotes: 'Please quote for out-of-hours cleaning.',
+    });
+
+    expect(quoteResponse.success).toBe(true);
+    expect(quoteResponse.data.customer.firstName).toBe('Daniel');
+    expect(quoteResponse.data.service.name).toBe('Office Cleaning');
+    expect(quoteResponse.data.postcode).toBe('88 King Street, London');
+    expect(quoteResponse.data.propertyType).toBe('Office');
+    expect(quoteResponse.data.bedrooms).toBe(0);
+    expect(quoteResponse.data.bathrooms).toBe(2);
+    expect(quoteResponse.data.details).toContain('88 King Street, London');
+    expect(quoteResponse.data.details).toContain(
+      'Please quote for out-of-hours cleaning.',
+    );
+    expect(quoteResponse.data.details).toContain(
+      'Weekly cleaning for a small office.',
+    );
+  });
+
   it('accepts a contact submission and exposes it in the admin list', async () => {
     const contactResponse = await contactController.create({
       'Full Name': 'Alan Turing',
@@ -391,6 +469,26 @@ describe('Framer public endpoint handlers', () => {
           message: 'Please call me back about office cleaning.',
         }),
       ]),
+    );
+  });
+
+  it('accepts a contact submission from canonical public API fields', async () => {
+    const contactResponse = await contactController.create({
+      fullName: 'Maya Carter',
+      email: 'maya.contact@example.com',
+      phone: '+447700900666',
+      subject: 'Office cleaning enquiry',
+      message: 'Can you call me about a regular office cleaning plan?',
+      source: 'curl-live-test',
+    });
+
+    expect(contactResponse.success).toBe(true);
+    expect(contactResponse.data.customer.firstName).toBe('Maya');
+    expect(contactResponse.data.customer.lastName).toBe('Carter');
+    expect(contactResponse.data.subject).toBe('Office cleaning enquiry');
+    expect(contactResponse.data.source).toBe('curl-live-test');
+    expect(contactResponse.data.message).toBe(
+      'Can you call me about a regular office cleaning plan?',
     );
   });
 });
