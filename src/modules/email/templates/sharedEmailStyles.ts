@@ -216,6 +216,7 @@ export function renderEmailLayout(input: LayoutInput) {
             .email-card { border-radius: 18px !important; }
             .email-header { padding: 20px 22px 14px 22px !important; }
             .email-logo { width: 108px !important; max-width: 108px !important; }
+            .email-footer-logo { width: 64px !important; max-width: 64px !important; }
             .email-primary-wrap { padding: 18px 22px 20px 22px !important; }
             .email-primary-inner { padding: 20px 18px 18px 18px !important; }
             .email-eyebrow { margin-bottom: 8px !important; font-size: 11px !important; line-height: 16px !important; }
@@ -228,11 +229,13 @@ export function renderEmailLayout(input: LayoutInput) {
             .email-details-inner { padding: 0 18px 12px 18px !important; }
             .email-detail-label,
             .email-detail-value { display: block !important; width: 100% !important; font-size: 13px !important; line-height: 19px !important; }
-            .email-detail-label { padding: 10px 0 2px 0 !important; border-bottom: 0 !important; }
-            .email-detail-value { padding: 0 0 10px 0 !important; border-bottom: 1px solid ${emailColors.border} !important; font-size: 14px !important; line-height: 21px !important; }
+            .email-detail-label { padding: 10px 0 2px 0 !important; border-bottom: 0 !important; margin-bottom: 4px !important; }
+            .email-detail-value { padding: 0 0 10px 0 !important; border-bottom: 1px solid ${emailColors.border} !important; font-size: 14px !important; line-height: 21px !important; word-break: break-word; overflow-wrap: break-word; margin-bottom: 12px !important; }
             .email-cta-wrap { padding: 0 22px 24px 22px !important; }
             .email-cta-inner { padding: 18px 18px !important; }
-            .email-footer { padding: 22px !important; }
+            .email-footer { padding: 20px !important; }
+            .email-footer-title { font-size: 14px !important; line-height: 20px !important; }
+            .email-footer-muted { font-size: 12px !important; line-height: 19px !important; }
           }
           @media (prefers-color-scheme: dark) {
             .email-bg,
@@ -323,17 +326,28 @@ export function renderEmailLayout(input: LayoutInput) {
                 </tr>
                 <tr>
                   <td class="email-footer" bgcolor="${emailColors.navy}" style="padding:24px 32px;background:${emailColors.navy};background-color:${emailColors.navy};">
-                    <p class="email-footer-title" style="margin:0 0 10px 0;font-family:Inter,Arial,sans-serif;font-size:15px;line-height:22px;${textColorStyle(emailColors.white)};font-weight:700;">
-                      UltraSpark Cleaning
-                    </p>
-                    <p class="email-footer-muted" style="margin:0;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:22px;${textColorStyle(emailColors.softMuted)};">
-                      ${escapeHtml(companyPhone)}<br />
-                      <a class="email-footer-link" href="mailto:${escapeAttribute(companyEmail)}" style="${textColorStyle(emailColors.white)};text-decoration:none;">${escapeHtml(companyEmail)}</a><br />
-                      <a class="email-footer-link" href="${escapeAttribute(companyWebsite)}" style="${textColorStyle(emailColors.white)};text-decoration:none;">${escapeHtml(companyWebsite)}</a>
-                    </p>
-                    <p class="email-footer-muted" style="margin:16px 0 0 0;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:20px;${textColorStyle(emailColors.softMuted)};">
-                      Thank you for choosing UltraSpark Cleaning.
-                    </p>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+                      <tr>
+                        <td style="padding:0 0 16px 0;">
+                          <img class="email-footer-logo" src="${escapeAttribute(logoUrl)}" width="80" alt="UltraSpark Cleaning" style="display:block;width:80px;max-width:80px;height:auto;border:0;outline:none;text-decoration:none;" />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <p class="email-footer-title" style="margin:0 0 10px 0;font-family:Inter,Arial,sans-serif;font-size:15px;line-height:22px;${textColorStyle(emailColors.white)};font-weight:700;">
+                            UltraSpark Cleaning
+                          </p>
+                          <p class="email-footer-muted" style="margin:0;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:22px;${textColorStyle(emailColors.softMuted)};">
+                            ${escapeHtml(companyPhone)}<br />
+                            <a class="email-footer-link" href="mailto:${escapeAttribute(companyEmail)}" style="${textColorStyle(emailColors.white)};text-decoration:none;">${escapeHtml(companyEmail)}</a><br />
+                            <a class="email-footer-link" href="${escapeAttribute(companyWebsite)}" style="${textColorStyle(emailColors.white)};text-decoration:none;">${escapeHtml(companyWebsite)}</a>
+                          </p>
+                          <p class="email-footer-muted" style="margin:16px 0 0 0;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:20px;${textColorStyle(emailColors.softMuted)};">
+                            Thank you for choosing UltraSpark Cleaning.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>

@@ -1,4 +1,4 @@
-import { Mail, MessageCircle, Phone } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
 import { ReactNode } from "react";
 import { ButtonLink } from "./Buttons";
 
@@ -37,11 +37,11 @@ export function Header() {
           </span>
           info@ultrasparkcleaning.co.uk
         </a>
-        <a href="tel:+4407445948269" className="topbar-link">
+        <a href="https://wa.me/message/KHTHDSYA5FK6C1" className="topbar-link" target="_blank" rel="noopener noreferrer">
           <span className="topbar-icon" aria-hidden="true">
             <MessageCircle size={16} />
           </span>
-          +44 07445 948269
+          Chat on WhatsApp
         </a>
         <ButtonLink href="/get-quote" variant="secondary" className="topbar-cta">
           Get a quote
@@ -121,7 +121,7 @@ export function Footer() {
           <a href="mailto:info@ultrasparkcleaning.co.uk">
             Email: info@ultrasparkcleaning.co.uk
           </a>
-          <a href="tel:+4407445948269">Phone:+44 07445 948269</a>
+          <a href="https://wa.me/message/KHTHDSYA5FK6C1" target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a>
           <p>Location: London, UK</p>
         </div>
       </div>
@@ -133,7 +133,7 @@ export function Footer() {
 export function ThankYouBrand() {
   return (
     <a className="thank-you-brand" href="/" aria-label="UltraSpark home">
-      <Phone size={30} strokeWidth={1.7} />
+      <img src="/images/ultraspark-logo.png" alt="UltraSpark" className="thank-you-logo" />
       <span>
         <strong>UltraSpark</strong>
         <span>Cleaning Services</span>
