@@ -1,6 +1,6 @@
 import { Mail } from "lucide-react";
 import { ReactNode } from "react";
-import { FaWhatsapp } from "react-icons/fa";
+import { WhatsAppIcon } from "./icons/WhatsAppIcon";
 import { ButtonLink } from "./Buttons";
 
 const navItems = [
@@ -40,7 +40,7 @@ export function Header() {
         </a>
         <a href="https://wa.me/447445948269" className="topbar-link" target="_blank" rel="noopener noreferrer" aria-label="Chat with UltraSpark on WhatsApp">
           <span className="topbar-icon" aria-hidden="true">
-            <FaWhatsapp size={16} />
+            <WhatsAppIcon width={16} height={16} />
           </span>
           +44 07445 948269
         </a>
