@@ -769,11 +769,20 @@ select {
   top: 36px;
   left: 92px;
   color: var(--text);
+  text-decoration: none;
 }
 
 .thank-you-brand svg {
   color: var(--green);
   margin-top: 8px;
+}
+
+.thank-you-brand img,
+.thank-you-logo {
+  display: block;
+  width: 48px;
+  height: auto;
+  margin-top: 2px;
 }
 
 .thank-you-brand strong,

@@ -37,7 +37,7 @@ export function Header() {
           </span>
           info@ultrasparkcleaning.co.uk
         </a>
-        <a href="https://wa.me/message/KHTHDSYA5FK6C1" className="topbar-link" target="_blank" rel="noopener noreferrer">
+        <a href="https://wa.me/447445948269" className="topbar-link" target="_blank" rel="noopener noreferrer" aria-label="Chat with UltraSpark on WhatsApp">
           <span className="topbar-icon" aria-hidden="true">
             <MessageCircle size={16} />
           </span>
@@ -121,7 +121,7 @@ export function Footer() {
           <a href="mailto:info@ultrasparkcleaning.co.uk">
             Email: info@ultrasparkcleaning.co.uk
           </a>
-          <a href="https://wa.me/message/KHTHDSYA5FK6C1" target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a>
+          <a href="https://wa.me/447445948269" target="_blank" rel="noopener noreferrer" aria-label="Chat with UltraSpark on WhatsApp">Chat on WhatsApp</a>
           <p>Location: London, UK</p>
         </div>
       </div>

@@ -47,7 +47,7 @@ export default function ContactUs() {
             info@ultrasparkcleaning.co.uk
           </a>
           <h3>Phone</h3>
-          <a href="https://wa.me/message/KHTHDSYA5FK6C1" target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a>
+          <a href="https://wa.me/447445948269" target="_blank" rel="noopener noreferrer" aria-label="Chat with UltraSpark on WhatsApp">Chat on WhatsApp</a>
           <h3>Location</h3>
           <p>London, UK</p>
         </aside>
