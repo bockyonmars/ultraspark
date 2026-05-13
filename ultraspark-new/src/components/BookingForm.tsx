@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
@@ -40,20 +40,67 @@ const requestCopy: Record<
 };
 
 const propertyTypes = ["House", "Flat / Apartment", "Office", "Airbnb / Short-let", "Other"];
+const serviceOptions = SERVICES.map((service) => service.title);
 
-function asString(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
+type BookingFormValues = {
+  fullName: string;
+  phone: string;
+  email: string;
+  serviceType: string;
+  propertyType: string;
+  bedrooms: string;
+  bathrooms: string;
+  preferredDate: string;
+  preferredTime: string;
+  postcode: string;
+  address: string;
+  additionalNotes: string;
+};
+
+type ContactFormValues = {
+  fullName: string;
+  phone: string;
+  email: string;
+  subject: string;
+  message: string;
+};
+
+const initialBookingFormValues: BookingFormValues = {
+  fullName: "",
+  phone: "",
+  email: "",
+  serviceType: "",
+  propertyType: "",
+  bedrooms: "",
+  bathrooms: "",
+  preferredDate: "",
+  preferredTime: "",
+  postcode: "",
+  address: "",
+  additionalNotes: "",
+};
+
+const initialContactFormValues: ContactFormValues = {
+  fullName: "",
+  phone: "",
+  email: "",
+  subject: "",
+  message: "",
+};
+
+function clean(value: string) {
+  return value.trim();
 }
 
 function asOptionalNumber(value: string) {
-  if (!value) return undefined;
-  const parsed = Number.parseInt(value, 10);
+  const cleaned = clean(value);
+  if (!cleaned) return undefined;
+  const parsed = Number.parseInt(cleaned, 10);
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
 function required(errors: FieldErrors, field: string, value: string, label: string) {
-  if (!value) errors[field] = `${label} is required.`;
+  if (!clean(value)) errors[field] = `${label} is required.`;
 }
 
 function emailLooksValid(email: string) {
@@ -75,9 +122,14 @@ function getRequestId(response: PublicFormResponse) {
   return response?.data?.requestId ?? response?.data?.id;
 }
 
+function publicFormErrorMessage(error: unknown, fallback: string) {
+  return error instanceof PublicFormError ? error.message : fallback;
+}
+
 export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKind }) {
   const navigate = useNavigate();
   const [kind, setKind] = useState<RequestKind>(initialKind);
+  const [values, setValues] = useState<BookingFormValues>(initialBookingFormValues);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<FormStatus>({});
@@ -88,27 +140,48 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
 
   const copy = requestCopy[kind];
 
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const { name, value } = event.currentTarget;
+
+      setValues((current) => {
+        if (!(name in current)) return current;
+        const field = name as keyof BookingFormValues;
+        if (current[field] === value) return current;
+        return { ...current, [field]: value };
+      });
+
+      setErrors((current) => {
+        if (!current[name]) return current;
+        const next = { ...current };
+        delete next[name];
+        return next;
+      });
+
+      setStatus((current) => (current.type === "error" ? {} : current));
+    },
+    [],
+  );
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (submitting) return;
 
-    const form = e.currentTarget;
-    const formData = new FormData(form);
     const nextErrors: FieldErrors = {};
 
-    const fullName = asString(formData, "fullName");
-    const phone = asString(formData, "phone");
-    const email = asString(formData, "email");
-    const selectedServiceTitle = asString(formData, "serviceType");
+    const fullName = clean(values.fullName);
+    const phone = clean(values.phone);
+    const email = clean(values.email);
+    const selectedServiceTitle = clean(values.serviceType);
     const selectedService = getServiceByTitle(selectedServiceTitle);
-    const address = asString(formData, "address");
-    const postcode = asString(formData, "postcode");
-    const propertyType = asString(formData, "propertyType");
-    const preferredDate = asString(formData, "preferredDate");
-    const preferredTime = asString(formData, "preferredTime");
-    const bedrooms = asString(formData, "bedrooms");
-    const bathrooms = asString(formData, "bathrooms");
-    const additionalNotes = asString(formData, "additionalNotes");
+    const address = clean(values.address);
+    const postcode = clean(values.postcode);
+    const propertyType = clean(values.propertyType);
+    const preferredDate = clean(values.preferredDate);
+    const preferredTime = clean(values.preferredTime);
+    const bedrooms = clean(values.bedrooms);
+    const bathrooms = clean(values.bathrooms);
+    const additionalNotes = clean(values.additionalNotes);
 
     required(nextErrors, "fullName", fullName, "Full name");
     required(nextErrors, "phone", phone, "Phone number");
@@ -160,10 +233,12 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
               phone,
               serviceType: backendServiceType,
               address,
+              postcode,
               propertyType,
               bedrooms: asOptionalNumber(bedrooms),
               bathrooms: asOptionalNumber(bathrooms),
               preferredDate: preferredDate || undefined,
+              preferredTime: preferredTime || undefined,
               details: details || "Quote request submitted from UltraSpark new website.",
               additionalNotes,
               source: copy.source,
@@ -199,10 +274,10 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
     } catch (error) {
       setStatus({
         type: "error",
-        message:
-          error instanceof PublicFormError
-            ? error.message
-            : `We could not send your request just now. Please try again or contact us on WhatsApp at ${CONTACT.phoneDisplay}.`,
+        message: publicFormErrorMessage(
+          error,
+          `We could not send your request just now. Please try again or contact us on WhatsApp at ${CONTACT.phoneDisplay}.`,
+        ),
       });
     } finally {
       setSubmitting(false);
@@ -213,6 +288,7 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
     <form
       onSubmit={handleSubmit}
       className="rounded-2xl border bg-card p-5 shadow-elegant sm:p-6 md:p-8"
+      noValidate
     >
       <div className="mb-6">
         <div className="inline-flex rounded-full border bg-background p-1">
@@ -245,6 +321,8 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
         <Field
           label="Full Name"
           name="fullName"
+          value={values.fullName}
+          onChange={handleChange}
           required
           error={errors.fullName}
           autoComplete="name"
@@ -253,6 +331,8 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
           label="Phone Number"
           name="phone"
           type="tel"
+          value={values.phone}
+          onChange={handleChange}
           required
           error={errors.phone}
           autoComplete="tel"
@@ -261,6 +341,8 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
           label="Email Address"
           name="email"
           type="email"
+          value={values.email}
+          onChange={handleChange}
           required
           error={errors.email}
           autoComplete="email"
@@ -268,13 +350,17 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
         <Select
           label="Service Needed"
           name="serviceType"
-          options={SERVICES.map((service) => service.title)}
+          value={values.serviceType}
+          onChange={handleChange}
+          options={serviceOptions}
           required
           error={errors.serviceType}
         />
         <Select
           label="Property Type"
           name="propertyType"
+          value={values.propertyType}
+          onChange={handleChange}
           options={propertyTypes}
           error={errors.propertyType}
         />
@@ -282,6 +368,8 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
           label="Bedrooms / Rooms"
           name="bedrooms"
           type="number"
+          value={values.bedrooms}
+          onChange={handleChange}
           min="0"
           placeholder="e.g. 2"
           error={errors.bedrooms}
@@ -290,6 +378,8 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
           label="Bathrooms"
           name="bathrooms"
           type="number"
+          value={values.bathrooms}
+          onChange={handleChange}
           min="0"
           placeholder="e.g. 1"
           error={errors.bathrooms}
@@ -298,6 +388,8 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
           label="Preferred Date"
           name="preferredDate"
           type="date"
+          value={values.preferredDate}
+          onChange={handleChange}
           required={kind === "booking"}
           error={errors.preferredDate}
         />
@@ -305,12 +397,16 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
           label="Preferred Time"
           name="preferredTime"
           type="time"
+          value={values.preferredTime}
+          onChange={handleChange}
           required={kind === "booking"}
           error={errors.preferredTime}
         />
         <Field
           label="Postcode"
           name="postcode"
+          value={values.postcode}
+          onChange={handleChange}
           placeholder="e.g. SW1A 1AA"
           autoComplete="postal-code"
           error={errors.postcode}
@@ -319,6 +415,8 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
           <Field
             label="Address / Area"
             name="address"
+            value={values.address}
+            onChange={handleChange}
             required
             placeholder="Street address or service area"
             autoComplete="street-address"
@@ -331,6 +429,8 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
         <Textarea
           label="Additional Notes"
           name="additionalNotes"
+          value={values.additionalNotes}
+          onChange={handleChange}
           rows={4}
           placeholder="Anything we should know about access, timing, parking, pets, or cleaning priorities?"
           error={errors.additionalNotes}
@@ -354,23 +454,45 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
 
 export function ContactForm() {
   const navigate = useNavigate();
+  const [values, setValues] = useState<ContactFormValues>(initialContactFormValues);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<FormStatus>({});
+
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const { name, value } = event.currentTarget;
+
+      setValues((current) => {
+        if (!(name in current)) return current;
+        const field = name as keyof ContactFormValues;
+        if (current[field] === value) return current;
+        return { ...current, [field]: value };
+      });
+
+      setErrors((current) => {
+        if (!current[name]) return current;
+        const next = { ...current };
+        delete next[name];
+        return next;
+      });
+
+      setStatus((current) => (current.type === "error" ? {} : current));
+    },
+    [],
+  );
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (submitting) return;
 
-    const form = e.currentTarget;
-    const formData = new FormData(form);
     const nextErrors: FieldErrors = {};
 
-    const fullName = asString(formData, "fullName");
-    const email = asString(formData, "email");
-    const phone = asString(formData, "phone");
-    const subject = asString(formData, "subject");
-    const message = asString(formData, "message");
+    const fullName = clean(values.fullName);
+    const email = clean(values.email);
+    const phone = clean(values.phone);
+    const subject = clean(values.subject);
+    const message = clean(values.message);
 
     required(nextErrors, "fullName", fullName, "Full name");
     required(nextErrors, "email", email, "Email address");
@@ -412,10 +534,10 @@ export function ContactForm() {
     } catch (error) {
       setStatus({
         type: "error",
-        message:
-          error instanceof PublicFormError
-            ? error.message
-            : `We could not send your message just now. Please try again or contact us on WhatsApp at ${CONTACT.phoneDisplay}.`,
+        message: publicFormErrorMessage(
+          error,
+          `We could not send your message just now. Please try again or contact us on WhatsApp at ${CONTACT.phoneDisplay}.`,
+        ),
       });
     } finally {
       setSubmitting(false);
@@ -426,6 +548,7 @@ export function ContactForm() {
     <form
       onSubmit={handleSubmit}
       className="rounded-2xl border bg-card p-5 shadow-elegant sm:p-6 md:p-8"
+      noValidate
     >
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-primary">Send us a message</h2>
@@ -440,6 +563,8 @@ export function ContactForm() {
         <Field
           label="Full Name"
           name="fullName"
+          value={values.fullName}
+          onChange={handleChange}
           required
           error={errors.fullName}
           autoComplete="name"
@@ -448,6 +573,8 @@ export function ContactForm() {
           label="Phone Number"
           name="phone"
           type="tel"
+          value={values.phone}
+          onChange={handleChange}
           error={errors.phone}
           autoComplete="tel"
         />
@@ -455,6 +582,8 @@ export function ContactForm() {
           label="Email Address"
           name="email"
           type="email"
+          value={values.email}
+          onChange={handleChange}
           required
           error={errors.email}
           autoComplete="email"
@@ -462,6 +591,8 @@ export function ContactForm() {
         <Field
           label="Subject"
           name="subject"
+          value={values.subject}
+          onChange={handleChange}
           placeholder="How can we help?"
           error={errors.subject}
         />
@@ -471,6 +602,8 @@ export function ContactForm() {
         <Textarea
           label="Message"
           name="message"
+          value={values.message}
+          onChange={handleChange}
           rows={6}
           required
           placeholder="Tell us what you need help with."
@@ -517,6 +650,8 @@ function Field({
   label,
   name,
   type = "text",
+  value,
+  onChange,
   required,
   placeholder,
   error,
@@ -526,6 +661,8 @@ function Field({
   label: string;
   name: string;
   type?: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
   placeholder?: string;
   error?: string;
@@ -541,6 +678,8 @@ function Field({
         id={name}
         name={name}
         type={type}
+        value={value}
+        onChange={onChange}
         required={required}
         placeholder={placeholder}
         maxLength={200}
@@ -560,6 +699,8 @@ function Field({
 function Textarea({
   label,
   name,
+  value,
+  onChange,
   required,
   placeholder,
   rows,
@@ -567,6 +708,8 @@ function Textarea({
 }: {
   label: string;
   name: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   required?: boolean;
   placeholder?: string;
   rows: number;
@@ -580,6 +723,8 @@ function Textarea({
       <textarea
         id={name}
         name={name}
+        value={value}
+        onChange={onChange}
         rows={rows}
         required={required}
         placeholder={placeholder}
@@ -597,12 +742,16 @@ function Textarea({
 function Select({
   label,
   name,
+  value,
+  onChange,
   options,
   required,
   error,
 }: {
   label: string;
   name: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   options: readonly string[];
   required?: boolean;
   error?: string;
@@ -615,8 +764,9 @@ function Select({
       <select
         id={name}
         name={name}
+        value={value}
+        onChange={onChange}
         required={required}
-        defaultValue=""
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${name}-error` : undefined}
         className={`w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 ${

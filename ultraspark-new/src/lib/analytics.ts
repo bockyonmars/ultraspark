@@ -20,14 +20,29 @@ const conversionLabels: Partial<Record<LeadKind, string>> = {
 };
 
 let initialized = false;
+let initializing = false;
+let lastTrackedPagePath: string | undefined;
 
 function hasAnalyticsIds() {
   return Boolean(googleAdsId || gaMeasurementId);
 }
 
+function warnAnalyticsError(action: string, error: unknown) {
+  if (import.meta.env.DEV) {
+    console.warn(`[analytics] ${action} failed`, error);
+  }
+}
+
+function getExistingGtagScript(id: string) {
+  if (typeof document === "undefined") return null;
+  const encodedId = encodeURIComponent(id);
+  return document.querySelector(
+    `script[data-ultraspark-gtag="${id}"], script[src*="googletagmanager.com/gtag/js?id=${encodedId}"]`,
+  );
+}
+
 function ensureGtagScript(id: string) {
-  if (typeof document === "undefined") return;
-  if (document.querySelector(`script[data-ultraspark-gtag="${id}"]`)) return;
+  if (typeof document === "undefined" || getExistingGtagScript(id)) return;
 
   const script = document.createElement("script");
   script.async = true;
@@ -36,35 +51,53 @@ function ensureGtagScript(id: string) {
   document.head.appendChild(script);
 }
 
+function safeGtag(command: GtagCommand, target: string | Date, params?: Record<string, unknown>) {
+  try {
+    window.gtag?.(command, target, params);
+  } catch (error) {
+    warnAnalyticsError(`${command}:${String(target)}`, error);
+  }
+}
+
 export function initAnalytics() {
-  if (typeof window === "undefined" || initialized || !hasAnalyticsIds()) return;
+  if (typeof window === "undefined" || initialized || initializing || !hasAnalyticsIds()) return;
 
   const primaryId = googleAdsId || gaMeasurementId;
   if (!primaryId) return;
 
-  window.dataLayer = window.dataLayer || [];
-  window.gtag =
-    window.gtag ||
-    function gtag(...args) {
-      window.dataLayer?.push(args);
-    };
+  initializing = true;
 
-  ensureGtagScript(primaryId);
-  window.gtag("js", new Date());
+  try {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag =
+      window.gtag ||
+      function gtag(...args) {
+        window.dataLayer?.push(args);
+      };
 
-  if (googleAdsId) {
-    window.gtag("config", googleAdsId, { send_page_view: false });
+    ensureGtagScript(primaryId);
+    safeGtag("js", new Date());
+
+    if (googleAdsId) {
+      safeGtag("config", googleAdsId, { send_page_view: false });
+    }
+
+    if (gaMeasurementId) {
+      safeGtag("config", gaMeasurementId, { send_page_view: false });
+    }
+
+    initialized = true;
+  } catch (error) {
+    warnAnalyticsError("init", error);
+  } finally {
+    initializing = false;
   }
-
-  if (gaMeasurementId) {
-    window.gtag("config", gaMeasurementId, { send_page_view: false });
-  }
-
-  initialized = true;
 }
 
 export function trackPageView(path: string) {
   if (typeof window === "undefined" || !hasAnalyticsIds()) return;
+  if (path === lastTrackedPagePath) return;
+
   initAnalytics();
   if (!window.gtag) return;
 
@@ -74,12 +107,18 @@ export function trackPageView(path: string) {
     page_title: document.title,
   };
 
-  if (googleAdsId) window.gtag("config", googleAdsId, params);
-  if (gaMeasurementId) window.gtag("config", gaMeasurementId, params);
+  try {
+    if (googleAdsId) safeGtag("config", googleAdsId, params);
+    if (gaMeasurementId) safeGtag("config", gaMeasurementId, params);
+    lastTrackedPagePath = path;
+  } catch (error) {
+    warnAnalyticsError("page_view", error);
+  }
 }
 
 function trackLeadSubmission(kind: LeadKind, requestId?: string) {
   if (typeof window === "undefined" || !hasAnalyticsIds()) return;
+
   initAnalytics();
   if (!window.gtag) return;
 
@@ -90,17 +129,21 @@ function trackLeadSubmission(kind: LeadKind, requestId?: string) {
         ? "quote_request_submitted"
         : "booking_request_submitted";
 
-  window.gtag("event", eventName, {
-    form_type: kind,
-    ...(requestId ? { request_id: requestId } : {}),
-  });
-
-  const conversionLabel = conversionLabels[kind];
-  if (googleAdsId && conversionLabel) {
-    window.gtag("event", "conversion", {
-      send_to: `${googleAdsId}/${conversionLabel}`,
-      ...(requestId ? { transaction_id: requestId } : {}),
+  try {
+    safeGtag("event", eventName, {
+      form_type: kind,
+      ...(requestId ? { request_id: requestId } : {}),
     });
+
+    const conversionLabel = conversionLabels[kind];
+    if (googleAdsId && conversionLabel) {
+      safeGtag("event", "conversion", {
+        send_to: `${googleAdsId}/${conversionLabel}`,
+        ...(requestId ? { transaction_id: requestId } : {}),
+      });
+    }
+  } catch (error) {
+    warnAnalyticsError(`${kind}_submission`, error);
   }
 }
 
