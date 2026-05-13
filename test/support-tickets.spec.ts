@@ -1,5 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { SupportTicketMessageType, SupportTicketStatus } from "@prisma/client";
+import { GUARDS_METADATA } from "@nestjs/common/constants";
+import {
+  SupportTicketMessageType,
+  SupportTicketPriority,
+  SupportTicketStatus,
+} from "@prisma/client";
+import { IS_PUBLIC_KEY } from "../src/common/decorators/public.decorator";
+import { JwtAuthGuard } from "../src/common/guards/jwt-auth.guard";
 import { AuditLogsService } from "../src/modules/audit-logs/audit-logs.service";
 import { AnalyticsService } from "../src/modules/analytics/analytics.service";
 import { CustomersService } from "../src/modules/customers/customers.service";
@@ -274,6 +281,76 @@ describe("Support tickets", () => {
 
     expect(first.data.ticketNumber).toBe("USC-000001");
     expect(second.data.ticketNumber).toBe("USC-000002");
+  });
+
+  it("creates an admin support ticket with the full admin response shape", async () => {
+    const response = await controller.createAdmin(
+      {
+        customerName: "Olivia Reed",
+        customerEmail: "OLIVIA@example.com",
+        customerPhone: "  +447700900456  ",
+        category: "GENERAL_ENQUIRY",
+        priority: SupportTicketPriority.URGENT,
+        status: SupportTicketStatus.OPEN,
+        subject: "Manual follow-up",
+        description: "Customer called and needs a follow-up ticket.",
+      },
+      { id: adminUser.id },
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.data).toMatchObject({
+      id: "ticket-1",
+      ticketNumber: "USC-000001",
+      customerName: "Olivia Reed",
+      customerEmail: "olivia@example.com",
+      customerPhone: "+447700900456",
+      priority: SupportTicketPriority.URGENT,
+      status: SupportTicketStatus.OPEN,
+      source: "manual_admin",
+      subject: "Manual follow-up",
+      description: "Customer called and needs a follow-up ticket.",
+    });
+    expect(emailService.sendAdminSupportTicketAlert).not.toHaveBeenCalled();
+    expect(
+      emailService.sendCustomerSupportTicketConfirmation,
+    ).not.toHaveBeenCalled();
+    expect(prisma.supportTicketActivity.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: "CREATED",
+          adminUserId: adminUser.id,
+        }),
+      }),
+    );
+    expect(auditLogsService.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "SUPPORT_TICKET_CREATED",
+        adminUserId: adminUser.id,
+      }),
+    );
+  });
+
+  it("rejects whitespace-only admin support tickets", async () => {
+    await expect(
+      controller.createAdmin(
+        {
+          customerName: "   ",
+          customerEmail: "support@example.com",
+          subject: "Manual follow-up",
+          description: "Customer called and needs a follow-up ticket.",
+        },
+        { id: adminUser.id },
+      ),
+    ).rejects.toThrow("Customer name is required");
+  });
+
+  it("keeps admin support ticket creation behind the JWT guard", () => {
+    const handler = controller.createAdmin;
+    const guards = Reflect.getMetadata(GUARDS_METADATA, handler) ?? [];
+
+    expect(Reflect.getMetadata(IS_PUBLIC_KEY, handler)).not.toBe(true);
+    expect(guards).toContain(JwtAuthGuard);
   });
 
   it("lists admin support tickets and supports search", async () => {

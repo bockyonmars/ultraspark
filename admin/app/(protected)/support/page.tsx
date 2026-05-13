@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApiData } from "@/lib/use-api-data";
 import { DataTable } from "@/components/shared/data-table";
@@ -15,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type {
+  CreateSupportTicketRequest,
   SupportTicket,
   SupportTicketActivity,
   SupportTicketMessage,
@@ -47,6 +49,56 @@ const categories = [
   "OTHER",
 ] as const;
 
+type CreateTicketFormValues = {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  subject: string;
+  description: string;
+  category: SupportTicket["category"];
+  priority: NonNullable<SupportTicket["priority"]>;
+  status: NonNullable<SupportTicket["status"]>;
+  assignedToAdminId: string;
+};
+
+type CreateTicketErrors = Partial<
+  Record<
+    "customerName" | "customerEmail" | "subject" | "description" | "form",
+    string
+  >
+>;
+
+const initialCreateTicketValues: CreateTicketFormValues = {
+  customerName: "",
+  customerEmail: "",
+  customerPhone: "",
+  subject: "",
+  description: "",
+  category: "GENERAL_ENQUIRY",
+  priority: "MEDIUM",
+  status: "NEW",
+  assignedToAdminId: "",
+};
+
+function validateCreateTicket(values: CreateTicketFormValues) {
+  const errors: CreateTicketErrors = {};
+  const customerName = values.customerName.trim();
+  const customerEmail = values.customerEmail.trim();
+  const subject = values.subject.trim();
+  const description = values.description.trim();
+
+  if (!customerName) errors.customerName = "Name is required.";
+  if (!customerEmail) {
+    errors.customerEmail = "Email is required.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+    errors.customerEmail = "Enter a valid email address.";
+  }
+  if (!subject) errors.subject = "Subject is required.";
+  if (!description) errors.description = "Message is required.";
+
+  return errors;
+}
+
 function getAdminName(
   admin?:
     | SupportTicketMessage["authorAdmin"]
@@ -55,6 +107,11 @@ function getAdminName(
   if (!admin) return "Admin";
   const fullName = `${admin.firstName ?? ""} ${admin.lastName ?? ""}`.trim();
   return fullName || admin.email || "Admin";
+}
+
+function FieldError({ error }: { error?: string }) {
+  if (!error) return null;
+  return <p className="mt-1 text-xs font-medium text-red-600">{error}</p>;
 }
 
 function SelectField({
@@ -102,6 +159,15 @@ export default function SupportPage() {
   const [replyMessage, setReplyMessage] = useState("");
   const [internalNote, setInternalNote] = useState("");
   const [assignmentAdminId, setAssignmentAdminId] = useState("");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createValues, setCreateValues] = useState<CreateTicketFormValues>(
+    initialCreateTicketValues,
+  );
+  const [createErrors, setCreateErrors] = useState<CreateTicketErrors>({});
+  const [createSuccessMessage, setCreateSuccessMessage] = useState<
+    string | null
+  >(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   const listState = useApiData<SupportTicket[]>(
     () => api.get<SupportTicket[]>("/support/tickets"),
@@ -230,6 +296,81 @@ export default function SupportPage() {
     setActivityRefresh((current) => current + 1);
   }
 
+  function openCreateDrawer() {
+    setSelectedId(null);
+    setCreateValues(initialCreateTicketValues);
+    setCreateErrors({});
+    setCreateSuccessMessage(null);
+    setIsCreateOpen(true);
+  }
+
+  function updateCreateValue(
+    field: keyof CreateTicketFormValues,
+    value: string,
+  ) {
+    setCreateValues((current) => ({ ...current, [field]: value }));
+    setCreateErrors((current) => {
+      if (!current[field as keyof CreateTicketErrors] && !current.form) {
+        return current;
+      }
+      const next = { ...current };
+      delete next[field as keyof CreateTicketErrors];
+      delete next.form;
+      return next;
+    });
+  }
+
+  async function createTicket(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isCreating) return;
+
+    const nextErrors = validateCreateTicket(createValues);
+    if (Object.keys(nextErrors).length > 0) {
+      setCreateErrors(nextErrors);
+      return;
+    }
+
+    const payload: CreateSupportTicketRequest = {
+      customerName: createValues.customerName.trim(),
+      customerEmail: createValues.customerEmail.trim().toLowerCase(),
+      customerPhone: createValues.customerPhone.trim() || undefined,
+      subject: createValues.subject.trim(),
+      description: createValues.description.trim(),
+      category: createValues.category,
+      priority: createValues.priority,
+      status: createValues.status,
+      source: "manual_admin",
+      assignedToAdminId: createValues.assignedToAdminId.trim() || undefined,
+    };
+
+    setIsCreating(true);
+    setCreateErrors({});
+
+    try {
+      const created = await api.post<SupportTicket>(
+        "/support/tickets/admin",
+        payload,
+      );
+      listState.setData((current) => [
+        created,
+        ...(current ?? []).filter((ticket) => ticket.id !== created.id),
+      ]);
+      setCreateValues(initialCreateTicketValues);
+      setCreateSuccessMessage(`Ticket ${created.ticketNumber} created.`);
+      setIsCreateOpen(false);
+      setSelectedId(created.id);
+    } catch (error) {
+      setCreateErrors({
+        form:
+          error instanceof Error
+            ? error.message
+            : "Unable to create support ticket. Please try again.",
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
   if (listState.isLoading)
     return <LoadingSpinner label="Loading support tickets..." />;
   if (listState.error || !listState.data) {
@@ -246,6 +387,29 @@ export default function SupportPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-primary">Support</p>
+          <h1 className="mt-1 text-2xl font-semibold text-slate-950">
+            Support tickets
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600">
+            Review customer support cases, update status, assign ownership, and
+            create manual tickets for admin-led follow-up.
+          </p>
+        </div>
+        <Button onClick={openCreateDrawer}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Ticket
+        </Button>
+      </div>
+
+      {createSuccessMessage ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          {createSuccessMessage}
+        </div>
+      ) : null}
+
       <Card>
         <CardContent className="grid gap-4 pt-6 lg:grid-cols-[minmax(0,1fr)_180px_180px_220px]">
           <SearchInput
@@ -364,6 +528,137 @@ export default function SupportPage() {
           },
         ]}
       />
+
+      <DetailsDrawer
+        open={isCreateOpen}
+        title="Create support ticket"
+        description="Add a manual customer support case from the admin panel"
+        onClose={() => {
+          if (!isCreating) setIsCreateOpen(false);
+        }}
+      >
+        <form className="space-y-5" onSubmit={createTicket} noValidate>
+          {createErrors.form ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {createErrors.form}
+            </div>
+          ) : null}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-2">
+              <span className="text-sm font-medium">Customer name</span>
+              <Input
+                value={createValues.customerName}
+                onChange={(event) =>
+                  updateCreateValue("customerName", event.target.value)
+                }
+                placeholder="Sarah Johnson"
+                aria-invalid={Boolean(createErrors.customerName)}
+              />
+              <FieldError error={createErrors.customerName} />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-sm font-medium">Customer email</span>
+              <Input
+                type="email"
+                value={createValues.customerEmail}
+                onChange={(event) =>
+                  updateCreateValue("customerEmail", event.target.value)
+                }
+                placeholder="customer@example.com"
+                aria-invalid={Boolean(createErrors.customerEmail)}
+              />
+              <FieldError error={createErrors.customerEmail} />
+            </label>
+          </div>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium">Phone</span>
+            <Input
+              type="tel"
+              value={createValues.customerPhone}
+              onChange={(event) =>
+                updateCreateValue("customerPhone", event.target.value)
+              }
+              placeholder="+44..."
+            />
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium">Subject</span>
+            <Input
+              value={createValues.subject}
+              onChange={(event) =>
+                updateCreateValue("subject", event.target.value)
+              }
+              placeholder="Cleaning follow-up needed"
+              aria-invalid={Boolean(createErrors.subject)}
+            />
+            <FieldError error={createErrors.subject} />
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium">Message</span>
+            <Textarea
+              value={createValues.description}
+              onChange={(event) =>
+                updateCreateValue("description", event.target.value)
+              }
+              placeholder="Describe the customer issue or request"
+              aria-invalid={Boolean(createErrors.description)}
+              className="min-h-[180px]"
+            />
+            <FieldError error={createErrors.description} />
+          </label>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <SelectField
+              label="Category"
+              value={createValues.category}
+              options={categories.filter((category) => category !== "ALL")}
+              onChange={(value) => updateCreateValue("category", value)}
+            />
+            <SelectField
+              label="Priority"
+              value={createValues.priority}
+              options={priorities.filter((priority) => priority !== "ALL")}
+              onChange={(value) => updateCreateValue("priority", value)}
+            />
+            <SelectField
+              label="Status"
+              value={createValues.status}
+              options={statuses.filter((status) => status !== "ALL")}
+              onChange={(value) => updateCreateValue("status", value)}
+            />
+          </div>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium">Assigned admin ID</span>
+            <Input
+              value={createValues.assignedToAdminId}
+              onChange={(event) =>
+                updateCreateValue("assignedToAdminId", event.target.value)
+              }
+              placeholder="Optional admin user ID"
+            />
+          </label>
+
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsCreateOpen(false)}
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? "Creating..." : "Create ticket"}
+            </Button>
+          </div>
+        </form>
+      </DetailsDrawer>
 
       <DetailsDrawer
         open={Boolean(selectedId)}

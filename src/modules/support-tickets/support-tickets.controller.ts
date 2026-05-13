@@ -14,6 +14,7 @@ import { CurrentAdmin } from "../../common/decorators/current-admin.decorator";
 import { Public } from "../../common/decorators/public.decorator";
 import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
 import { AssignSupportTicketDto } from "./dto/assign-support-ticket.dto";
+import { CreateAdminSupportTicketDto } from "./dto/create-admin-support-ticket.dto";
 import { CreateSupportTicketMessageDto } from "./dto/create-support-ticket-message.dto";
 import { CreateSupportTicketDto } from "./dto/create-support-ticket.dto";
 import { UpdateSupportTicketStatusDto } from "./dto/update-support-ticket-status.dto";
@@ -35,6 +36,26 @@ export class SupportTicketsController {
     return {
       success: true,
       message: "Support ticket submitted successfully",
+      data: ticket,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("support/tickets/admin")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Create admin support ticket" })
+  async createAdmin(
+    @Body() createDto: CreateAdminSupportTicketDto,
+    @CurrentAdmin() adminUser: { id: string },
+  ) {
+    const ticket = await this.supportTicketsService.createAdmin(
+      createDto,
+      adminUser?.id,
+    );
+
+    return {
+      success: true,
+      message: "Support ticket created",
       data: ticket,
     };
   }

@@ -143,6 +143,19 @@ export type SupportTicket = {
   };
 };
 
+export type CreateSupportTicketRequest = {
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  category?: SupportTicket["category"];
+  priority?: SupportTicket["priority"];
+  status?: SupportTicket["status"];
+  subject: string;
+  description: string;
+  source?: string;
+  assignedToAdminId?: string;
+};
+
 export type SupportTicketMessage = {
   id: string;
   ticketId: string;

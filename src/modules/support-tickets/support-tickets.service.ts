@@ -15,6 +15,7 @@ import { CustomersService } from "../customers/customers.service";
 import { EmailService } from "../email/email.service";
 import { PrismaService } from "../prisma.service";
 import { AssignSupportTicketDto } from "./dto/assign-support-ticket.dto";
+import { CreateAdminSupportTicketDto } from "./dto/create-admin-support-ticket.dto";
 import { CreateSupportTicketMessageDto } from "./dto/create-support-ticket-message.dto";
 import { CreateSupportTicketDto } from "./dto/create-support-ticket.dto";
 import { UpdateSupportTicketStatusDto } from "./dto/update-support-ticket-status.dto";
@@ -136,6 +137,87 @@ export class SupportTicketsService {
     ]);
 
     return this.toPublicResponse(ticket);
+  }
+
+  async createAdmin(
+    createDto: CreateAdminSupportTicketDto,
+    adminUserId?: string,
+  ) {
+    const customerName = createDto.customerName.trim();
+    const customerEmail = createDto.customerEmail.trim().toLowerCase();
+    const customerPhone = createDto.customerPhone?.trim() || undefined;
+    const subject = createDto.subject.trim();
+    const description = createDto.description.trim();
+    const source = createDto.source?.trim() || "manual_admin";
+
+    if (!customerName) {
+      throw new BadRequestException("Customer name is required");
+    }
+
+    if (!customerEmail) {
+      throw new BadRequestException("Customer email is required");
+    }
+
+    if (!subject) {
+      throw new BadRequestException("Subject is required");
+    }
+
+    if (!description) {
+      throw new BadRequestException("Description is required");
+    }
+
+    const nameParts = splitFullName(customerName);
+    const customer = await this.customersService.createOrMatch({
+      firstName: nameParts.firstName ?? customerName,
+      lastName: nameParts.lastName,
+      email: customerEmail,
+      phone: customerPhone,
+    });
+    const ticketNumber = await this.generateTicketNumber();
+
+    const ticket = await this.prisma.supportTicket.create({
+      data: {
+        ticketNumber,
+        customerId: customer.id,
+        customerName,
+        customerEmail,
+        customerPhone,
+        category: createDto.category ?? "GENERAL_ENQUIRY",
+        priority: createDto.priority ?? "MEDIUM",
+        status: createDto.status ?? SupportTicketStatus.NEW,
+        subject,
+        description,
+        source,
+        assignedToAdminId: createDto.assignedToAdminId?.trim() || undefined,
+        relatedBookingId: createDto.relatedBookingId?.trim() || undefined,
+        relatedQuoteId: createDto.relatedQuoteId?.trim() || undefined,
+      },
+      include: ticketInclude,
+    });
+
+    await Promise.allSettled([
+      this.createActivity({
+        ticketId: ticket.id,
+        action: "CREATED",
+        description: "Support ticket created by admin",
+        adminUserId,
+        metadata: { source },
+      }),
+      this.auditLogsService.create({
+        action: "SUPPORT_TICKET_CREATED",
+        entityType: "SupportTicket",
+        entityId: ticket.id,
+        description: "Admin support ticket created",
+        adminUserId,
+        metadata: {
+          customerId: customer.id,
+          ticketNumber: ticket.ticketNumber,
+          source,
+        },
+      }),
+    ]);
+
+    return ticket;
   }
 
   findAll({ query }: { query?: string }) {
