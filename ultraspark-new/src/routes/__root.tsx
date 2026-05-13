@@ -80,19 +80,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: `${BRAND_NAME} | Professional Cleaning Across London & Surrounding Areas` },
+      { title: BRAND_NAME },
       {
         name: "description",
-        content: `Reliable home, office, deep, short-let, and end-of-tenancy cleaning across ${SERVICE_AREA}. Book UltraSpark Cleaning Services today.`,
+        content: `Reliable home, office, deep, short-let, and end-of-tenancy cleaning in ${SERVICE_AREA}. Book UltraSpark Cleaning Services today.`,
       },
       { name: "author", content: BRAND_NAME },
       {
         property: "og:title",
-        content: `${BRAND_NAME} | Professional Cleaning Across London & Surrounding Areas`,
+        content: BRAND_NAME,
       },
       {
         property: "og:description",
-        content: `Reliable cleaning for homes, offices, landlords, tenants, and short-let hosts across ${SERVICE_AREA}.`,
+        content: `Reliable cleaning for homes, offices, landlords, tenants, and short-let hosts in ${SERVICE_AREA}.`,
       },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: BRAND_NAME },

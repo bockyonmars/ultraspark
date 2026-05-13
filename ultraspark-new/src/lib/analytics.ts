@@ -26,7 +26,9 @@ function hasAnalyticsIds() {
 }
 
 function ensureGtagScript(id: string) {
+  if (typeof document === "undefined") return;
   if (document.querySelector(`script[data-ultraspark-gtag="${id}"]`)) return;
+
   const script = document.createElement("script");
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
@@ -37,6 +39,9 @@ function ensureGtagScript(id: string) {
 export function initAnalytics() {
   if (typeof window === "undefined" || initialized || !hasAnalyticsIds()) return;
 
+  const primaryId = googleAdsId || gaMeasurementId;
+  if (!primaryId) return;
+
   window.dataLayer = window.dataLayer || [];
   window.gtag =
     window.gtag ||
@@ -44,7 +49,7 @@ export function initAnalytics() {
       window.dataLayer?.push(args);
     };
 
-  ensureGtagScript(googleAdsId || gaMeasurementId);
+  ensureGtagScript(primaryId);
   window.gtag("js", new Date());
 
   if (googleAdsId) {
@@ -73,7 +78,7 @@ export function trackPageView(path: string) {
   if (gaMeasurementId) window.gtag("config", gaMeasurementId, params);
 }
 
-export function trackLeadSubmission(kind: LeadKind) {
+function trackLeadSubmission(kind: LeadKind, requestId?: string) {
   if (typeof window === "undefined" || !hasAnalyticsIds()) return;
   initAnalytics();
   if (!window.gtag) return;
@@ -86,14 +91,27 @@ export function trackLeadSubmission(kind: LeadKind) {
         : "booking_request_submitted";
 
   window.gtag("event", eventName, {
-    event_category: "lead",
-    event_label: kind,
+    form_type: kind,
+    ...(requestId ? { request_id: requestId } : {}),
   });
 
   const conversionLabel = conversionLabels[kind];
   if (googleAdsId && conversionLabel) {
     window.gtag("event", "conversion", {
       send_to: `${googleAdsId}/${conversionLabel}`,
+      ...(requestId ? { transaction_id: requestId } : {}),
     });
   }
+}
+
+export function trackContactSubmitted(requestId?: string) {
+  trackLeadSubmission("contact", requestId);
+}
+
+export function trackQuoteSubmitted(requestId?: string) {
+  trackLeadSubmission("quote", requestId);
+}
+
+export function trackBookingSubmitted(requestId?: string) {
+  trackLeadSubmission("booking", requestId);
 }

@@ -15,7 +15,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChartColumn, LifeBuoy, Repeat, Siren, Users } from "lucide-react";
+import { ChartColumn, LifeBuoy, MousePointerClick, Repeat, Siren, TrendingUp, Users } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApiData } from "@/lib/use-api-data";
 import { ChartCard } from "@/components/shared/chart-card";
@@ -24,6 +24,7 @@ import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { StatCard } from "@/components/shared/stat-card";
 import type {
   AnalyticsOverview,
+  MarketingAnalyticsSummary,
   BookingRequest,
   ContactMessage,
   Customer,
@@ -39,6 +40,7 @@ import { safeNumber } from "@/lib/utils";
 
 type AnalyticsPayload = {
   overview: AnalyticsOverview;
+  marketingSummary: MarketingAnalyticsSummary;
   customers: Customer[];
   contacts: ContactMessage[];
   quotes: QuoteRequest[];
@@ -49,16 +51,17 @@ const chartColors = ["#1f6b47", "#6ba17d", "#d59b38", "#1f4d8c", "#c94f4f"];
 
 export default function AnalyticsPage() {
   const { data, isLoading, error } = useApiData<AnalyticsPayload>(async () => {
-    const [overview, customers, contacts, quotes, bookings] = await Promise.all(
+    const [overview, marketingSummary, customers, contacts, quotes, bookings] = await Promise.all(
       [
         api.get<AnalyticsOverview>("/analytics/overview"),
+        api.get<MarketingAnalyticsSummary>("/analytics/marketing/summary"),
         api.get<Customer[]>("/customers"),
         api.get<ContactMessage[]>("/contact-messages"),
         api.get<QuoteRequest[]>("/quotes"),
         api.get<BookingRequest[]>("/bookings"),
       ],
     );
-    return { overview, customers, contacts, quotes, bookings };
+    return { overview, marketingSummary, customers, contacts, quotes, bookings };
   }, []);
 
   const derived = useMemo(() => {
@@ -176,6 +179,39 @@ export default function AnalyticsPage() {
           icon={Siren}
         />
       </section>
+
+      <section className="dashboard-grid">
+        <StatCard
+          title="Website users"
+          value={data.marketingSummary.website?.users ?? "—"}
+          description="GA4 users once connected"
+          icon={Users}
+        />
+        <StatCard
+          title="Page views"
+          value={data.marketingSummary.website?.pageViews ?? "—"}
+          description="GA4 page views once connected"
+          icon={TrendingUp}
+        />
+        <StatCard
+          title="Ad clicks"
+          value={data.marketingSummary.ads?.clicks ?? "—"}
+          description="Google Ads clicks once connected"
+          icon={MousePointerClick}
+        />
+        <StatCard
+          title="Ad conversions"
+          value={data.marketingSummary.ads?.conversions ?? "—"}
+          description="Google Ads conversions once connected"
+          icon={ChartColumn}
+        />
+      </section>
+
+      {!data.marketingSummary.configured ? (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-slate-600">
+          <strong className="text-slate-900">Connect Google Analytics and Google Ads</strong> to view live traffic and campaign performance. Backend form submissions and support metrics are still available.
+        </div>
+      ) : null}
 
       <section className="grid gap-6 xl:grid-cols-2">
         <ChartCard

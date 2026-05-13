@@ -8,8 +8,8 @@ import { CONTACT, SERVICE_AREA_SHORT } from "@/lib/constants";
 export const Route = createFileRoute("/contact")({
   head: () =>
     metaFor(
-      "Contact UltraSpark Cleaning",
-      `Contact UltraSpark Cleaning Services across ${SERVICE_AREA_SHORT} by WhatsApp or email. We respond Monday to Saturday.`,
+      "Contact",
+      `Contact UltraSpark Cleaning Services in ${SERVICE_AREA_SHORT} by WhatsApp or email. We respond Monday to Saturday.`,
     ),
   component: ContactPage,
 });

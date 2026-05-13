@@ -7,9 +7,9 @@ export const CONTACT = {
   whatsappUrl: "https://wa.me/447445948269",
 };
 
-export const SERVICE_AREA = "London, nearby areas, and selected parts of the UK";
+export const SERVICE_AREA = "London, Bristol, and Edinburgh";
 
-export const SERVICE_AREA_SHORT = "London and surrounding areas";
+export const SERVICE_AREA_SHORT = "London, Bristol, and Edinburgh";
 
 export const SERVICES = [
   {

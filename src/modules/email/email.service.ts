@@ -1,11 +1,12 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { EmailLogStatus } from "@prisma/client";
+import { EmailLogStatus, SupportTicketStatus } from "@prisma/client";
 import { Resend } from "resend";
 import { PrismaService } from "../prisma.service";
 import { bookingRequestResponseTemplate } from "./templates/bookingRequestResponse";
 import { contactFormResponseTemplate } from "./templates/contactFormResponse";
 import { quoteRequestResponseTemplate } from "./templates/quoteRequestResponse";
+import { manualCustomerReplyTemplate } from "./templates/manualCustomerReply";
 import {
   adminTicketAlertTemplate,
   customerTicketConfirmationTemplate,
@@ -26,6 +27,22 @@ type SendEmailInput = {
   supportTicketId?: string;
 };
 
+type SendManualCustomerReplyInput = {
+  recipientEmail: string;
+  recipientName?: string;
+  subject: string;
+  messageHtml: string;
+  plainText?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  relatedTicketId?: string;
+  relatedCustomerId?: string;
+  relatedContactMessageId?: string;
+  relatedQuoteId?: string;
+  relatedBookingId?: string;
+  adminUserId?: string;
+};
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
@@ -38,6 +55,85 @@ export class EmailService {
     this.resend = new Resend(
       this.configService.get<string>("app.resendApiKey"),
     );
+  }
+
+  async sendManualCustomerReply(payload: SendManualCustomerReplyInput) {
+    const safeMessageHtml = this.sanitizeCustomerHtml(payload.messageHtml);
+
+    if (!safeMessageHtml.trim()) {
+      throw new BadRequestException("Message body is required");
+    }
+
+    const ticket = payload.relatedTicketId
+      ? await this.prisma.supportTicket.findUnique({
+          where: { id: payload.relatedTicketId },
+        })
+      : null;
+
+    if (payload.relatedTicketId && !ticket) {
+      throw new BadRequestException("Related support ticket was not found");
+    }
+
+    const recipientName =
+      payload.recipientName?.trim() || ticket?.customerName || "there";
+    const template = manualCustomerReplyTemplate({
+      ...this.getTemplateCompanyVariables(),
+      customerName: recipientName,
+      title: payload.subject,
+      bodyHtml: safeMessageHtml,
+      nextStepText:
+        payload.ctaLabel && payload.ctaUrl
+          ? "Use the button below if you need to take the next step. You can also reply directly to this email."
+          : "You can reply directly to this email if you have any questions.",
+      ctaLabel: payload.ctaLabel,
+      ctaUrl: payload.ctaUrl,
+      senderName: "The UltraSpark Cleaning team",
+    });
+
+    const result = await this.sendEmail({
+      type: "MANUAL_CUSTOMER_REPLY",
+      recipient: payload.recipientEmail,
+      subject: payload.subject,
+      html: template.html,
+      text: payload.plainText?.trim() || template.text,
+      contactMessageId: payload.relatedContactMessageId,
+      quoteRequestId: payload.relatedQuoteId,
+      bookingRequestId: payload.relatedBookingId,
+      supportTicketId: payload.relatedTicketId,
+    });
+
+    const status = result ? EmailLogStatus.SENT : EmailLogStatus.FAILED;
+
+    await Promise.allSettled([
+      this.createManualEmailAuditLog(payload, status),
+      ...(ticket
+        ? [
+            this.createTicketCustomerReply({
+              ticket,
+              payload,
+              message:
+                payload.plainText?.trim() || this.stripHtml(safeMessageHtml),
+            }),
+          ]
+        : []),
+    ]);
+
+    if (!result) {
+      throw new BadRequestException(
+        "Email could not be sent. Check email logs for details.",
+      );
+    }
+
+    return {
+      recipient: payload.recipientEmail,
+      subject: payload.subject,
+      status,
+      relatedTicketId: payload.relatedTicketId,
+      relatedCustomerId: payload.relatedCustomerId,
+      relatedContactMessageId: payload.relatedContactMessageId,
+      relatedQuoteId: payload.relatedQuoteId,
+      relatedBookingId: payload.relatedBookingId,
+    };
   }
 
   async sendAdminContactAlert(payload: {
@@ -310,6 +406,103 @@ export class EmailService {
       supportTicketId: payload.supportTicketId,
       html: template.html,
       text: template.text,
+    });
+  }
+
+  private sanitizeCustomerHtml(value: string) {
+    return value
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
+      .replace(/on\w+="[^"]*"/gi, "")
+      .replace(/on\w+='[^']*'/gi, "")
+      .replace(/javascript:/gi, "");
+  }
+
+  private stripHtml(value: string) {
+    return value
+      .replace(/<br\s*\/?>(\s*)/gi, "\n")
+      .replace(/<\/p>/gi, "\n\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  private createManualEmailAuditLog(
+    payload: SendManualCustomerReplyInput,
+    status: EmailLogStatus,
+  ) {
+    return this.prisma.auditLog.create({
+      data: {
+        adminUserId: payload.adminUserId,
+        action: "SUPPORT_TICKET_MESSAGE_CREATED",
+        entityType: "ManualEmail",
+        entityId:
+          payload.relatedTicketId ??
+          payload.relatedContactMessageId ??
+          payload.relatedQuoteId ??
+          payload.relatedBookingId ??
+          payload.relatedCustomerId ??
+          payload.recipientEmail,
+        description: `Manual customer email ${status === EmailLogStatus.SENT ? "sent" : "failed"}`,
+        metadata: {
+          recipient: payload.recipientEmail,
+          subject: payload.subject,
+          status,
+          relatedTicketId: payload.relatedTicketId,
+          relatedCustomerId: payload.relatedCustomerId,
+          relatedContactMessageId: payload.relatedContactMessageId,
+          relatedQuoteId: payload.relatedQuoteId,
+          relatedBookingId: payload.relatedBookingId,
+        },
+      },
+    });
+  }
+
+  private async createTicketCustomerReply(input: {
+    ticket: {
+      id: string;
+      status: SupportTicketStatus;
+    };
+    payload: SendManualCustomerReplyInput;
+    message: string;
+  }) {
+    const nextStatus =
+      input.ticket.status === SupportTicketStatus.NEW ||
+      input.ticket.status === SupportTicketStatus.OPEN
+        ? SupportTicketStatus.IN_PROGRESS
+        : input.ticket.status;
+
+    await this.prisma.supportTicket.update({
+      where: { id: input.ticket.id },
+      data: { status: nextStatus },
+    });
+
+    await this.prisma.supportTicketMessage.create({
+      data: {
+        ticketId: input.ticket.id,
+        type: "CUSTOMER_REPLY",
+        message: input.message,
+        authorAdminId: input.payload.adminUserId,
+      },
+    });
+
+    await this.prisma.supportTicketActivity.create({
+      data: {
+        ticketId: input.ticket.id,
+        action: "CUSTOMER_EMAIL_SENT",
+        description: "Customer-facing manual email sent",
+        adminUserId: input.payload.adminUserId,
+        metadata: {
+          recipient: input.payload.recipientEmail,
+          subject: input.payload.subject,
+        },
+      },
     });
   }
 

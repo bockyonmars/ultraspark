@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { useApiData } from "@/lib/use-api-data";
@@ -542,6 +543,36 @@ export default function SupportPage() {
                     No messages or notes yet.
                   </p>
                 )}
+              </div>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">
+                    Branded email follow-up
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Open the compose page with this ticket and customer
+                    prefilled.
+                  </p>
+                </div>
+                <Link
+                  href={`/emails/compose?recipientEmail=${encodeURIComponent(
+                    selected.customerEmail ?? "",
+                  )}&recipientName=${encodeURIComponent(
+                    selected.customerName ?? "",
+                  )}&subject=${encodeURIComponent(
+                    `Re: ${selected.subject}`,
+                  )}&relatedTicketId=${encodeURIComponent(
+                    selected.id,
+                  )}&relatedCustomerId=${encodeURIComponent(
+                    selected.customerId ?? "",
+                  )}`}
+                  className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+                >
+                  Compose email
+                </Link>
               </div>
             </div>
 

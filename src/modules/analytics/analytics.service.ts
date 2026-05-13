@@ -9,6 +9,16 @@ type TrackEventInput = {
   metadata?: Prisma.InputJsonValue;
 };
 
+type MarketingDateRangeInput = {
+  startDate?: string;
+  endDate?: string;
+};
+
+type MarketingConfigStatus = {
+  configured: boolean;
+  missingConfig: string[];
+};
+
 @Injectable()
 export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -217,6 +227,195 @@ export class AnalyticsService {
       mostRequestedServices,
       recentSubmissions,
     };
+  }
+
+
+  async marketingSummary(input: MarketingDateRangeInput = {}) {
+    const dateRange = this.getMarketingDateRange(input);
+    const where = this.createdAtWhere(dateRange.startDate, dateRange.endDate);
+    const config = this.getMarketingConfigStatus();
+
+    const [contacts, quotes, bookings] = await Promise.all([
+      this.prisma.contactMessage.count({ where }),
+      this.prisma.quoteRequest.count({ where }),
+      this.prisma.bookingRequest.count({ where }),
+    ]);
+
+    return {
+      configured: config.configured,
+      missingConfig: config.missingConfig,
+      dateRange: {
+        startDate: this.toDateOnly(dateRange.startDate),
+        endDate: this.toDateOnly(dateRange.endDate),
+      },
+      website: config.configured
+        ? {
+            users: 0,
+            sessions: 0,
+            pageViews: 0,
+            engagementRate: 0,
+          }
+        : null,
+      forms: {
+        contacts,
+        quotes,
+        bookings,
+      },
+      ads: config.configured
+        ? {
+            clicks: 0,
+            impressions: 0,
+            cost: 0,
+            conversions: 0,
+            costPerLead: 0,
+          }
+        : null,
+    };
+  }
+
+  async marketingTraffic(input: MarketingDateRangeInput = {}) {
+    const dateRange = this.getMarketingDateRange(input);
+    const where = this.createdAtWhere(dateRange.startDate, dateRange.endDate);
+    const [contacts, quotes, bookings] = await Promise.all([
+      this.prisma.contactMessage.findMany({ where, select: { createdAt: true } }),
+      this.prisma.quoteRequest.findMany({ where, select: { createdAt: true } }),
+      this.prisma.bookingRequest.findMany({ where, select: { createdAt: true } }),
+    ]);
+
+    return {
+      configured: this.getMarketingConfigStatus().configured,
+      dateRange: {
+        startDate: this.toDateOnly(dateRange.startDate),
+        endDate: this.toDateOnly(dateRange.endDate),
+      },
+      timeline: this.groupRecordsByDay([
+        ...contacts.map((item) => ({ type: 'contact', createdAt: item.createdAt })),
+        ...quotes.map((item) => ({ type: 'quote', createdAt: item.createdAt })),
+        ...bookings.map((item) => ({ type: 'booking', createdAt: item.createdAt })),
+      ]),
+    };
+  }
+
+  async marketingSources(input: MarketingDateRangeInput = {}) {
+    const dateRange = this.getMarketingDateRange(input);
+    const where = this.createdAtWhere(dateRange.startDate, dateRange.endDate);
+    const contactSources = await this.prisma.contactMessage.groupBy({
+      by: ['source'],
+      where,
+      _count: { _all: true },
+    });
+
+    return {
+      configured: this.getMarketingConfigStatus().configured,
+      sources: contactSources.map((item) => ({
+        source: item.source ?? 'unknown',
+        total: item._count._all,
+      })),
+      note: 'Google traffic sources will appear here after Analytics API credentials are connected. Current values are backend lead sources.',
+    };
+  }
+
+  async marketingAds() {
+    const config = this.getMarketingConfigStatus();
+
+    return {
+      configured: config.configured,
+      missingConfig: config.missingConfig,
+      metrics: config.configured
+        ? {
+            clicks: 0,
+            impressions: 0,
+            cost: 0,
+            conversions: 0,
+            costPerLead: 0,
+          }
+        : null,
+    };
+  }
+
+  async marketingConversions(input: MarketingDateRangeInput = {}) {
+    const dateRange = this.getMarketingDateRange(input);
+    const where = this.createdAtWhere(dateRange.startDate, dateRange.endDate);
+    const [contacts, quotes, bookings] = await Promise.all([
+      this.prisma.contactMessage.count({ where }),
+      this.prisma.quoteRequest.count({ where }),
+      this.prisma.bookingRequest.count({ where }),
+    ]);
+
+    return {
+      configured: this.getMarketingConfigStatus().configured,
+      conversions: {
+        contacts,
+        quotes,
+        bookings,
+        total: contacts + quotes + bookings,
+      },
+    };
+  }
+
+  private getMarketingConfigStatus(): MarketingConfigStatus {
+    const required = [
+      'GOOGLE_ANALYTICS_PROPERTY_ID',
+      'GOOGLE_ADS_CUSTOMER_ID',
+    ];
+    const missingConfig = required.filter((key) => !process.env[key]);
+
+    return {
+      configured: missingConfig.length === 0,
+      missingConfig,
+    };
+  }
+
+  private getMarketingDateRange(input: MarketingDateRangeInput) {
+    const endDate = input.endDate ? new Date(input.endDate) : new Date();
+    const startDate = input.startDate ? new Date(input.startDate) : new Date(endDate);
+
+    if (!input.startDate) {
+      startDate.setDate(endDate.getDate() - 30);
+    }
+
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    return { startDate, endDate };
+  }
+
+  private createdAtWhere(startDate: Date, endDate: Date) {
+    return {
+      createdAt: {
+        gte: startDate,
+        lte: endDate,
+      },
+    };
+  }
+
+  private toDateOnly(date: Date) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  private groupRecordsByDay(
+    records: Array<{ type: string; createdAt: Date }>,
+  ) {
+    const totals = new Map<string, { date: string; contacts: number; quotes: number; bookings: number; total: number }>();
+
+    for (const record of records) {
+      const date = this.toDateOnly(record.createdAt);
+      const current = totals.get(date) ?? {
+        date,
+        contacts: 0,
+        quotes: 0,
+        bookings: 0,
+        total: 0,
+      };
+
+      if (record.type === 'contact') current.contacts += 1;
+      if (record.type === 'quote') current.quotes += 1;
+      if (record.type === 'booking') current.bookings += 1;
+      current.total += 1;
+      totals.set(date, current);
+    }
+
+    return Array.from(totals.values()).sort((left, right) => left.date.localeCompare(right.date));
   }
 
   private averageResolutionHours(

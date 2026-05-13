@@ -31,20 +31,6 @@ export function Header() {
         scrolled ? "bg-background/90 shadow-soft backdrop-blur-lg" : "bg-background"
       }`}
     >
-      <div className="border-b bg-primary text-primary-foreground">
-        <div className="mx-auto flex max-w-7xl items-center justify-center px-4 py-2 text-xs font-semibold sm:justify-end md:px-8">
-          <a
-            href={CONTACT.whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Chat with UltraSpark on WhatsApp"
-            className="inline-flex max-w-full items-center gap-2 truncate text-primary-foreground/90 hover:text-primary-glow"
-          >
-            <WhatsAppIcon className="h-4 w-4 shrink-0" />
-            <span>{CONTACT.phoneDisplay}</span>
-          </a>
-        </div>
-      </div>
 
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-8">
         <Link to="/" className="flex min-w-0 items-center" onClick={() => setOpen(false)}>

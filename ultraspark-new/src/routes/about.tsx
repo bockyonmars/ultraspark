@@ -6,8 +6,8 @@ import { SERVICE_AREA } from "@/lib/constants";
 export const Route = createFileRoute("/about")({
   head: () =>
     metaFor(
-      "About UltraSpark Cleaning",
-      `Learn about UltraSpark Cleaning Services, a detail-focused cleaning team serving homes and businesses across ${SERVICE_AREA}.`,
+      "About",
+      `Learn about UltraSpark Cleaning Services, a detail-focused cleaning team serving homes and businesses in ${SERVICE_AREA}.`,
     ),
   component: AboutPage,
 });
@@ -34,7 +34,7 @@ function AboutPage() {
           </h1>
           <p className="mt-6 text-muted-foreground leading-relaxed md:text-lg">
             UltraSpark Cleaning Services supports homes, offices, landlords, tenants, short-let
-            hosts, and businesses across {SERVICE_AREA}. Our team focuses on detail, consistency,
+            hosts, and businesses in {SERVICE_AREA}. Our team focuses on detail, consistency,
             and customer satisfaction, helping every space feel fresh, hygienic, and welcoming.
           </p>
         </div>

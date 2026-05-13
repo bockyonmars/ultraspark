@@ -3,13 +3,13 @@ import { Mail, MapPin } from "lucide-react";
 
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import logo from "@/assets/logo.png";
-import { CONTACT, SERVICE_AREA_SHORT, SERVICES } from "@/lib/constants";
+import { CONTACT, SERVICE_AREA_SHORT } from "@/lib/constants";
 
 export function Footer() {
   return (
     <footer className="bg-primary text-primary-foreground">
       <div className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-16">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.9fr_1.1fr]">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_1.1fr]">
           <div>
             <div className="inline-block rounded-2xl bg-white/95 p-3">
               <img
@@ -43,26 +43,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-primary-foreground/80 hover:text-primary-glow">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/booking"
-                  search={{ request: "quote" }}
-                  className="text-primary-foreground/80 hover:text-primary-glow"
-                >
-                  Get a Quote
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/booking"
-                  search={{ request: "booking" }}
-                  className="text-primary-foreground/80 hover:text-primary-glow"
-                >
-                  Book a Clean
+                <Link to="/booking" className="text-primary-foreground/80 hover:text-primary-glow">
+                  Book
                 </Link>
               </li>
               <li>
@@ -75,17 +57,6 @@ export function Footer() {
                   Privacy Policy
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary-glow">
-              Services
-            </h3>
-            <ul className="space-y-2 text-sm text-primary-foreground/80">
-              {SERVICES.map((service) => (
-                <li key={service.slug}>{service.title}</li>
-              ))}
             </ul>
           </div>
 

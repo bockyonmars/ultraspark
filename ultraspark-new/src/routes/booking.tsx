@@ -10,8 +10,8 @@ export const Route = createFileRoute("/booking")({
   }),
   head: () =>
     metaFor(
-      "Book a Cleaning or Request a Quote",
-      `Book your cleaning service or request a free quote from UltraSpark Cleaning Services across ${SERVICE_AREA_SHORT}.`,
+      "Book",
+      `Book your cleaning service or request a free quote from UltraSpark Cleaning Services in ${SERVICE_AREA_SHORT}.`,
     ),
   component: BookingPage,
 });
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/booking")({
 const perks = [
   "Free, no-obligation quote",
   "Flexible day or evening slots",
-  `Same-week availability across ${SERVICE_AREA_SHORT}`,
+  `Same-week availability in ${SERVICE_AREA_SHORT}`,
   "Friendly response, usually within hours",
 ];
 

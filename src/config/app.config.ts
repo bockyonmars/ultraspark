@@ -16,4 +16,10 @@ export default registerAs('app', () => ({
   frontendUrl: process.env.FRONTEND_URL ?? 'https://ultrasparkcleaning.co.uk',
   adminUrl: process.env.ADMIN_URL ?? 'https://admin.ultrasparkcleaning.co.uk',
   apiUrl: process.env.API_URL ?? 'https://api.ultrasparkcleaning.co.uk',
+  googleAnalyticsPropertyId: process.env.GOOGLE_ANALYTICS_PROPERTY_ID,
+  googleAdsCustomerId: process.env.GOOGLE_ADS_CUSTOMER_ID,
+  googleAdsDeveloperToken: process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+  googleAdsClientId: process.env.GOOGLE_ADS_CLIENT_ID,
+  googleAdsClientSecret: process.env.GOOGLE_ADS_CLIENT_SECRET,
+  googleAdsRefreshToken: process.env.GOOGLE_ADS_REFRESH_TOKEN,
 }));

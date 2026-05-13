@@ -1,4 +1,4 @@
-import type { DetailItem, EmailTemplateVariables } from './types';
+import type { DetailItem, EmailTemplateVariables } from "./types";
 
 type PlaceholderKey = keyof EmailTemplateVariables;
 
@@ -13,52 +13,54 @@ type LayoutInput = {
   nextStep: string;
   closing: string;
   variables: EmailTemplateVariables;
+  ctaLabel?: string;
+  ctaUrl?: string;
 };
 
 const placeholders: Record<PlaceholderKey, string> = {
-  customerName: '{{customer_name}}',
-  serviceType: '{{service_type}}',
-  requestedDate: '{{requested_date}}',
-  requestedTime: '{{requested_time}}',
-  location: '{{location}}',
-  phoneNumber: '{{phone_number}}',
-  email: '{{email}}',
-  message: '{{message}}',
-  quoteDetails: '{{quote_details}}',
-  propertyType: '{{property_type}}',
-  companyPhone: '{{company_phone}}',
-  companyEmail: '{{company_email}}',
-  companyWebsite: '{{company_website}}',
-  logoUrl: '{{logo_url}}',
-  watermarkLogoUrl: '{{logo_url}}',
+  customerName: "{{customer_name}}",
+  serviceType: "{{service_type}}",
+  requestedDate: "{{requested_date}}",
+  requestedTime: "{{requested_time}}",
+  location: "{{location}}",
+  phoneNumber: "{{phone_number}}",
+  email: "{{email}}",
+  message: "{{message}}",
+  quoteDetails: "{{quote_details}}",
+  propertyType: "{{property_type}}",
+  companyPhone: "{{company_phone}}",
+  companyEmail: "{{company_email}}",
+  companyWebsite: "{{company_website}}",
+  logoUrl: "{{logo_url}}",
+  watermarkLogoUrl: "{{logo_url}}",
 };
 
 export const emailColors = {
-  green: '#22c55e',
-  greenDark: '#16a34a',
-  greenSoft: '#dcfce7',
-  navy: '#0f1714',
-  text: '#1f2933',
-  heading: '#0f172a',
-  muted: '#52635b',
-  softMuted: '#c8d3ce',
-  border: '#cfe2d8',
-  pale: '#eef8f1',
-  surface: '#f8fbf7',
-  primarySurface: '#ffffff',
-  surfaceMuted: '#f0f8f2',
-  ctaSurface: '#e6f8ed',
-  darkBg: '#0f1714',
-  darkSurface: '#17201c',
-  darkPrimarySurface: '#1d2521',
-  darkSurfaceMuted: '#1d2a24',
-  darkCtaSurface: '#1b3328',
-  darkBorder: '#32433b',
-  darkHeading: '#f8fafc',
-  darkText: '#dde7e2',
-  darkMuted: '#aab7b1',
-  darkSoftMuted: '#c8d3ce',
-  white: '#ffffff',
+  green: "#22c55e",
+  greenDark: "#16a34a",
+  greenSoft: "#dcfce7",
+  navy: "#0f1714",
+  text: "#1f2933",
+  heading: "#0f172a",
+  muted: "#52635b",
+  softMuted: "#c8d3ce",
+  border: "#cfe2d8",
+  pale: "#eef8f1",
+  surface: "#f8fbf7",
+  primarySurface: "#ffffff",
+  surfaceMuted: "#f0f8f2",
+  ctaSurface: "#e6f8ed",
+  darkBg: "#0f1714",
+  darkSurface: "#17201c",
+  darkPrimarySurface: "#1d2521",
+  darkSurfaceMuted: "#1d2a24",
+  darkCtaSurface: "#1b3328",
+  darkBorder: "#32433b",
+  darkHeading: "#f8fafc",
+  darkText: "#dde7e2",
+  darkMuted: "#aab7b1",
+  darkSoftMuted: "#c8d3ce",
+  white: "#ffffff",
 };
 
 export function templateValue(
@@ -67,7 +69,7 @@ export function templateValue(
 ) {
   const value = variables[key];
 
-  if (typeof value === 'string' && value.trim()) {
+  if (typeof value === "string" && value.trim()) {
     return value.trim();
   }
 
@@ -76,19 +78,36 @@ export function templateValue(
 
 export function escapeHtml(value: string) {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function escapeAttribute(value: string) {
-  return escapeHtml(value).replace(/`/g, '&#96;');
+  return escapeHtml(value).replace(/`/g, "&#96;");
 }
 
 function renderMultiline(value: string) {
-  return escapeHtml(value).replace(/\n/g, '<br />');
+  return escapeHtml(value).replace(/\n/g, "<br />");
+}
+
+export function stripHtmlToText(value: string) {
+  return value
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
+    .replace(/<br\s*\/?>(\s*)/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function renderPreviewText(previewText: string) {
@@ -105,7 +124,7 @@ function textColorStyle(color: string) {
 
 function renderDetails(details: DetailItem[] = []) {
   if (!details.length) {
-    return '';
+    return "";
   }
 
   const rows = details
@@ -121,7 +140,7 @@ function renderDetails(details: DetailItem[] = []) {
         </tr>
       `,
     )
-    .join('');
+    .join("");
 
   return `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
@@ -131,14 +150,16 @@ function renderDetails(details: DetailItem[] = []) {
 }
 
 function renderPlainDetails(details: DetailItem[] = []) {
-  return details.map((item) => `${item.label}: ${item.value}`).join('\n');
+  return details.map((item) => `${item.label}: ${item.value}`).join("\n");
 }
 
 export function renderEmailLayout(input: LayoutInput) {
-  const logoUrl = templateValue(input.variables, 'logoUrl');
-  const companyPhone = templateValue(input.variables, 'companyPhone');
-  const companyEmail = templateValue(input.variables, 'companyEmail');
-  const companyWebsite = templateValue(input.variables, 'companyWebsite');
+  const logoUrl = templateValue(input.variables, "logoUrl");
+  const companyPhone = templateValue(input.variables, "companyPhone");
+  const companyEmail = templateValue(input.variables, "companyEmail");
+  const companyWebsite = templateValue(input.variables, "companyWebsite");
+  const ctaHref = input.ctaUrl?.trim() || `mailto:${companyEmail}`;
+  const ctaLabel = input.ctaLabel?.trim() || "Contact UltraSpark";
   const detailsHtml = renderDetails(input.details);
   const detailsBlock = detailsHtml
     ? `
@@ -147,7 +168,7 @@ export function renderEmailLayout(input: LayoutInput) {
           <table class="email-details-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="${emailColors.surfaceMuted}" style="border-collapse:collapse;background:${emailColors.surfaceMuted};background-color:${emailColors.surfaceMuted};border:1px solid ${emailColors.border};border-radius:16px;">
             <tr>
               <td class="email-detail-heading" style="padding:18px 22px 5px 22px;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:18px;letter-spacing:0.08em;text-transform:uppercase;${textColorStyle(emailColors.greenDark)};font-weight:700;">
-                ${escapeHtml(input.detailsTitle ?? 'Request details')}
+                ${escapeHtml(input.detailsTitle ?? "Request details")}
               </td>
             </tr>
             <tr>
@@ -159,7 +180,7 @@ export function renderEmailLayout(input: LayoutInput) {
         </td>
       </tr>
     `
-    : '';
+    : "";
 
   const bodyParagraphs = input.body
     .map(
@@ -169,7 +190,7 @@ export function renderEmailLayout(input: LayoutInput) {
         </p>
       `,
     )
-    .join('');
+    .join("");
   const primaryMessageBlock = `
     <tr>
       <td class="email-primary-wrap" style="padding:20px 32px 22px 32px;">
@@ -310,8 +331,8 @@ export function renderEmailLayout(input: LayoutInput) {
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
                                   <tr>
                                     <td style="border-radius:999px;background:${emailColors.green};">
-                                      <a class="email-button" href="mailto:${escapeAttribute(companyEmail)}" style="display:inline-block;padding:12px 20px;font-family:Inter,Arial,sans-serif;font-size:14px;line-height:18px;${textColorStyle(emailColors.white)};font-weight:700;text-decoration:none;border-radius:999px;">
-                                        Contact UltraSpark
+                                      <a class="email-button" href="${escapeAttribute(ctaHref)}" style="display:inline-block;padding:12px 20px;font-family:Inter,Arial,sans-serif;font-size:14px;line-height:18px;${textColorStyle(emailColors.white)};font-weight:700;text-decoration:none;border-radius:999px;">
+                                        ${escapeHtml(ctaLabel)}
                                       </a>
                                     </td>
                                   </tr>
@@ -360,34 +381,34 @@ export function renderEmailLayout(input: LayoutInput) {
 }
 
 export function renderPlainText(input: LayoutInput) {
-  const companyPhone = templateValue(input.variables, 'companyPhone');
-  const companyEmail = templateValue(input.variables, 'companyEmail');
-  const companyWebsite = templateValue(input.variables, 'companyWebsite');
+  const companyPhone = templateValue(input.variables, "companyPhone");
+  const companyEmail = templateValue(input.variables, "companyEmail");
+  const companyWebsite = templateValue(input.variables, "companyWebsite");
   const details = input.details?.length
-    ? `\n${input.detailsTitle ?? 'Request details'}\n${renderPlainDetails(input.details)}\n`
-    : '';
+    ? `\n${input.detailsTitle ?? "Request details"}\n${renderPlainDetails(input.details)}\n`
+    : "";
 
   return [
     input.title,
-    '',
+    "",
     input.intro,
-    '',
-    ...input.body.flatMap((paragraph) => [paragraph, '']),
+    "",
+    ...input.body.flatMap((paragraph) => [paragraph, ""]),
     details.trim(),
-    '',
+    "",
     input.nextStep,
-    '',
+    "",
     input.closing,
-    '',
-    'UltraSpark Cleaning',
+    "",
+    "UltraSpark Cleaning",
     companyPhone,
     companyEmail,
     companyWebsite,
-    '',
-    'Thank you for choosing UltraSpark Cleaning.',
+    "",
+    "Thank you for choosing UltraSpark Cleaning.",
   ]
     .filter((line) => line !== undefined)
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

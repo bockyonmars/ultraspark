@@ -21,9 +21,9 @@ function PrivacyPage() {
 
         <div className="prose prose-slate mt-10 max-w-none space-y-8 text-foreground">
           <Block title="Introduction">
-            UltraSpark Cleaning Services ("we", "us", "our") is committed to protecting your
-            privacy. This policy explains how we collect, use, and safeguard your personal
-            information when you visit our website or request our cleaning services.
+            UltraSpark Cleaning Services is committed to protecting your privacy. This policy
+            explains how we collect, use, and safeguard your personal information when you visit our
+            website or request our cleaning services.
           </Block>
 
           <Block title="Information we collect">

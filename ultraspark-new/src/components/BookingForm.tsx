@@ -4,7 +4,7 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 import { CONTACT, SERVICES, getServiceByTitle } from "@/lib/constants";
 import { PublicFormError, submitPublicForm } from "@/lib/api";
-import { trackLeadSubmission } from "@/lib/analytics";
+import { trackBookingSubmitted, trackContactSubmitted, trackQuoteSubmitted } from "@/lib/analytics";
 
 export type RequestKind = "quote" | "booking";
 
@@ -62,6 +62,17 @@ function emailLooksValid(email: string) {
 
 function createDetails(parts: Array<string | undefined>) {
   return parts.filter(Boolean).join("\n");
+}
+
+type PublicFormResponse = {
+  data?: {
+    requestId?: string;
+    id?: string;
+  };
+};
+
+function getRequestId(response: PublicFormResponse) {
+  return response?.data?.requestId ?? response?.data?.id;
 }
 
 export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKind }) {
@@ -141,41 +152,45 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
     setStatus({});
 
     try {
-      if (kind === "quote") {
-        await submitPublicForm("/quotes", {
-          fullName,
-          email,
-          phone,
-          serviceType: backendServiceType,
-          address,
-          propertyType,
-          bedrooms: asOptionalNumber(bedrooms),
-          bathrooms: asOptionalNumber(bathrooms),
-          preferredDate: preferredDate || undefined,
-          details: details || "Quote request submitted from UltraSpark new website.",
-          additionalNotes,
-          source: copy.source,
-        });
-      } else {
-        await submitPublicForm("/bookings", {
-          fullName,
-          email,
-          phone,
-          serviceType: backendServiceType,
-          preferredDate,
-          preferredTime,
-          address,
-          postcode,
-          propertyType,
-          bedrooms: asOptionalNumber(bedrooms),
-          bathrooms: asOptionalNumber(bathrooms),
-          details: details || "Booking request submitted from UltraSpark new website.",
-          additionalNotes,
-          source: copy.source,
-        });
-      }
+      const response =
+        kind === "quote"
+          ? await submitPublicForm<PublicFormResponse>("/quotes", {
+              fullName,
+              email,
+              phone,
+              serviceType: backendServiceType,
+              address,
+              propertyType,
+              bedrooms: asOptionalNumber(bedrooms),
+              bathrooms: asOptionalNumber(bathrooms),
+              preferredDate: preferredDate || undefined,
+              details: details || "Quote request submitted from UltraSpark new website.",
+              additionalNotes,
+              source: copy.source,
+            })
+          : await submitPublicForm<PublicFormResponse>("/bookings", {
+              fullName,
+              email,
+              phone,
+              serviceType: backendServiceType,
+              preferredDate,
+              preferredTime,
+              address,
+              postcode,
+              propertyType,
+              bedrooms: asOptionalNumber(bedrooms),
+              bathrooms: asOptionalNumber(bathrooms),
+              details: details || "Booking request submitted from UltraSpark new website.",
+              additionalNotes,
+              source: copy.source,
+            });
 
-      trackLeadSubmission(kind);
+      const requestId = getRequestId(response);
+      if (kind === "quote") {
+        trackQuoteSubmitted(requestId);
+      } else {
+        trackBookingSubmitted(requestId);
+      }
       setStatus({
         type: "success",
         message: "Request sent. Taking you to the confirmation page...",
@@ -212,7 +227,7 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
               }}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 kind === option
-                  ? "bg-primary text-primary-foreground shadow-soft"
+                  ? "bg-secondary text-secondary-foreground shadow-soft"
                   : "text-muted-foreground hover:text-primary"
               }`}
             >
@@ -379,7 +394,7 @@ export function ContactForm() {
     setStatus({});
 
     try {
-      await submitPublicForm("/contact", {
+      const response = await submitPublicForm<PublicFormResponse>("/contact", {
         fullName,
         email,
         phone,
@@ -388,7 +403,7 @@ export function ContactForm() {
         source: "ultraspark-new-contact-form",
       });
 
-      trackLeadSubmission("contact");
+      trackContactSubmitted(getRequestId(response));
       setStatus({
         type: "success",
         message: "Message sent. Taking you to the confirmation page...",

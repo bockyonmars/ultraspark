@@ -14,6 +14,7 @@ import {
   Sparkles,
   FileClock,
   LifeBuoy,
+  MailPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/quotes", label: "Quotes", icon: FileClock },
   { href: "/bookings", label: "Bookings", icon: BookOpen },
   { href: "/support", label: "Support Tickets", icon: LifeBuoy },
+  { href: "/emails/compose", label: "Emails", icon: MailPlus },
   { href: "/customers", label: "Customers", icon: Users },
   { href: "/services", label: "Services", icon: Sparkles },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },

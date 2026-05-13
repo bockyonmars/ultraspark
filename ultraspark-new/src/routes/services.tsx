@@ -6,8 +6,8 @@ import { metaFor } from "@/lib/seo";
 export const Route = createFileRoute("/services")({
   head: () =>
     metaFor(
-      "Cleaning Services Across London & Surrounding Areas",
-      `Home cleaning, office cleaning, deep cleaning, short-let cleaning, and end-of-tenancy cleaning across ${SERVICE_AREA}.`,
+      "Services",
+      `Home cleaning, office cleaning, deep cleaning, short-let cleaning, and end-of-tenancy cleaning in ${SERVICE_AREA}.`,
     ),
   component: ServicesPage,
 });

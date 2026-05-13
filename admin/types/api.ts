@@ -200,3 +200,85 @@ export type AnalyticsOverview = {
     service?: Service | null;
   }>;
 };
+
+export type ManualEmailRequest = {
+  recipientEmail: string;
+  recipientName?: string;
+  subject: string;
+  messageHtml: string;
+  plainText?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  relatedTicketId?: string;
+  relatedCustomerId?: string;
+  relatedContactMessageId?: string;
+  relatedQuoteId?: string;
+  relatedBookingId?: string;
+};
+
+export type ManualEmailResponse = {
+  recipient: string;
+  subject: string;
+  status: "SENT" | "FAILED" | string;
+  relatedTicketId?: string;
+  relatedCustomerId?: string;
+  relatedContactMessageId?: string;
+  relatedQuoteId?: string;
+  relatedBookingId?: string;
+};
+
+export type MarketingAnalyticsSummary = {
+  configured: boolean;
+  missingConfig?: string[];
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+  website?: {
+    users: number;
+    sessions: number;
+    pageViews: number;
+    engagementRate: number;
+  } | null;
+  forms?: {
+    contacts: number;
+    quotes: number;
+    bookings: number;
+  };
+  ads?: {
+    clicks: number;
+    impressions: number;
+    cost: number;
+    conversions: number;
+    costPerLead: number;
+  } | null;
+};
+
+export type MarketingTraffic = {
+  configured: boolean;
+  timeline: Array<{
+    date: string;
+    contacts: number;
+    quotes: number;
+    bookings: number;
+    total: number;
+  }>;
+};
+
+export type MarketingSources = {
+  configured: boolean;
+  sources: Array<{ source: string; total: number }>;
+  note?: string;
+};
+
+export type MarketingAds = {
+  configured: boolean;
+  missingConfig?: string[];
+  metrics?: {
+    clicks: number;
+    impressions: number;
+    cost: number;
+    conversions: number;
+    costPerLead: number;
+  } | null;
+};

@@ -21,8 +21,8 @@ import { metaFor } from "@/lib/seo";
 export const Route = createFileRoute("/")({
   head: () =>
     metaFor(
-      "Professional Cleaning Across London & Surrounding Areas",
-      `Reliable home, office, deep, short-let, and end-of-tenancy cleaning services across ${SERVICE_AREA}.`,
+      "UltraSpark Cleaning Services",
+      `Reliable home, office, deep, short-let, and end-of-tenancy cleaning services in ${SERVICE_AREA}.`,
     ),
   component: Home,
 });
@@ -96,7 +96,7 @@ function Home() {
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 md:px-8 md:py-20 lg:grid-cols-2 lg:py-24">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-secondary/30 bg-white/70 px-4 py-1.5 text-xs font-semibold text-secondary backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" /> Professional cleaning across {SERVICE_AREA_SHORT}
+              <Sparkles className="h-3.5 w-3.5" /> Your trusted cleaning partner
             </div>
             <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-tight text-primary text-balance md:text-5xl lg:text-6xl">
               Professional Cleaning Services You Can Trust
