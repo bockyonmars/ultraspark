@@ -4,7 +4,9 @@ Next.js admin dashboard for the UltraSpark Cleaning backend API. This app is foc
 
 - contacts
 - quotes
+- invoices
 - bookings
+- support tickets
 - customers
 - services
 - analytics
@@ -63,7 +65,11 @@ npm run build
 - dashboard overview with KPI cards, charts, recent submissions, latest quotes, latest bookings
 - traffic and funnel page using backend events until web analytics is added
 - contacts, quotes, and bookings management with status updates
+- invoice management with create, edit, PDF upload, protected PDF open, send email, resend, and mark paid actions
+- quote-to-invoice action from quote detail pages
+- email history and customer activity timeline on invoice detail
 - customer table plus customer history drawer
+- support ticket drawer with related invoice visibility
 - services overview with request counts
 - analytics visualizations
 - audit log feed
@@ -81,6 +87,38 @@ NEXT_PUBLIC_API_URL=https://api.ultrasparkcleaning.co.uk/api/v1
 ```
 
 5. Deploy.
+
+## Invoice Operations
+
+Invoices live at `/invoices`. Admins can:
+
+- create invoice records manually or from an existing quote
+- link invoices to customers, bookings, quotes, and support tickets
+- upload or replace an externally generated PDF invoice
+- send a professional invoice email with the PDF attached and payment link included
+- view email status, attachments, and activity history
+- mark invoices as paid
+
+The admin app never stores email or storage credentials. It calls protected backend endpoints with the admin JWT cookie, and the backend handles email delivery, attachment storage, and audit/activity logging.
+
+## Quote Request Workflow
+
+The Quotes section has two views:
+
+- **Created Quotes** shows formal quote and estimate documents with status, totals, dates, and actions.
+- **Website Requests** shows quote form submissions from the website.
+
+Open a website request to review the full customer/service details before
+creating the quote. Choosing **Create Quote** opens the normal quote builder with
+customer details, service address, requested service, request notes, and a
+default editable line item already filled in. Pricing is intentionally left at
+zero when there are no pricing rules, so staff must confirm the rate and
+quantity before sending.
+
+After saving, the formal quote is linked back to the original request and the
+request status becomes `QUOTED`. If a request already has a linked quote, the UI
+shows **Quote created** and offers **View Quote** instead of making another
+quote the primary action.
 
 ## Connect The Admin Subdomain
 

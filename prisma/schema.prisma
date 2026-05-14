@@ -67,6 +67,7 @@ enum SupportTicketMessageType {
 }
 
 enum EmailLogStatus {
+  DRAFT
   SENT
   FAILED
 }
@@ -83,6 +84,28 @@ enum QuoteStatus {
   REJECTED
 }
 
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum CustomerActivityType {
+  QUOTE_CREATED
+  QUOTE_SENT
+  INVOICE_CREATED
+  INVOICE_UPLOADED
+  INVOICE_SENT
+  INVOICE_PAID
+  EMAIL_SENT
+  EMAIL_FAILED
+  SUPPORT_TICKET_CREATED
+  BOOKING_UPDATED
+  NOTE_ADDED
+}
+
 enum AnalyticsEventType {
   CONTACT_SUBMITTED
   QUOTE_SUBMITTED
@@ -97,6 +120,10 @@ enum AuditAction {
   QUOTE_STATUS_UPDATED
   QUOTE_UPDATED
   QUOTE_SENT
+  INVOICE_CREATED
+  INVOICE_UPDATED
+  INVOICE_SENT
+  INVOICE_PAID
   BOOKING_CREATED
   BOOKING_STATUS_UPDATED
   ADMIN_LOGIN
@@ -121,21 +148,27 @@ model AdminUser {
   assignedSupportTickets  SupportTicket[]         @relation("AssignedSupportTickets")
   supportTicketMessages   SupportTicketMessage[]
   supportTicketActivities SupportTicketActivity[]
+  createdInvoices         Invoice[]               @relation("InvoiceCreatedBy")
+  sentEmailLogs           EmailLog[]              @relation("EmailLogSentBy")
+  customerActivities      CustomerActivity[]      @relation("CustomerActivityCreatedBy")
 }
 
 model Customer {
-  id              String           @id @default(cuid())
+  id              String             @id @default(cuid())
   firstName       String?
   lastName        String?
-  email           String?          @unique
-  phone           String?          @unique
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  email           String?            @unique
+  phone           String?            @unique
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   contactMessages ContactMessage[]
   quoteRequests   QuoteRequest[]
   quotes          Quote[]
   bookingRequests BookingRequest[]
   supportTickets  SupportTicket[]
+  invoices        Invoice[]
+  emailLogs       EmailLog[]
+  activities      CustomerActivity[]
 }
 
 model Service {
@@ -180,11 +213,13 @@ model QuoteRequest {
   service        Service            @relation(fields: [serviceId], references: [id])
   emailLogs      EmailLog[]
   supportTickets SupportTicket[]
+  createdQuote   Quote?             @relation("QuoteRequestCreatedQuote")
 }
 
 model Quote {
   id                  String            @id @default(cuid())
   customerId          String?
+  quoteRequestId      String?           @unique
   quoteNumber         String            @unique
   documentType        QuoteDocumentType @default(HOUSE_CLEANING_QUOTE)
   customerName        String
@@ -210,8 +245,10 @@ model Quote {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
   customer            Customer?         @relation(fields: [customerId], references: [id])
+  sourceQuoteRequest  QuoteRequest?     @relation("QuoteRequestCreatedQuote", fields: [quoteRequestId], references: [id])
   lineItems           QuoteLineItem[]
   emailLogs           EmailLog[]
+  invoices            Invoice[]
 
   @@index([status])
   @@index([documentType])
@@ -253,6 +290,7 @@ model BookingRequest {
   service        Service              @relation(fields: [serviceId], references: [id])
   emailLogs      EmailLog[]
   supportTickets SupportTicket[]
+  invoices       Invoice[]
 }
 
 model SupportTicket {
@@ -282,6 +320,7 @@ model SupportTicket {
   messages          SupportTicketMessage[]
   activities        SupportTicketActivity[]
   emailLogs         EmailLog[]
+  invoices          Invoice[]
 
   @@index([status])
   @@index([priority])
@@ -314,25 +353,116 @@ model SupportTicketActivity {
 }
 
 model EmailLog {
-  id                String          @id @default(cuid())
+  id                String            @id @default(cuid())
   type              String
   recipient         String
+  cc                String?
+  bcc               String?
   subject           String
+  body              String?
   status            EmailLogStatus
-  provider          String          @default("resend")
+  provider          String?
   providerMessageId String?
   errorMessage      String?
+  customerId        String?
   contactMessageId  String?
   quoteRequestId    String?
   quoteId           String?
+  invoiceId         String?
   bookingRequestId  String?
   supportTicketId   String?
-  createdAt         DateTime        @default(now())
-  contactMessage    ContactMessage? @relation(fields: [contactMessageId], references: [id])
-  quoteRequest      QuoteRequest?   @relation(fields: [quoteRequestId], references: [id])
-  quote             Quote?          @relation(fields: [quoteId], references: [id])
-  bookingRequest    BookingRequest? @relation(fields: [bookingRequestId], references: [id])
-  supportTicket     SupportTicket?  @relation(fields: [supportTicketId], references: [id])
+  sentByAdminId     String?
+  sentAt            DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  customer          Customer?         @relation(fields: [customerId], references: [id])
+  contactMessage    ContactMessage?   @relation(fields: [contactMessageId], references: [id])
+  quoteRequest      QuoteRequest?     @relation(fields: [quoteRequestId], references: [id])
+  quote             Quote?            @relation(fields: [quoteId], references: [id])
+  invoice           Invoice?          @relation(fields: [invoiceId], references: [id])
+  bookingRequest    BookingRequest?   @relation(fields: [bookingRequestId], references: [id])
+  supportTicket     SupportTicket?    @relation(fields: [supportTicketId], references: [id])
+  sentByAdmin       AdminUser?        @relation("EmailLogSentBy", fields: [sentByAdminId], references: [id])
+  attachments       EmailAttachment[]
+
+  @@index([customerId])
+  @@index([invoiceId])
+  @@index([bookingRequestId])
+  @@index([quoteId])
+  @@index([supportTicketId])
+  @@index([createdAt])
+}
+
+model EmailAttachment {
+  id         String   @id @default(cuid())
+  emailLogId String
+  fileName   String
+  fileUrl    String
+  fileType   String?
+  fileSize   Int?
+  createdAt  DateTime @default(now())
+  emailLog   EmailLog @relation(fields: [emailLogId], references: [id], onDelete: Cascade)
+
+  @@index([emailLogId])
+}
+
+model Invoice {
+  id              String          @id @default(cuid())
+  customerId      String?
+  bookingId       String?
+  quoteId         String?
+  supportTicketId String?
+  invoiceNumber   String          @unique
+  invoiceDate     DateTime
+  dueDate         DateTime?
+  amount          Decimal         @db.Decimal(10, 2)
+  currency        String          @default("GBP")
+  status          InvoiceStatus   @default(DRAFT)
+  paymentLink     String?
+  pdfUrl          String?
+  pdfStorageKey   String?
+  pdfFileName     String?
+  pdfFileSize     Int?
+  notes           String?
+  paidAt          DateTime?
+  paymentMethod   String?
+  paymentNotes    String?
+  createdById     String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  customer        Customer?       @relation(fields: [customerId], references: [id])
+  booking         BookingRequest? @relation(fields: [bookingId], references: [id])
+  quote           Quote?          @relation(fields: [quoteId], references: [id])
+  supportTicket   SupportTicket?  @relation(fields: [supportTicketId], references: [id])
+  createdBy       AdminUser?      @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+  emailLogs       EmailLog[]
+
+  @@index([customerId])
+  @@index([bookingId])
+  @@index([quoteId])
+  @@index([supportTicketId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([dueDate])
+}
+
+model CustomerActivity {
+  id                String               @id @default(cuid())
+  customerId        String?
+  type              CustomerActivityType
+  title             String
+  description       String?
+  relatedEntityType String?
+  relatedEntityId   String?
+  createdById       String?
+  createdAt         DateTime             @default(now())
+  customer          Customer?            @relation(fields: [customerId], references: [id])
+  createdBy         AdminUser?           @relation("CustomerActivityCreatedBy", fields: [createdById], references: [id])
+
+  @@index([customerId])
+  @@index([type])
+  @@index([relatedEntityType, relatedEntityId])
+  @@index([createdAt])
 }
 
 model AnalyticsEvent {

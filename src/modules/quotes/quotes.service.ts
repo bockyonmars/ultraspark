@@ -7,9 +7,11 @@ import {
   Prisma,
   QuoteDocumentType,
   QuoteStatus,
+  CustomerActivityType,
 } from '@prisma/client';
 import { splitFullName } from '../../common/utils/public-form-payload.util';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { CustomerActivitiesService } from '../customer-activities/customer-activities.service';
 import { CustomersService } from '../customers/customers.service';
 import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma.service';
@@ -27,6 +29,7 @@ export class QuotesService {
     private readonly prisma: PrismaService,
     private readonly customersService: CustomersService,
     private readonly emailService: EmailService,
+    private readonly customerActivitiesService: CustomerActivitiesService,
     private readonly auditLogsService: AuditLogsService,
   ) {}
 
@@ -34,7 +37,11 @@ export class QuotesService {
     return this.generateQuoteNumber();
   }
 
-  async create(createDto: CreateQuoteDto, adminUserId?: string) {
+  async create(
+    createDto: CreateQuoteDto,
+    adminUserId?: string,
+    quoteRequestId?: string,
+  ) {
     const quoteNumber =
       this.trimToUndefined(createDto.quoteNumber) ??
       (await this.generateQuoteNumber());
@@ -52,6 +59,7 @@ export class QuotesService {
     const quote = await this.prisma.quote.create({
       data: {
         quoteNumber,
+        quoteRequestId,
         documentType:
           createDto.documentType ?? QuoteDocumentType.HOUSE_CLEANING_QUOTE,
         customerId: customer.id,
@@ -89,18 +97,29 @@ export class QuotesService {
       include: this.quoteInclude(),
     });
 
-    await this.auditLogsService.create({
-      action: 'QUOTE_CREATED',
-      entityType: 'Quote',
-      entityId: quote.id,
-      description: `Quote document ${quote.quoteNumber} created`,
-      adminUserId,
-      metadata: {
-        quoteNumber: quote.quoteNumber,
-        customerEmail: quote.customerEmail,
-        status: quote.status,
-      },
-    });
+    await Promise.allSettled([
+      this.customerActivitiesService.create({
+        customerId: quote.customerId,
+        type: CustomerActivityType.QUOTE_CREATED,
+        title: `Quote ${quote.quoteNumber} created`,
+        description: quote.customerEmail,
+        relatedEntityType: 'Quote',
+        relatedEntityId: quote.id,
+        createdById: adminUserId,
+      }),
+      this.auditLogsService.create({
+        action: 'QUOTE_CREATED',
+        entityType: 'Quote',
+        entityId: quote.id,
+        description: `Quote document ${quote.quoteNumber} created`,
+        adminUserId,
+        metadata: {
+          quoteNumber: quote.quoteNumber,
+          customerEmail: quote.customerEmail,
+          status: quote.status,
+        },
+      }),
+    ]);
 
     return quote;
   }
@@ -322,18 +341,29 @@ export class QuotesService {
       include: this.quoteInclude(),
     });
 
-    await this.auditLogsService.create({
-      action: 'QUOTE_SENT',
-      entityType: 'Quote',
-      entityId: sentQuote.id,
-      description: `Quote document ${sentQuote.quoteNumber} sent to ${sentQuote.customerEmail}`,
-      adminUserId,
-      metadata: {
-        quoteNumber: sentQuote.quoteNumber,
-        customerEmail: sentQuote.customerEmail,
-        total: this.toNumber(sentQuote.total),
-      },
-    });
+    await Promise.allSettled([
+      this.customerActivitiesService.create({
+        customerId: sentQuote.customerId,
+        type: CustomerActivityType.QUOTE_SENT,
+        title: `Quote ${sentQuote.quoteNumber} sent`,
+        description: `Sent to ${sentQuote.customerEmail}`,
+        relatedEntityType: 'Quote',
+        relatedEntityId: sentQuote.id,
+        createdById: adminUserId,
+      }),
+      this.auditLogsService.create({
+        action: 'QUOTE_SENT',
+        entityType: 'Quote',
+        entityId: sentQuote.id,
+        description: `Quote document ${sentQuote.quoteNumber} sent to ${sentQuote.customerEmail}`,
+        adminUserId,
+        metadata: {
+          quoteNumber: sentQuote.quoteNumber,
+          customerEmail: sentQuote.customerEmail,
+          total: this.toNumber(sentQuote.total),
+        },
+      }),
+    ]);
 
     return sentQuote;
   }
@@ -416,10 +446,19 @@ export class QuotesService {
   private quoteInclude() {
     return {
       customer: true,
+      sourceQuoteRequest: {
+        include: {
+          customer: true,
+          service: true,
+        },
+      },
       lineItems: {
         orderBy: { createdAt: 'asc' as const },
       },
       emailLogs: {
+        orderBy: { createdAt: 'desc' as const },
+      },
+      invoices: {
         orderBy: { createdAt: 'desc' as const },
       },
     };

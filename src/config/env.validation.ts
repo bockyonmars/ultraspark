@@ -4,9 +4,6 @@ const requiredEnvVars = [
   'DATABASE_URL',
   'JWT_SECRET',
   'JWT_EXPIRES_IN',
-  'RESEND_API_KEY',
-  'EMAIL_FROM',
-  'ADMIN_NOTIFICATION_EMAIL',
   'FRONTEND_URL',
   'ADMIN_URL',
   'API_URL',
@@ -14,8 +11,31 @@ const requiredEnvVars = [
   'PORT',
 ] as const;
 
+const productionEmailVars = [
+  'EMAIL_PROVIDER',
+  'EMAIL_FROM_ADDRESS',
+  'EMAIL_REPLY_TO',
+] as const;
+
+const productionStorageVars = ['STORAGE_PROVIDER'] as const;
+
 export function validateEnv(config: EnvShape) {
-  const missing = requiredEnvVars.filter((key) => !config[key]);
+  const missing: string[] = [...requiredEnvVars].filter((key) => !config[key]);
+  const isProduction = config.NODE_ENV === 'production';
+
+  if (isProduction) {
+    missing.push(
+      ...productionEmailVars.filter((key) => !config[key]),
+      ...productionStorageVars.filter((key) => !config[key]),
+      ...(!config.EMAIL_API_KEY && !config.RESEND_API_KEY
+        ? (['EMAIL_API_KEY'] as const)
+        : []),
+    );
+
+    if ((config.STORAGE_PROVIDER ?? 'local') === 'local' && !config.STORAGE_LOCAL_ROOT) {
+      missing.push('STORAGE_LOCAL_ROOT');
+    }
+  }
 
   if (missing.length > 0) {
     throw new Error(

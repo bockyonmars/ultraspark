@@ -12,6 +12,7 @@ import { CurrentAdmin } from '../../common/decorators/current-admin.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UpdateQuoteRequestStatusDto } from './dto/update-quote-request-status.dto';
+import { CreateQuoteFromRequestDto } from './dto/create-quote-from-request.dto';
 import { QuoteRequestsService } from './quote-requests.service';
 
 @ApiTags('Quote Requests')
@@ -47,10 +48,38 @@ export class QuoteRequestsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('admin/quote-requests')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List website quote requests for admin conversion' })
+  async findAllAdmin() {
+    const quoteRequests = await this.quoteRequestsService.findAll();
+
+    return {
+      success: true,
+      message: 'Quote requests retrieved',
+      data: quoteRequests,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('quotes/:id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get quote request details' })
   async findOne(@Param('id') id: string) {
+    const quoteRequest = await this.quoteRequestsService.findOne(id);
+
+    return {
+      success: true,
+      message: 'Quote request retrieved',
+      data: quoteRequest,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/quote-requests/:id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get website quote request details for admin' })
+  async findOneAdmin(@Param('id') id: string) {
     const quoteRequest = await this.quoteRequestsService.findOne(id);
 
     return {
@@ -79,6 +108,50 @@ export class QuoteRequestsController {
       success: true,
       message: 'Quote request status updated',
       data: quoteRequest,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('admin/quote-requests/:id/status')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update website quote request status' })
+  async updateAdminStatus(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateQuoteRequestStatusDto,
+    @CurrentAdmin() adminUser: { id: string },
+  ) {
+    const quoteRequest = await this.quoteRequestsService.updateStatus(
+      id,
+      updateDto,
+      adminUser?.id,
+    );
+
+    return {
+      success: true,
+      message: 'Quote request status updated',
+      data: quoteRequest,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('admin/quote-requests/:id/create-quote')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create quote document from website quote request' })
+  async createQuoteFromRequest(
+    @Param('id') id: string,
+    @Body() createDto: CreateQuoteFromRequestDto,
+    @CurrentAdmin() adminUser: { id: string },
+  ) {
+    const quote = await this.quoteRequestsService.createQuoteFromRequest(
+      id,
+      createDto,
+      adminUser?.id,
+    );
+
+    return {
+      success: true,
+      message: 'Quote created from request',
+      data: quote,
     };
   }
 }

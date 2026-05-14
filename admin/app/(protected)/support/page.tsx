@@ -799,6 +799,24 @@ export default function SupportPage() {
             </div>
 
             <div className="space-y-3 rounded-2xl border p-4">
+              <p className="text-sm font-semibold">Related invoices</p>
+              {(selected.invoices ?? []).length ? (
+                <ul className="space-y-2 text-sm">
+                  {selected.invoices?.map((invoice) => (
+                    <li key={invoice.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-3">
+                      <span>{invoice.invoiceNumber}</span>
+                      <Link href={`/invoices/${invoice.id}`} className="font-semibold text-primary">
+                        View invoice
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-slate-500">No invoices linked.</p>
+              )}
+            </div>
+
+            <div className="space-y-3 rounded-2xl border p-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold">Customer thread</p>
                 <StatusBadge status={selected.status} />

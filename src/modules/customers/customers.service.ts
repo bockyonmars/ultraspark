@@ -57,8 +57,11 @@ export class CustomersService {
           select: {
             contactMessages: true,
             quoteRequests: true,
+            quotes: true,
             bookingRequests: true,
             supportTickets: true,
+            invoices: true,
+            activities: true,
           },
         },
       },
@@ -79,6 +82,29 @@ export class CustomersService {
         bookingRequests: {
           orderBy: { createdAt: "desc" },
           include: { service: true },
+        },
+        quotes: {
+          orderBy: { createdAt: "desc" },
+        },
+        invoices: {
+          orderBy: { createdAt: "desc" },
+        },
+        emailLogs: {
+          orderBy: { createdAt: "desc" },
+          include: { attachments: true },
+        },
+        activities: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            createdBy: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
         },
         supportTickets: {
           orderBy: { createdAt: "desc" },

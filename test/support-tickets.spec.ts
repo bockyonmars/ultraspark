@@ -9,6 +9,7 @@ import { IS_PUBLIC_KEY } from "../src/common/decorators/public.decorator";
 import { JwtAuthGuard } from "../src/common/guards/jwt-auth.guard";
 import { AuditLogsService } from "../src/modules/audit-logs/audit-logs.service";
 import { AnalyticsService } from "../src/modules/analytics/analytics.service";
+import { CustomerActivitiesService } from "../src/modules/customer-activities/customer-activities.service";
 import { CustomersService } from "../src/modules/customers/customers.service";
 import { EmailService } from "../src/modules/email/email.service";
 import { PrismaService } from "../src/modules/prisma.service";
@@ -195,6 +196,7 @@ describe("Support tickets", () => {
   };
   let analyticsService: { trackEvent: jest.Mock };
   let auditLogsService: { create: jest.Mock };
+  let customerActivitiesService: { create: jest.Mock };
 
   beforeEach(async () => {
     prisma = createSupportPrismaMock();
@@ -206,6 +208,7 @@ describe("Support tickets", () => {
     };
     analyticsService = { trackEvent: jest.fn() };
     auditLogsService = { create: jest.fn() };
+    customerActivitiesService = { create: jest.fn() };
 
     moduleRef = await Test.createTestingModule({
       controllers: [SupportTicketsController],
@@ -216,6 +219,10 @@ describe("Support tickets", () => {
         { provide: EmailService, useValue: emailService },
         { provide: AnalyticsService, useValue: analyticsService },
         { provide: AuditLogsService, useValue: auditLogsService },
+        {
+          provide: CustomerActivitiesService,
+          useValue: customerActivitiesService,
+        },
       ],
     }).compile();
 

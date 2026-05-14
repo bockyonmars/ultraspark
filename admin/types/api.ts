@@ -19,13 +19,20 @@ export type Customer = {
   updatedAt?: string;
   contactMessages?: ContactMessage[];
   quoteRequests?: QuoteRequest[];
+  quotes?: QuoteDocument[];
   bookingRequests?: BookingRequest[];
   supportTickets?: SupportTicket[];
+  invoices?: Invoice[];
+  emailLogs?: EmailLog[];
+  activities?: CustomerActivity[];
   _count?: {
     contactMessages?: number;
     quoteRequests?: number;
+    quotes?: number;
     bookingRequests?: number;
     supportTickets?: number;
+    invoices?: number;
+    activities?: number;
   };
 };
 
@@ -70,6 +77,8 @@ export type QuoteRequest = {
   updatedAt?: string;
   customer?: Customer | null;
   service?: Service | null;
+  createdQuote?: QuoteDocument | null;
+  emailLogs?: EmailLog[];
 };
 
 export type QuoteDocumentType =
@@ -94,6 +103,8 @@ export type QuoteLineItem = {
 
 export type QuoteDocument = {
   id: string;
+  customerId?: string | null;
+  quoteRequestId?: string | null;
   quoteNumber: string;
   documentType: QuoteDocumentType;
   customerName: string;
@@ -119,6 +130,7 @@ export type QuoteDocument = {
   createdAt?: string;
   updatedAt?: string;
   customer?: Customer | null;
+  sourceQuoteRequest?: QuoteRequest | null;
   lineItems: QuoteLineItem[];
   emailLogs?: Array<{
     id: string;
@@ -128,6 +140,118 @@ export type QuoteDocument = {
     status: "SENT" | "FAILED" | string;
     createdAt?: string;
   }>;
+  invoices?: Invoice[];
+};
+
+export type InvoiceStatus = "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
+
+export type EmailLogStatus = "DRAFT" | "SENT" | "FAILED";
+
+export type CustomerActivityType =
+  | "QUOTE_CREATED"
+  | "QUOTE_SENT"
+  | "INVOICE_CREATED"
+  | "INVOICE_UPLOADED"
+  | "INVOICE_SENT"
+  | "INVOICE_PAID"
+  | "EMAIL_SENT"
+  | "EMAIL_FAILED"
+  | "SUPPORT_TICKET_CREATED"
+  | "BOOKING_UPDATED"
+  | "NOTE_ADDED";
+
+export type EmailAttachment = {
+  id: string;
+  emailLogId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType?: string | null;
+  fileSize?: number | null;
+  createdAt?: string;
+};
+
+export type EmailLog = {
+  id: string;
+  type: string;
+  recipient: string;
+  cc?: string | null;
+  bcc?: string | null;
+  subject: string;
+  body?: string | null;
+  status: EmailLogStatus | string;
+  provider?: string | null;
+  providerMessageId?: string | null;
+  errorMessage?: string | null;
+  customerId?: string | null;
+  invoiceId?: string | null;
+  quoteId?: string | null;
+  bookingRequestId?: string | null;
+  supportTicketId?: string | null;
+  sentAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  attachments?: EmailAttachment[];
+};
+
+export type CustomerActivity = {
+  id: string;
+  customerId?: string | null;
+  type: CustomerActivityType | string;
+  title: string;
+  description?: string | null;
+  relatedEntityType?: string | null;
+  relatedEntityId?: string | null;
+  createdAt?: string;
+  createdBy?: AdminUser | null;
+};
+
+export type Invoice = {
+  id: string;
+  customerId?: string | null;
+  bookingId?: string | null;
+  quoteId?: string | null;
+  supportTicketId?: string | null;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate?: string | null;
+  amount: MoneyValue;
+  currency: string;
+  status: InvoiceStatus;
+  paymentLink?: string | null;
+  pdfUrl?: string | null;
+  pdfFileName?: string | null;
+  pdfFileSize?: number | null;
+  notes?: string | null;
+  paidAt?: string | null;
+  paymentMethod?: string | null;
+  paymentNotes?: string | null;
+  createdById?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  customer?: Customer | null;
+  booking?: BookingRequest | null;
+  quote?: QuoteDocument | null;
+  supportTicket?: SupportTicket | null;
+  emailLogs?: EmailLog[];
+  activity?: CustomerActivity[];
+};
+
+export type InvoicePayload = {
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  bookingId?: string;
+  quoteId?: string;
+  supportTicketId?: string;
+  invoiceNumber?: string;
+  invoiceDate?: string;
+  dueDate?: string | null;
+  amount: number;
+  currency?: string;
+  status?: InvoiceStatus;
+  paymentLink?: string;
+  notes?: string;
 };
 
 export type QuoteFormLineItem = {
@@ -247,6 +371,8 @@ export type SupportTicket = {
   relatedQuoteId?: string | null;
   relatedBooking?: BookingRequest | null;
   relatedQuote?: QuoteRequest | null;
+  invoices?: Invoice[];
+  emailLogs?: EmailLog[];
   createdAt?: string;
   updatedAt?: string;
   closedAt?: string | null;

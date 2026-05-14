@@ -4,6 +4,7 @@ import type {
   QuoteFormLineItem,
   QuoteFormState,
   QuotePayload,
+  QuoteRequest,
 } from "@/types/api";
 
 const gbpFormatter = new Intl.NumberFormat("en-GB", {
@@ -51,6 +52,55 @@ export function createDefaultQuoteDraft(): QuoteFormState {
         description: "Professional domestic cleaning service.",
         rate: 35,
         quantity: 3,
+      },
+    ],
+  };
+}
+
+export function createQuoteDraftFromRequest(request: QuoteRequest): QuoteFormState {
+  const draft = createDefaultQuoteDraft();
+  const customerName = [request.customer?.firstName, request.customer?.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  const requestedDate = request.preferredDate
+    ? `Requested date: ${formatDateForNotes(request.preferredDate)}`
+    : "";
+  const propertySummary = [
+    request.propertyType ? `Property type: ${request.propertyType}` : "",
+    request.bedrooms !== null && request.bedrooms !== undefined
+      ? `Bedrooms: ${request.bedrooms}`
+      : "",
+    request.bathrooms !== null && request.bathrooms !== undefined
+      ? `Bathrooms: ${request.bathrooms}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return {
+    ...draft,
+    customerName,
+    customerEmail: request.customer?.email ?? "",
+    customerPhone: request.customer?.phone ?? "",
+    customerAddress: request.postcode ?? "",
+    serviceAddress: request.postcode ?? "",
+    specialInstructions: [requestedDate, propertySummary].filter(Boolean).join("\n"),
+    notes: [
+      `Created from website quote request ${request.id}.`,
+      requestedDate,
+      request.details,
+      "Pricing must be confirmed before sending this quote.",
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+    lineItems: [
+      {
+        id: createEmptyLineItem().id,
+        serviceName: request.service?.name ?? "Cleaning service",
+        description: request.details ?? "Website quote request. Confirm scope and pricing before sending.",
+        rate: 0,
+        quantity: 1,
       },
     ],
   };
@@ -198,4 +248,14 @@ function roundMoney(value: number) {
 function emptyToUndefined(value?: string) {
   const trimmed = value?.trim();
   return trimmed || undefined;
+}
+
+function formatDateForNotes(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }

@@ -16,6 +16,8 @@ const styles: Record<string, string> = {
   URGENT: "bg-rose-50 text-rose-700",
   DRAFT: "bg-slate-100 text-slate-700",
   SENT: "bg-emerald-50 text-emerald-700",
+  PAID: "bg-emerald-50 text-emerald-700",
+  OVERDUE: "bg-rose-50 text-rose-700",
   CONTACTED: "bg-orange-50 text-orange-700",
   QUOTED: "bg-indigo-50 text-indigo-700",
   ACCEPTED: "bg-emerald-50 text-emerald-700",

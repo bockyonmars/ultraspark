@@ -10,7 +10,9 @@ import { ErrorState } from '@/components/shared/error-state';
 import { LoadingSpinner } from '@/components/shared/loading-spinner';
 import { SearchInput } from '@/components/shared/search-input';
 import { Card, CardContent } from '@/components/ui/card';
+import { CustomerActivityTimeline } from '@/components/invoices/customer-activity-timeline';
 import type { Customer } from '@/types/api';
+import { formatInvoiceMoney } from '@/lib/invoices';
 import { formatDateTime, getName, safeNumber } from '@/lib/utils';
 
 export default function CustomersPage() {
@@ -78,7 +80,7 @@ export default function CustomersPage() {
             key: 'counts',
             title: 'Requests',
             render: (row) =>
-              `${safeNumber(row._count?.contactMessages)} contact / ${safeNumber(row._count?.quoteRequests)} quote / ${safeNumber(row._count?.bookingRequests)} booking`,
+              `${safeNumber(row._count?.contactMessages)} contact / ${safeNumber(row._count?.quoteRequests)} quote / ${safeNumber(row._count?.bookingRequests)} booking / ${safeNumber(row._count?.invoices)} invoice`,
           },
           {
             key: 'createdAt',
@@ -138,6 +140,20 @@ export default function CustomersPage() {
               </div>
 
               <div>
+                <p className="text-sm font-semibold">Invoices</p>
+                <ul className="mt-2 space-y-2 text-sm text-slate-600">
+                  {(selected.invoices ?? []).map((item) => (
+                    <li key={item.id} className="rounded-xl border p-3">
+                      <p className="font-medium">
+                        {item.invoiceNumber} - {formatInvoiceMoney(item)}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">{formatDateTime(item.createdAt)}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
                 <p className="text-sm font-semibold">Booking history</p>
                 <ul className="mt-2 space-y-2 text-sm text-slate-600">
                   {(selected.bookingRequests ?? []).map((item) => (
@@ -149,6 +165,8 @@ export default function CustomersPage() {
                 </ul>
               </div>
             </div>
+
+            <CustomerActivityTimeline activity={selected.activities} />
           </>
         ) : null}
       </DetailsDrawer>

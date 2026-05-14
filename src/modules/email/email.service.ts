@@ -22,14 +22,43 @@ import type { EmailTemplateVariables } from "./templates/types";
 type SendEmailInput = {
   type: string;
   recipient: string;
+  cc?: string[];
+  bcc?: string[];
   subject: string;
   html: string;
   text: string;
+  attachments?: EmailAttachmentInput[];
+  customerId?: string;
   contactMessageId?: string;
   quoteRequestId?: string;
   quoteId?: string;
+  invoiceId?: string;
   bookingRequestId?: string;
   supportTicketId?: string;
+  sentByAdminId?: string;
+};
+
+export type EmailAttachmentInput = {
+  fileName: string;
+  content: Buffer;
+  contentType?: string;
+  fileUrl?: string;
+  fileSize?: number;
+};
+
+export type ProviderSendEmailInput = {
+  to: string | string[];
+  cc?: string[];
+  bcc?: string[];
+  subject: string;
+  html: string;
+  text: string;
+  attachments?: EmailAttachmentInput[];
+};
+
+export type ProviderSendEmailResult = {
+  provider: string;
+  providerMessageId?: string;
 };
 
 type SendManualCustomerReplyInput = {
@@ -58,7 +87,8 @@ export class EmailService {
     private readonly configService: ConfigService,
   ) {
     this.resend = new Resend(
-      this.configService.get<string>("app.resendApiKey"),
+      this.configService.get<string>("app.emailApiKey") ??
+        this.configService.get<string>("app.resendApiKey"),
     );
   }
 
@@ -441,6 +471,60 @@ export class EmailService {
     });
   }
 
+  async sendProviderEmail(
+    input: ProviderSendEmailInput,
+  ): Promise<ProviderSendEmailResult> {
+    const nodeEnv = this.configService.get<string>("app.nodeEnv") ?? "development";
+    const emailApiKey =
+      this.configService.get<string>("app.emailApiKey") ??
+      this.configService.get<string>("app.resendApiKey");
+    const provider = (
+      this.configService.get<string>("app.emailProvider") ??
+      (emailApiKey ? "resend" : "log")
+    ).toLowerCase();
+    const recipients = Array.isArray(input.to) ? input.to : [input.to];
+
+    if (provider === "log" || !emailApiKey) {
+      if (nodeEnv === "production") {
+        throw new Error("Email provider is not configured");
+      }
+
+      this.logger.log(
+        `Log-only email to ${recipients.join(", ")}: ${input.subject}`,
+      );
+
+      return {
+        provider: "log",
+        providerMessageId: `log-${Date.now()}`,
+      };
+    }
+
+    if (provider !== "resend") {
+      throw new Error(`Unsupported email provider: ${provider}`);
+    }
+
+    const response = await this.resend.emails.send({
+      from: this.getEmailFrom(),
+      to: recipients,
+      cc: input.cc?.length ? input.cc : undefined,
+      bcc: input.bcc?.length ? input.bcc : undefined,
+      replyTo: this.configService.get<string>("app.emailReplyTo"),
+      subject: input.subject,
+      html: input.html,
+      text: input.text,
+      attachments: input.attachments?.map((attachment) => ({
+        filename: attachment.fileName,
+        content: attachment.content,
+        contentType: attachment.contentType,
+      })),
+    } as never);
+
+    return {
+      provider: "resend",
+      providerMessageId: response.data?.id,
+    };
+  }
+
   private sanitizeCustomerHtml(value: string) {
     return value
       .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
@@ -544,6 +628,8 @@ export class EmailService {
         "{{company_website}}",
     );
     const companyEmail =
+      this.configService.get<string>("app.emailReplyTo") ??
+      this.configService.get<string>("app.emailFromAddress") ??
       this.configService.get<string>("app.adminNotificationEmail") ??
       this.extractEmailAddress(
         this.configService.get<string>("app.emailFrom") ?? "",
@@ -576,34 +662,68 @@ export class EmailService {
     return match?.[1] ?? (value.includes("@") ? value : undefined);
   }
 
-  private async sendEmail(input: SendEmailInput) {
-    const emailFrom = this.configService.getOrThrow<string>("app.emailFrom");
+  private getEmailFrom() {
+    const configured = this.configService.get<string>("app.emailFrom");
+    if (configured?.trim()) {
+      return configured.trim();
+    }
 
+    const name =
+      this.configService.get<string>("app.emailFromName") ??
+      "UltraSpark Cleaning";
+    const address =
+      this.configService.get<string>("app.emailFromAddress") ??
+      "info@ultrasparkcleaning.co.uk";
+
+    return `${name} <${address}>`;
+  }
+
+  private async sendEmail(input: SendEmailInput) {
     try {
-      const response = await this.resend.emails.send({
-        from: emailFrom,
-        to: [input.recipient],
+      const response = await this.sendProviderEmail({
+        to: input.recipient,
+        cc: input.cc,
+        bcc: input.bcc,
         subject: input.subject,
         html: input.html,
         text: input.text,
+        attachments: input.attachments,
       });
 
-      await this.prisma.emailLog.create({
+      const emailLog = await this.prisma.emailLog.create({
         data: {
           type: input.type,
           recipient: input.recipient,
+          cc: input.cc?.join(", "),
+          bcc: input.bcc?.join(", "),
           subject: input.subject,
+          body: input.text,
           status: EmailLogStatus.SENT,
-          providerMessageId: response.data?.id,
+          provider: response.provider,
+          providerMessageId: response.providerMessageId,
+          customerId: input.customerId,
           contactMessageId: input.contactMessageId,
           quoteRequestId: input.quoteRequestId,
           quoteId: input.quoteId,
+          invoiceId: input.invoiceId,
           bookingRequestId: input.bookingRequestId,
           supportTicketId: input.supportTicketId,
+          sentByAdminId: input.sentByAdminId,
+          sentAt: new Date(),
+          attachments: input.attachments?.length
+            ? {
+                create: input.attachments.map((attachment) => ({
+                  fileName: attachment.fileName,
+                  fileUrl: attachment.fileUrl ?? "",
+                  fileType: attachment.contentType,
+                  fileSize: attachment.fileSize,
+                })),
+              }
+            : undefined,
         },
       });
 
-      return response;
+      return { ...response, emailLog };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Email send failed";
@@ -614,13 +734,19 @@ export class EmailService {
           type: input.type,
           recipient: input.recipient,
           subject: input.subject,
+          body: input.text,
           status: EmailLogStatus.FAILED,
+          provider:
+            this.configService.get<string>("app.emailProvider") ?? "resend",
           errorMessage: message,
+          customerId: input.customerId,
           contactMessageId: input.contactMessageId,
           quoteRequestId: input.quoteRequestId,
           quoteId: input.quoteId,
+          invoiceId: input.invoiceId,
           bookingRequestId: input.bookingRequestId,
           supportTicketId: input.supportTicketId,
+          sentByAdminId: input.sentByAdminId,
         },
       });
 

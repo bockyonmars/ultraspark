@@ -10,7 +10,9 @@ import { ServicesService } from '../src/modules/services/services.service';
 import { EmailService } from '../src/modules/email/email.service';
 import { AnalyticsService } from '../src/modules/analytics/analytics.service';
 import { AuditLogsService } from '../src/modules/audit-logs/audit-logs.service';
+import { CustomerActivitiesService } from '../src/modules/customer-activities/customer-activities.service';
 import { PrismaService } from '../src/modules/prisma.service';
+import { QuotesService } from '../src/modules/quotes/quotes.service';
 
 type CustomerRecord = {
   id: string;
@@ -291,6 +293,18 @@ describe('Framer public endpoint handlers', () => {
             create: jest.fn(),
           },
         },
+        {
+          provide: CustomerActivitiesService,
+          useValue: {
+            create: jest.fn(),
+          },
+        },
+        {
+          provide: QuotesService,
+          useValue: {
+            create: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -300,7 +314,7 @@ describe('Framer public endpoint handlers', () => {
   });
 
   afterAll(async () => {
-    await moduleRef.close();
+    await moduleRef?.close();
   });
 
   it('accepts a booking from Framer label-style fields and exposes it in the admin list', async () => {

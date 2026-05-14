@@ -3,7 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { QuoteRequestStatus } from '@prisma/client';
+import {
+  QuoteDocumentType,
+  QuoteRequestStatus,
+  QuoteStatus,
+} from '@prisma/client';
 import {
   assertRequiredFields,
   combineDetails,
@@ -17,6 +21,8 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CustomersService } from '../customers/customers.service';
 import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma.service';
+import { QuotesService } from '../quotes/quotes.service';
+import { CreateQuoteFromRequestDto } from './dto/create-quote-from-request.dto';
 import { ServicesService } from '../services/services.service';
 import { CreateQuoteRequestDto } from './dto/create-quote-request.dto';
 import { UpdateQuoteRequestStatusDto } from './dto/update-quote-request-status.dto';
@@ -30,6 +36,7 @@ export class QuoteRequestsService {
     private readonly emailService: EmailService,
     private readonly analyticsService: AnalyticsService,
     private readonly auditLogsService: AuditLogsService,
+    private readonly quotesService: QuotesService,
   ) {}
 
   async createPublic(payload: PayloadRecord) {
@@ -200,21 +207,14 @@ export class QuoteRequestsService {
   findAll() {
     return this.prisma.quoteRequest.findMany({
       orderBy: { createdAt: 'desc' },
-      include: {
-        customer: true,
-        service: true,
-      },
+      include: this.quoteRequestInclude(),
     });
   }
 
   async findOne(id: string) {
     const quoteRequest = await this.prisma.quoteRequest.findUnique({
       where: { id },
-      include: {
-        customer: true,
-        service: true,
-        emailLogs: true,
-      },
+      include: this.quoteRequestDetailInclude(),
     });
 
     if (!quoteRequest) {
@@ -242,10 +242,7 @@ export class QuoteRequestsService {
       data: {
         status: updateDto.status as QuoteRequestStatus,
       },
-      include: {
-        customer: true,
-        service: true,
-      },
+      include: this.quoteRequestInclude(),
     });
 
     await this.auditLogsService.create({
@@ -260,5 +257,194 @@ export class QuoteRequestsService {
     });
 
     return quoteRequest;
+  }
+
+  async createQuoteFromRequest(
+    id: string,
+    createDto: CreateQuoteFromRequestDto,
+    adminUserId?: string,
+  ) {
+    const quoteRequest = await this.prisma.quoteRequest.findUnique({
+      where: { id },
+      include: this.quoteRequestDetailInclude(),
+    });
+
+    if (!quoteRequest) {
+      throw new NotFoundException('Quote request not found');
+    }
+
+    if (quoteRequest.createdQuote) {
+      throw new BadRequestException(
+        `Quote ${quoteRequest.createdQuote.quoteNumber} has already been created from this request`,
+      );
+    }
+
+    const customerName =
+      this.trimToUndefined(createDto.customerName) ??
+      this.customerName(quoteRequest.customer);
+    const customerEmail =
+      this.trimToUndefined(createDto.customerEmail)?.toLowerCase() ??
+      quoteRequest.customer.email?.toLowerCase();
+
+    if (!customerName || !customerEmail) {
+      throw new BadRequestException(
+        'Customer name and email are required to create a quote from a request',
+      );
+    }
+
+    const issueDate =
+      this.trimToUndefined(createDto.issueDate) ?? new Date().toISOString();
+    const expiryDate =
+      createDto.expiryDate === undefined
+        ? this.addDays(new Date(), 14).toISOString()
+        : createDto.expiryDate;
+
+    const quote = await this.quotesService.create(
+      {
+        documentType:
+          createDto.documentType ?? QuoteDocumentType.HOUSE_CLEANING_QUOTE,
+        quoteNumber: createDto.quoteNumber,
+        customerName,
+        customerEmail,
+        customerPhone:
+          this.trimToUndefined(createDto.customerPhone) ??
+          quoteRequest.customer.phone ??
+          undefined,
+        customerAddress:
+          this.trimToUndefined(createDto.customerAddress) ??
+          quoteRequest.postcode ??
+          undefined,
+        serviceAddress:
+          this.trimToUndefined(createDto.serviceAddress) ??
+          quoteRequest.postcode ??
+          undefined,
+        issueDate,
+        expiryDate,
+        preparedBy:
+          this.trimToUndefined(createDto.preparedBy) ??
+          'UltraSpark Cleaning',
+        status: QuoteStatus.DRAFT,
+        paymentTerms:
+          this.trimToUndefined(createDto.paymentTerms) ??
+          'Payment is due on completion unless agreed otherwise.',
+        specialInstructions:
+          this.trimToUndefined(createDto.specialInstructions) ??
+          this.specialInstructionsFromRequest(quoteRequest),
+        included:
+          this.trimToUndefined(createDto.included) ??
+          'General cleaning of agreed areas based on the website request details.',
+        excluded:
+          this.trimToUndefined(createDto.excluded) ??
+          'Specialist services, external windows, carpet shampooing, and hazardous waste unless agreed in writing.',
+        notes:
+          this.trimToUndefined(createDto.notes) ??
+          this.notesFromRequest(quoteRequest),
+        showSignature: createDto.showSignature ?? true,
+        discount: createDto.discount ?? 0,
+        tax: createDto.tax ?? 0,
+        lineItems: createDto.lineItems?.length
+          ? createDto.lineItems
+          : [
+              {
+                serviceName: quoteRequest.service.name,
+                description:
+                  `${quoteRequest.details}\n\nPricing must be confirmed by UltraSpark before sending.`.trim(),
+                rate: 0,
+                quantity: 1,
+              },
+            ],
+      },
+      adminUserId,
+      quoteRequest.id,
+    );
+
+    await this.prisma.quoteRequest.update({
+      where: { id },
+      data: { status: QuoteRequestStatus.QUOTED },
+    });
+
+    await this.auditLogsService.create({
+      action: 'QUOTE_CREATED',
+      entityType: 'QuoteRequest',
+      entityId: id,
+      description: `Quote ${quote.quoteNumber} created from website quote request`,
+      adminUserId,
+      metadata: {
+        quoteId: quote.id,
+        quoteNumber: quote.quoteNumber,
+        customerId: quote.customerId,
+      },
+    });
+
+    return quote;
+  }
+
+  private quoteRequestInclude() {
+    return {
+      customer: true,
+      service: true,
+      createdQuote: {
+        include: {
+          lineItems: true,
+        },
+      },
+    };
+  }
+
+  private quoteRequestDetailInclude() {
+    return {
+      ...this.quoteRequestInclude(),
+      emailLogs: {
+        orderBy: { createdAt: 'desc' as const },
+      },
+    };
+  }
+
+  private customerName(customer: { firstName?: string | null; lastName?: string | null }) {
+    return `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim();
+  }
+
+  private specialInstructionsFromRequest(
+    request: Awaited<ReturnType<QuoteRequestsService['findOne']>>,
+  ) {
+    return [
+      request.preferredDate
+        ? `Requested date: ${request.preferredDate.toISOString()}`
+        : undefined,
+      request.propertyType ? `Property type: ${request.propertyType}` : undefined,
+      request.bedrooms !== null && request.bedrooms !== undefined
+        ? `Bedrooms: ${request.bedrooms}`
+        : undefined,
+      request.bathrooms !== null && request.bathrooms !== undefined
+        ? `Bathrooms: ${request.bathrooms}`
+        : undefined,
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  private notesFromRequest(
+    request: Awaited<ReturnType<QuoteRequestsService['findOne']>>,
+  ) {
+    return [
+      `Created from website quote request ${request.id}.`,
+      request.preferredDate
+        ? `Requested date: ${request.preferredDate.toISOString()}`
+        : undefined,
+      request.details,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+  }
+
+  private addDays(date: Date, days: number) {
+    const next = new Date(date);
+    next.setDate(next.getDate() + days);
+    return next;
+  }
+
+  private trimToUndefined(value?: string | null) {
+    const trimmed = value?.trim();
+    return trimmed || undefined;
   }
 }

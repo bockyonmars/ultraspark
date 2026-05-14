@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ReceiptText } from "lucide-react";
 import { QuoteActions } from "@/components/quotes/quote-actions";
 import { QuoteForm } from "@/components/quotes/quote-form";
 import { QuotePreview } from "@/components/quotes/quote-preview";
@@ -23,6 +24,7 @@ import type {
   QuoteFormLineItem,
   QuoteFormState,
   QuoteStatus,
+  Invoice,
 } from "@/types/api";
 import { useApiData } from "@/lib/use-api-data";
 
@@ -31,6 +33,7 @@ export default function QuoteDetailsPage({
 }: {
   params: { id: string };
 }) {
+  const router = useRouter();
   const detailState = useApiData<QuoteDocument>(
     () => api.get<QuoteDocument>(`/admin/quotes/${params.id}`),
     [params.id],
@@ -38,6 +41,7 @@ export default function QuoteDetailsPage({
   const [form, setForm] = useState<QuoteFormState | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -164,6 +168,26 @@ export default function QuoteDetailsPage({
     }
   }
 
+  async function createInvoiceFromQuote() {
+    setIsCreatingInvoice(true);
+    setMessage(null);
+    try {
+      const invoice = await api.post<Invoice>(
+        `/admin/invoices/from-quote/${params.id}`,
+        {},
+      );
+      router.push(`/invoices/${invoice.id}`);
+    } catch (error) {
+      setMessage(
+        error instanceof ApiError
+          ? error.message
+          : "Unable to create invoice from quote",
+      );
+    } finally {
+      setIsCreatingInvoice(false);
+    }
+  }
+
   if (detailState.isLoading) {
     return <LoadingSpinner label="Loading quote..." />;
   }
@@ -200,14 +224,35 @@ export default function QuoteDetailsPage({
             {quote.sentAt ? ` - Sent ${formatDateTime(quote.sentAt)}` : ""}
           </p>
         </div>
-        <QuoteActions
-          onSave={() => void saveQuote()}
-          onSend={() => void sendQuote()}
-          isSaving={isSaving}
-          isSending={isSending}
-          canEdit={!readOnly}
-          canSend={canSend}
-        />
+        <div className="flex flex-wrap gap-3">
+          {quote.invoices?.[0] ? (
+            <Link
+              href={`/invoices/${quote.invoices[0].id}`}
+              className="inline-flex h-10 items-center justify-center rounded-xl border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+            >
+              <ReceiptText className="mr-2 h-4 w-4" />
+              View linked invoice
+            </Link>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void createInvoiceFromQuote()}
+              disabled={isCreatingInvoice}
+            >
+              <ReceiptText className="mr-2 h-4 w-4" />
+              {isCreatingInvoice ? "Creating..." : "Create invoice"}
+            </Button>
+          )}
+          <QuoteActions
+            onSave={() => void saveQuote()}
+            onSend={() => void sendQuote()}
+            isSaving={isSaving}
+            isSending={isSending}
+            canEdit={!readOnly}
+            canSend={canSend}
+          />
+        </div>
       </div>
 
       {message ? (
@@ -246,6 +291,50 @@ export default function QuoteDetailsPage({
         </div>
       ) : null}
 
+      <div className="admin-no-print grid gap-4 lg:grid-cols-3">
+        <LinkedRecordCard
+          label="Source website request"
+          title={
+            quote.sourceQuoteRequest
+              ? quote.sourceQuoteRequest.service?.name ?? "Website quote request"
+              : "No source request linked"
+          }
+          description={
+            quote.sourceQuoteRequest
+              ? `${getCustomerName(quote.sourceQuoteRequest.customer)} - ${formatDateTime(quote.sourceQuoteRequest.createdAt)}`
+              : "This quote was created manually."
+          }
+          href={
+            quote.sourceQuoteRequest
+              ? `/quotes/requests/${quote.sourceQuoteRequest.id}`
+              : undefined
+          }
+        />
+        <LinkedRecordCard
+          label="Email history"
+          title={`${quote.emailLogs?.length ?? 0} email log${quote.emailLogs?.length === 1 ? "" : "s"}`}
+          description={
+            quote.sentAt
+              ? `Last sent ${formatDateTime(quote.sentAt)}`
+              : "No quote email has been sent yet."
+          }
+        />
+        <LinkedRecordCard
+          label="Invoice"
+          title={
+            quote.invoices?.[0]
+              ? quote.invoices[0].invoiceNumber
+              : "No invoice linked"
+          }
+          description={
+            quote.invoices?.[0]
+              ? `Status ${quote.invoices[0].status}`
+              : "Create an invoice once the quote is accepted."
+          }
+          href={quote.invoices?.[0] ? `/invoices/${quote.invoices[0].id}` : undefined}
+        />
+      </div>
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.92fr)] xl:items-start">
         <QuoteForm
           form={form}
@@ -262,4 +351,41 @@ export default function QuoteDetailsPage({
       </div>
     </div>
   );
+}
+
+function LinkedRecordCard({
+  label,
+  title,
+  description,
+  href,
+}: {
+  label: string;
+  title: string;
+  description: string;
+  href?: string;
+}) {
+  const content = (
+    <div className="rounded-xl border bg-white p-4 shadow-soft">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p className="mt-2 font-semibold text-slate-900">{title}</p>
+      <p className="mt-1 text-sm text-slate-500">{description}</p>
+    </div>
+  );
+
+  return href ? (
+    <Link href={href} className="block hover:opacity-90">
+      {content}
+    </Link>
+  ) : (
+    content
+  );
+}
+
+function getCustomerName(customer?: {
+  firstName?: string | null;
+  lastName?: string | null;
+} | null) {
+  return `${customer?.firstName ?? ""} ${customer?.lastName ?? ""}`.trim() || "Unknown customer";
 }

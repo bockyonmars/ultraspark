@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import {
+  CustomerActivityType,
   Prisma,
   SupportTicketMessageType,
   SupportTicketStatus,
@@ -11,6 +12,7 @@ import {
 import { splitFullName } from "../../common/utils/public-form-payload.util";
 import { AnalyticsService } from "../analytics/analytics.service";
 import { AuditLogsService } from "../audit-logs/audit-logs.service";
+import { CustomerActivitiesService } from "../customer-activities/customer-activities.service";
 import { CustomersService } from "../customers/customers.service";
 import { EmailService } from "../email/email.service";
 import { PrismaService } from "../prisma.service";
@@ -33,6 +35,7 @@ const ticketInclude = {
   },
   relatedBooking: true,
   relatedQuote: true,
+  invoices: true,
   _count: {
     select: {
       messages: true,
@@ -47,6 +50,7 @@ export class SupportTicketsService {
     private readonly prisma: PrismaService,
     private readonly customersService: CustomersService,
     private readonly emailService: EmailService,
+    private readonly customerActivitiesService: CustomerActivitiesService,
     private readonly analyticsService: AnalyticsService,
     private readonly auditLogsService: AuditLogsService,
   ) {}
@@ -88,6 +92,14 @@ export class SupportTicketsService {
         ticketId: ticket.id,
         action: "CREATED",
         description: "Support ticket created from public form",
+      }),
+      this.customerActivitiesService.create({
+        customerId: customer.id,
+        type: CustomerActivityType.SUPPORT_TICKET_CREATED,
+        title: `Support ticket ${ticket.ticketNumber} created`,
+        description: ticket.subject,
+        relatedEntityType: "SupportTicket",
+        relatedEntityId: ticket.id,
       }),
       this.emailService.sendAdminSupportTicketAlert({
         ticketNumber: ticket.ticketNumber,
@@ -202,6 +214,15 @@ export class SupportTicketsService {
         description: "Support ticket created by admin",
         adminUserId,
         metadata: { source },
+      }),
+      this.customerActivitiesService.create({
+        customerId: customer.id,
+        type: CustomerActivityType.SUPPORT_TICKET_CREATED,
+        title: `Support ticket ${ticket.ticketNumber} created`,
+        description: ticket.subject,
+        relatedEntityType: "SupportTicket",
+        relatedEntityId: ticket.id,
+        createdById: adminUserId,
       }),
       this.auditLogsService.create({
         action: "SUPPORT_TICKET_CREATED",

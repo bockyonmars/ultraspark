@@ -1,6 +1,6 @@
 # UltraSpark Cleaning Backend
 
-NestJS backend for the UltraSpark Cleaning Framer website. It supports the current production needs only: public lead capture, admin authentication, lead management, email notifications, analytics, audit logs, Swagger docs, and health checks.
+NestJS backend for the UltraSpark Cleaning website and admin operations portal. It supports public lead capture, admin authentication, customer/booking/quote management, invoice storage, invoice email sending, activity history, email notifications, analytics, audit logs, Swagger docs, and health checks.
 
 ## Stack
 
@@ -29,6 +29,19 @@ NestJS backend for the UltraSpark Cleaning Framer website. It supports the curre
   - `GET /api/v1/quotes`
   - `GET /api/v1/quotes/:id`
   - `PATCH /api/v1/quotes/:id/status`
+  - `GET /api/v1/admin/quotes`
+  - `POST /api/v1/admin/quotes`
+  - `GET /api/v1/admin/quotes/:id`
+  - `POST /api/v1/admin/quotes/:id/send`
+  - `GET /api/v1/admin/invoices`
+  - `POST /api/v1/admin/invoices`
+  - `POST /api/v1/admin/invoices/from-quote/:quoteId`
+  - `GET /api/v1/admin/invoices/:id`
+  - `PATCH /api/v1/admin/invoices/:id`
+  - `POST /api/v1/admin/invoices/:id/upload-pdf`
+  - `GET /api/v1/admin/invoices/:id/pdf`
+  - `POST /api/v1/admin/invoices/:id/send-email`
+  - `POST /api/v1/admin/invoices/:id/mark-paid`
   - `GET /api/v1/bookings`
   - `GET /api/v1/bookings/:id`
   - `PATCH /api/v1/bookings/:id/status`
@@ -50,19 +63,28 @@ test -f .env || cp .env.example .env
 If `.env` already exists, do not overwrite it. Open `.env.example` and copy only
 the missing keys into your local `.env`.
 
-Required variables:
+Required variables for the API:
 
 - `DATABASE_URL`
 - `JWT_SECRET`
 - `JWT_EXPIRES_IN`
-- `RESEND_API_KEY`
-- `EMAIL_FROM`
-- `ADMIN_NOTIFICATION_EMAIL`
 - `FRONTEND_URL`
 - `ADMIN_URL`
 - `API_URL`
 - `NODE_ENV`
 - `PORT`
+
+Production email sending also requires:
+
+- `EMAIL_PROVIDER`
+- `EMAIL_FROM_ADDRESS`
+- `EMAIL_REPLY_TO`
+- `EMAIL_API_KEY` or `RESEND_API_KEY`
+
+Production invoice PDF storage also requires:
+
+- `STORAGE_PROVIDER`
+- `STORAGE_LOCAL_ROOT` when `STORAGE_PROVIDER=local`
 
 Optional seed variables:
 
@@ -83,6 +105,11 @@ JWT_SECRET=ultraspark-local-jwt-secret-change-later-123456789
 JWT_EXPIRES_IN=1d
 
 RESEND_API_KEY=your_resend_key_here
+EMAIL_PROVIDER=resend
+EMAIL_API_KEY=your_provider_api_key_here
+EMAIL_FROM_NAME=UltraSpark Cleaning
+EMAIL_FROM_ADDRESS=info@ultrasparkcleaning.co.uk
+EMAIL_REPLY_TO=info@ultrasparkcleaning.co.uk
 
 EMAIL_FROM=UltraSpark Cleaning <info@ultrasparkcleaning.co.uk>
 ADMIN_NOTIFICATION_EMAIL=info@ultrasparkcleaning.co.uk
@@ -90,6 +117,12 @@ ADMIN_NOTIFICATION_EMAIL=info@ultrasparkcleaning.co.uk
 FRONTEND_URL=https://ultrasparkcleaning.co.uk
 ADMIN_URL=https://ultraspark.onrender.com
 API_URL=http://localhost:4000
+APP_BASE_URL=https://ultraspark.onrender.com
+
+STORAGE_PROVIDER=local
+STORAGE_LOCAL_ROOT=./uploads
+STORAGE_BUCKET=ultraspark-invoices
+STORAGE_PUBLIC_BASE_URL=http://localhost:4000
 
 NODE_ENV=development
 PORT=4000
@@ -185,6 +218,75 @@ Recommended Framer payload fields:
 - Contact: `firstName`, `lastName`, `email`, `phone`, `subject`, `message`, `source`
 - Quote: `firstName`, `lastName`, `email`, `phone`, `serviceId`, `postcode`, `propertyType`, `bedrooms`, `bathrooms`, `preferredDate`, `details`
 - Booking: `firstName`, `lastName`, `email`, `phone`, `serviceId`, `address`, `postcode`, `propertyType`, `bedrooms`, `bathrooms`, `preferredDate`, `preferredTime`, `details`
+
+## Invoice Workflow
+
+Invoices are managed from the admin dashboard and are stored independently from externally generated invoice PDFs, such as PDFs created in Monzo.
+
+1. Create an invoice from `/admin/invoices/new` or from a quote detail page.
+2. Link the invoice to a customer and optionally a booking, quote, or support ticket.
+3. Upload the generated invoice PDF through the invoice detail page.
+4. Send the invoice email from the admin portal. The email can include the payment link and attach the uploaded PDF.
+5. Email delivery attempts are saved in `EmailLog`; PDF attachment metadata is saved in `EmailAttachment`.
+6. Invoice/customer events are written to `CustomerActivity`, including invoice created, uploaded, sent, paid, and email failed.
+7. Mark the invoice paid when payment is confirmed.
+
+If email sending fails, the API stores a failed `EmailLog`, records an `EMAIL_FAILED` customer activity, and returns a safe admin-facing error without exposing provider secrets or stack traces.
+
+## Email Provider Setup
+
+The email layer uses a provider abstraction with Resend implemented. Configure:
+
+```dotenv
+EMAIL_PROVIDER=resend
+EMAIL_API_KEY=your_provider_api_key_here
+RESEND_API_KEY=your_resend_key_here
+EMAIL_FROM_NAME=UltraSpark Cleaning
+EMAIL_FROM_ADDRESS=info@ultrasparkcleaning.co.uk
+EMAIL_REPLY_TO=info@ultrasparkcleaning.co.uk
+```
+
+In development, if a provider key is missing the invoice email path can run in log-only mode. In production, invoice email sends fail clearly unless a provider and API key are configured.
+
+## Invoice PDF Storage
+
+The storage layer is isolated behind `StorageService`. The first provider is local filesystem storage:
+
+```dotenv
+STORAGE_PROVIDER=local
+STORAGE_LOCAL_ROOT=/persistent/ultraspark/uploads
+STORAGE_PUBLIC_BASE_URL=https://api.ultrasparkcleaning.co.uk
+```
+
+For local development, `STORAGE_LOCAL_ROOT=./uploads` is fine. In production, point `STORAGE_LOCAL_ROOT` to a persistent disk or volume. Do not use an ephemeral deployment directory for invoice PDFs. Additional providers such as S3 or Supabase Storage can be added behind the same storage interface later.
+
+Production setup checklist:
+
+- Run Prisma migrations and `npm run prisma:generate`.
+- Configure email provider variables.
+- Configure invoice PDF storage on a persistent volume.
+- Confirm `FRONTEND_URL`, `ADMIN_URL`, `API_URL`, and `APP_BASE_URL` match deployed domains.
+- Send a test invoice email from the admin portal and confirm the `EmailLog` and `CustomerActivity` records are created.
+
+## Website Request To Quote Workflow
+
+Website quote form submissions are stored as `QuoteRequest` records. The admin
+portal exposes them through protected admin routes without changing the public
+form endpoint:
+
+- Public submission: `POST /api/v1/quotes`
+- Admin request list: `GET /api/v1/admin/quote-requests`
+- Admin request detail: `GET /api/v1/admin/quote-requests/:id`
+- Convert request to quote: `POST /api/v1/admin/quote-requests/:id/create-quote`
+
+When a request is converted, the formal `Quote` stores `quoteRequestId`, the
+request status is moved to `QUOTED`, and the created quote can be traced back to
+the original website request, customer, and selected service. The conversion
+endpoint blocks duplicate quote creation from the same request and returns a
+clear admin-facing error naming the existing quote number.
+
+Admins can still create quotes manually through `POST /api/v1/admin/quotes`.
+Manual quotes simply have no `quoteRequestId`.
 
 ## Render Deployment
 

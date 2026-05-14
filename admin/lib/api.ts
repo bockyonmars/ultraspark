@@ -56,12 +56,67 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}) 
   return payload.data as T;
 }
 
+export async function apiFormRequest<T>(path: string, formData: FormData) {
+  const token = getTokenFromCookie();
+  const response = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+    cache: 'no-store',
+  });
+
+  const payload = (await response.json().catch(() => ({}))) as ApiEnvelope<T>;
+
+  if (response.status === 401) {
+    clearTokenCookie();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new ApiError(payload.message ?? 'Unauthorized', 401);
+  }
+
+  if (!response.ok) {
+    throw new ApiError(payload.message ?? 'Request failed', response.status);
+  }
+
+  return payload.data as T;
+}
+
+export async function apiBlobRequest(path: string) {
+  const token = getTokenFromCookie();
+  const response = await fetch(`${API_URL}${path}`, {
+    method: 'GET',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    cache: 'no-store',
+  });
+
+  if (response.status === 401) {
+    clearTokenCookie();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new ApiError('Unauthorized', 401);
+  }
+
+  if (!response.ok) {
+    throw new ApiError('File could not be loaded', response.status);
+  }
+
+  return response.blob();
+}
+
 export const api = {
   get: <T>(path: string, token?: string) => apiRequest<T>(path, { method: 'GET', token }),
   post: <T>(path: string, body: unknown, isPublic = false) =>
     apiRequest<T>(path, { method: 'POST', body, isPublic }),
   patch: <T>(path: string, body: unknown) =>
     apiRequest<T>(path, { method: 'PATCH', body }),
+  upload: <T>(path: string, formData: FormData) => apiFormRequest<T>(path, formData),
+  blob: (path: string) => apiBlobRequest(path),
 };
 
 export { API_URL };

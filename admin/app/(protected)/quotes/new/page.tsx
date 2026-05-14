@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { QuoteActions } from "@/components/quotes/quote-actions";
 import { QuoteForm } from "@/components/quotes/quote-form";
 import { QuotePreview } from "@/components/quotes/quote-preview";
@@ -11,23 +11,52 @@ import { api, ApiError } from "@/lib/api";
 import {
   buildQuotePayload,
   calculateQuoteTotals,
+  createQuoteDraftFromRequest,
   createDefaultQuoteDraft,
   createEmptyLineItem,
 } from "@/lib/quote-documents";
+import { useApiData } from "@/lib/use-api-data";
 import type {
   QuoteDocument,
   QuoteFormLineItem,
   QuoteFormState,
+  QuoteRequest,
 } from "@/types/api";
 
 export default function NewQuotePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestId = searchParams.get("requestId");
   const [form, setForm] = useState<QuoteFormState>(() =>
     createDefaultQuoteDraft(),
   );
+  const [requestApplied, setRequestApplied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const requestState = useApiData<QuoteRequest | null>(
+    () =>
+      requestId
+        ? api.get<QuoteRequest>(`/admin/quote-requests/${requestId}`)
+        : Promise.resolve(null),
+    [requestId],
+    null,
+  );
+
+  useEffect(() => {
+    if (!requestState.data || requestApplied) return;
+
+    if (requestState.data.createdQuote) {
+      setMessage(
+        `Quote ${requestState.data.createdQuote.quoteNumber} already exists for this request.`,
+      );
+      setRequestApplied(true);
+      return;
+    }
+
+    setForm(createQuoteDraftFromRequest(requestState.data));
+    setRequestApplied(true);
+  }, [requestApplied, requestState.data]);
 
   const totals = useMemo(
     () => calculateQuoteTotals(form.lineItems, form.discount, form.tax),
@@ -72,7 +101,9 @@ export default function NewQuotePage() {
     setMessage(null);
     try {
       const saved = await api.post<QuoteDocument>(
-        "/admin/quotes",
+        requestId
+          ? `/admin/quote-requests/${requestId}/create-quote`
+          : "/admin/quotes",
         buildQuotePayload(form),
       );
       router.replace(`/quotes/${saved.id}`);
@@ -90,7 +121,9 @@ export default function NewQuotePage() {
     setMessage(null);
     try {
       const saved = await api.post<QuoteDocument>(
-        "/admin/quotes",
+        requestId
+          ? `/admin/quote-requests/${requestId}/create-quote`
+          : "/admin/quotes",
         buildQuotePayload(form),
       );
       const sent = await api.post<QuoteDocument>(
@@ -125,7 +158,9 @@ export default function NewQuotePage() {
             Create quote
           </h1>
           <p className="text-sm text-slate-500">
-            Build a reusable branded quote or estimate with a live customer preview.
+            {requestId
+              ? "Review the prefilled website request details, confirm pricing, then save the formal quote."
+              : "Build a reusable branded quote or estimate with a live customer preview."}
           </p>
         </div>
         <QuoteActions

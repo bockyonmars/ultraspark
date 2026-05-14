@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BookingRequestStatus } from '@prisma/client';
+import { BookingRequestStatus, CustomerActivityType } from '@prisma/client';
 import {
   assertRequiredFields,
   combineDetails,
@@ -14,6 +14,7 @@ import {
 } from '../../common/utils/public-form-payload.util';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { CustomerActivitiesService } from '../customer-activities/customer-activities.service';
 import { CustomersService } from '../customers/customers.service';
 import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma.service';
@@ -28,6 +29,7 @@ export class BookingRequestsService {
     private readonly customersService: CustomersService,
     private readonly servicesService: ServicesService,
     private readonly emailService: EmailService,
+    private readonly customerActivitiesService: CustomerActivitiesService,
     private readonly analyticsService: AnalyticsService,
     private readonly auditLogsService: AuditLogsService,
   ) {}
@@ -259,16 +261,27 @@ export class BookingRequestsService {
       },
     });
 
-    await this.auditLogsService.create({
-      action: 'BOOKING_STATUS_UPDATED',
-      entityType: 'BookingRequest',
-      entityId: id,
-      description: `Booking request status updated to ${updateDto.status}`,
-      adminUserId,
-      metadata: {
-        status: updateDto.status,
-      },
-    });
+    await Promise.allSettled([
+      this.customerActivitiesService.create({
+        customerId: bookingRequest.customerId,
+        type: CustomerActivityType.BOOKING_UPDATED,
+        title: `Booking status updated to ${updateDto.status}`,
+        description: bookingRequest.service?.name,
+        relatedEntityType: 'BookingRequest',
+        relatedEntityId: id,
+        createdById: adminUserId,
+      }),
+      this.auditLogsService.create({
+        action: 'BOOKING_STATUS_UPDATED',
+        entityType: 'BookingRequest',
+        entityId: id,
+        description: `Booking request status updated to ${updateDto.status}`,
+        adminUserId,
+        metadata: {
+          status: updateDto.status,
+        },
+      }),
+    ]);
 
     return bookingRequest;
   }
