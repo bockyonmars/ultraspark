@@ -14,6 +14,8 @@ const styles: Record<string, string> = {
   MEDIUM: "bg-blue-50 text-blue-700",
   HIGH: "bg-orange-50 text-orange-700",
   URGENT: "bg-rose-50 text-rose-700",
+  DRAFT: "bg-slate-100 text-slate-700",
+  SENT: "bg-emerald-50 text-emerald-700",
   CONTACTED: "bg-orange-50 text-orange-700",
   QUOTED: "bg-indigo-50 text-indigo-700",
   ACCEPTED: "bg-emerald-50 text-emerald-700",

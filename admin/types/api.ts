@@ -72,6 +72,119 @@ export type QuoteRequest = {
   service?: Service | null;
 };
 
+export type QuoteDocumentType =
+  | "HOUSE_CLEANING_QUOTE"
+  | "HOUSE_CLEANING_ESTIMATE";
+
+export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED";
+
+export type MoneyValue = number | string;
+
+export type QuoteLineItem = {
+  id: string;
+  quoteId?: string;
+  serviceName: string;
+  description?: string | null;
+  rate: MoneyValue;
+  quantity: MoneyValue;
+  total: MoneyValue;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type QuoteDocument = {
+  id: string;
+  quoteNumber: string;
+  documentType: QuoteDocumentType;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string | null;
+  customerAddress?: string | null;
+  serviceAddress?: string | null;
+  issueDate: string;
+  expiryDate?: string | null;
+  preparedBy?: string | null;
+  status: QuoteStatus;
+  paymentTerms?: string | null;
+  specialInstructions?: string | null;
+  included?: string | null;
+  excluded?: string | null;
+  notes?: string | null;
+  showSignature: boolean;
+  subtotal: MoneyValue;
+  discount: MoneyValue;
+  tax: MoneyValue;
+  total: MoneyValue;
+  sentAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  customer?: Customer | null;
+  lineItems: QuoteLineItem[];
+  emailLogs?: Array<{
+    id: string;
+    type: string;
+    recipient: string;
+    subject: string;
+    status: "SENT" | "FAILED" | string;
+    createdAt?: string;
+  }>;
+};
+
+export type QuoteFormLineItem = {
+  id: string;
+  serviceName: string;
+  description: string;
+  rate: number;
+  quantity: number;
+};
+
+export type QuoteFormState = {
+  id?: string;
+  quoteNumber?: string;
+  documentType: QuoteDocumentType;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerAddress: string;
+  serviceAddress: string;
+  issueDate: string;
+  expiryDate: string;
+  preparedBy: string;
+  status: QuoteStatus;
+  paymentTerms: string;
+  specialInstructions: string;
+  included: string;
+  excluded: string;
+  notes: string;
+  showSignature: boolean;
+  discount: number;
+  tax: number;
+  lineItems: QuoteFormLineItem[];
+};
+
+export type QuotePayload = {
+  quoteNumber?: string;
+  documentType: QuoteDocumentType;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  serviceAddress?: string;
+  issueDate: string;
+  expiryDate?: string | null;
+  preparedBy?: string;
+  status: QuoteStatus;
+  paymentTerms?: string;
+  specialInstructions?: string;
+  included?: string;
+  excluded?: string;
+  notes?: string;
+  showSignature: boolean;
+  discount: number;
+  tax: number;
+  lineItems: Array<Omit<QuoteFormLineItem, "id">>;
+};
+
 export type BookingRequest = {
   id: string;
   postcode?: string | null;

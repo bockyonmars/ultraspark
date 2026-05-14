@@ -10,6 +10,7 @@ import { AdminUsersModule } from "./modules/admin-users/admin-users.module";
 import { CustomersModule } from "./modules/customers/customers.module";
 import { ContactMessagesModule } from "./modules/contact-messages/contact-messages.module";
 import { QuoteRequestsModule } from "./modules/quote-requests/quote-requests.module";
+import { QuotesModule } from "./modules/quotes/quotes.module";
 import { BookingRequestsModule } from "./modules/booking-requests/booking-requests.module";
 import { ServicesModule } from "./modules/services/services.module";
 import { EmailModule } from "./modules/email/email.module";
@@ -38,6 +39,7 @@ import { HealthModule } from "./modules/health/health.module";
     CustomersModule,
     ContactMessagesModule,
     QuoteRequestsModule,
+    QuotesModule,
     BookingRequestsModule,
     ServicesModule,
     EmailModule,

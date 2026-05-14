@@ -6,6 +6,10 @@ import { PrismaService } from "../prisma.service";
 import { bookingRequestResponseTemplate } from "./templates/bookingRequestResponse";
 import { contactFormResponseTemplate } from "./templates/contactFormResponse";
 import { quoteRequestResponseTemplate } from "./templates/quoteRequestResponse";
+import {
+  quoteDocumentTemplate,
+  type QuoteDocumentEmailData,
+} from "./templates/quoteDocument";
 import { manualCustomerReplyTemplate } from "./templates/manualCustomerReply";
 import {
   adminTicketAlertTemplate,
@@ -23,6 +27,7 @@ type SendEmailInput = {
   text: string;
   contactMessageId?: string;
   quoteRequestId?: string;
+  quoteId?: string;
   bookingRequestId?: string;
   supportTicketId?: string;
 };
@@ -252,6 +257,33 @@ export class EmailService {
       recipient: payload.recipient,
       subject: template.subject,
       quoteRequestId: payload.quoteRequestId,
+      html: template.html,
+      text: template.text,
+    });
+  }
+
+  async sendCustomerQuoteDocument(payload: {
+    quote: QuoteDocumentEmailData & { id: string };
+  }) {
+    const template = quoteDocumentTemplate({
+      quote: payload.quote,
+      variables: {
+        ...this.getTemplateCompanyVariables(),
+        customerName: payload.quote.customerName,
+        email: payload.quote.customerEmail,
+        phoneNumber: payload.quote.customerPhone ?? "Not provided",
+        location:
+          payload.quote.serviceAddress ??
+          payload.quote.customerAddress ??
+          "Not provided",
+      },
+    });
+
+    return this.sendEmail({
+      type: "CUSTOMER_QUOTE_DOCUMENT",
+      recipient: payload.quote.customerEmail,
+      subject: template.subject,
+      quoteId: payload.quote.id,
       html: template.html,
       text: template.text,
     });
@@ -565,6 +597,7 @@ export class EmailService {
           providerMessageId: response.data?.id,
           contactMessageId: input.contactMessageId,
           quoteRequestId: input.quoteRequestId,
+          quoteId: input.quoteId,
           bookingRequestId: input.bookingRequestId,
           supportTicketId: input.supportTicketId,
         },
@@ -585,6 +618,7 @@ export class EmailService {
           errorMessage: message,
           contactMessageId: input.contactMessageId,
           quoteRequestId: input.quoteRequestId,
+          quoteId: input.quoteId,
           bookingRequestId: input.bookingRequestId,
           supportTicketId: input.supportTicketId,
         },

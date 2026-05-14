@@ -1,0 +1,161 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { QuoteActions } from "@/components/quotes/quote-actions";
+import { QuoteForm } from "@/components/quotes/quote-form";
+import { QuotePreview } from "@/components/quotes/quote-preview";
+import { api, ApiError } from "@/lib/api";
+import {
+  buildQuotePayload,
+  calculateQuoteTotals,
+  createDefaultQuoteDraft,
+  createEmptyLineItem,
+} from "@/lib/quote-documents";
+import type {
+  QuoteDocument,
+  QuoteFormLineItem,
+  QuoteFormState,
+} from "@/types/api";
+
+export default function NewQuotePage() {
+  const router = useRouter();
+  const [form, setForm] = useState<QuoteFormState>(() =>
+    createDefaultQuoteDraft(),
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const totals = useMemo(
+    () => calculateQuoteTotals(form.lineItems, form.discount, form.tax),
+    [form.lineItems, form.discount, form.tax],
+  );
+
+  const updateForm = useCallback((patch: Partial<QuoteFormState>) => {
+    setForm((current) => ({ ...current, ...patch }));
+  }, []);
+
+  const updateLineItem = useCallback(
+    (id: string, patch: Partial<QuoteFormLineItem>) => {
+      setForm((current) => ({
+        ...current,
+        lineItems: current.lineItems.map((item) =>
+          item.id === id ? { ...item, ...patch } : item,
+        ),
+      }));
+    },
+    [],
+  );
+
+  const addLineItem = useCallback(() => {
+    setForm((current) => ({
+      ...current,
+      lineItems: [...current.lineItems, createEmptyLineItem()],
+    }));
+  }, []);
+
+  const removeLineItem = useCallback((id: string) => {
+    setForm((current) => ({
+      ...current,
+      lineItems:
+        current.lineItems.length > 1
+          ? current.lineItems.filter((item) => item.id !== id)
+          : current.lineItems,
+    }));
+  }, []);
+
+  async function saveQuote() {
+    setIsSaving(true);
+    setMessage(null);
+    try {
+      const saved = await api.post<QuoteDocument>(
+        "/admin/quotes",
+        buildQuotePayload(form),
+      );
+      router.replace(`/quotes/${saved.id}`);
+      return saved;
+    } catch (error) {
+      setMessage(error instanceof ApiError ? error.message : "Unable to save quote");
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function sendQuote() {
+    setIsSending(true);
+    setMessage(null);
+    try {
+      const saved = await api.post<QuoteDocument>(
+        "/admin/quotes",
+        buildQuotePayload(form),
+      );
+      const sent = await api.post<QuoteDocument>(
+        `/admin/quotes/${saved.id}/send`,
+        {},
+      );
+      router.replace(`/quotes/${sent.id}`);
+    } catch (error) {
+      setMessage(error instanceof ApiError ? error.message : "Unable to send quote");
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  const canSend =
+    Boolean(form.customerName.trim()) &&
+    Boolean(form.customerEmail.trim()) &&
+    form.lineItems.some((item) => item.serviceName.trim());
+
+  return (
+    <div className="space-y-6">
+      <div className="admin-no-print flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <Link
+            href="/quotes"
+            className="mb-2 inline-flex items-center text-sm font-semibold text-slate-600 hover:text-primary"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to quotes
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Create quote
+          </h1>
+          <p className="text-sm text-slate-500">
+            Build a reusable branded quote or estimate with a live customer preview.
+          </p>
+        </div>
+        <QuoteActions
+          onSave={() => void saveQuote()}
+          onSend={() => void sendQuote()}
+          isSaving={isSaving}
+          isSending={isSending}
+          canSend={canSend}
+        />
+      </div>
+
+      {message ? (
+        <div className="admin-no-print rounded-xl border border-danger/30 bg-red-50 p-4 text-sm text-danger">
+          {message}
+        </div>
+      ) : null}
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.92fr)] xl:items-start">
+        <QuoteForm
+          form={form}
+          totals={totals}
+          onChange={updateForm}
+          onLineItemChange={updateLineItem}
+          onAddLineItem={addLineItem}
+          onRemoveLineItem={removeLineItem}
+        />
+        <div className="xl:sticky xl:top-6">
+          <QuotePreview quote={form} totals={totals} />
+        </div>
+      </div>
+    </div>
+  );
+}
