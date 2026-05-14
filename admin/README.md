@@ -115,10 +115,25 @@ default editable line item already filled in. Pricing is intentionally left at
 zero when there are no pricing rules, so staff must confirm the rate and
 quantity before sending.
 
+The quote builder supports service-specific document types, including House
+Cleaning Quote, Office Cleaning Quote, Deep Cleaning Quote, End of Tenancy
+Cleaning Quote, After Builders Cleaning Quote, Commercial Cleaning Quote,
+Carpet Cleaning Quote, Move-In / Move-Out Cleaning Quote, and General Cleaning
+Quote. Website request conversion picks the closest type from the selected
+service, so an Office Cleaning request opens as an Office Cleaning Quote with
+office-specific included/excluded scope text. The same label is used in preview,
+detail, print/PDF output, and the quote email.
+
 After saving, the formal quote is linked back to the original request and the
 request status becomes `QUOTED`. If a request already has a linked quote, the UI
 shows **Quote created** and offers **View Quote** instead of making another
 quote the primary action.
+
+When **Send quote** is clicked, the admin calls
+`POST /api/v1/admin/quotes/:id/send`. Staging can use backend
+`EMAIL_PROVIDER=log`, which records the quote email as sent in `EmailLog`
+without contacting a real provider. Production delivery should use a supported
+provider such as Resend with `EMAIL_API_KEY` or `RESEND_API_KEY` configured.
 
 ## Connect The Admin Subdomain
 

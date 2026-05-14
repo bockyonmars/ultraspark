@@ -39,6 +39,8 @@ body {
   .quote-print-area,
   .quote-print-area * {
     visibility: visible;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .quote-print-area {
@@ -53,5 +55,18 @@ body {
     min-height: 0 !important;
     border: 0 !important;
     box-shadow: none !important;
+  }
+
+  .quote-logo-shell {
+    display: flex !important;
+  }
+
+  .quote-brand-logo {
+    display: block !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+    width: 100% !important;
   }
 }

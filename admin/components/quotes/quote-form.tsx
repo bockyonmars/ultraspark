@@ -5,6 +5,10 @@ import type { ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { QuoteFormLineItem, QuoteFormState } from "@/types/api";
+import {
+  getDefaultQuoteScope,
+  quoteDocumentTypeOptions,
+} from "@/lib/quote-documents";
 import { QuoteLineItems } from "./quote-line-items";
 import { QuoteTotals } from "./quote-totals";
 
@@ -33,7 +37,10 @@ export const QuoteForm = memo(function QuoteForm({
   onRemoveLineItem,
 }: QuoteFormProps) {
   return (
-    <form className="admin-no-print space-y-6" onSubmit={(event) => event.preventDefault()}>
+    <form
+      className="admin-no-print space-y-6"
+      onSubmit={(event) => event.preventDefault()}
+    >
       <section className="rounded-xl border bg-white p-5 shadow-soft">
         <div className="mb-4">
           <h2 className="text-base font-semibold text-slate-900">
@@ -94,7 +101,10 @@ export const QuoteForm = memo(function QuoteForm({
               className="min-h-[90px]"
             />
           </Field>
-          <Field label="Service address, if different" className="md:col-span-2">
+          <Field
+            label="Service address, if different"
+            className="md:col-span-2"
+          >
             <Textarea
               value={form.serviceAddress}
               onChange={(event) =>
@@ -121,18 +131,24 @@ export const QuoteForm = memo(function QuoteForm({
           <Field label="Document type">
             <select
               value={form.documentType}
-              onChange={(event) =>
+              onChange={(event) => {
+                const documentType = event.target
+                  .value as QuoteFormState["documentType"];
+                const scope = getDefaultQuoteScope(documentType);
                 onChange({
-                  documentType: event.target.value as QuoteFormState["documentType"],
-                })
-              }
+                  documentType,
+                  included: scope.included,
+                  excluded: scope.excluded,
+                });
+              }}
               disabled={readOnly}
               className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
             >
-              <option value="HOUSE_CLEANING_QUOTE">House Cleaning Quote</option>
-              <option value="HOUSE_CLEANING_ESTIMATE">
-                House Cleaning Estimate
-              </option>
+              {quoteDocumentTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </Field>
           <Field label="Quote number">
@@ -165,7 +181,9 @@ export const QuoteForm = memo(function QuoteForm({
             <select
               value={form.status}
               onChange={(event) =>
-                onChange({ status: event.target.value as QuoteFormState["status"] })
+                onChange({
+                  status: event.target.value as QuoteFormState["status"],
+                })
               }
               disabled
               className="h-10 w-full rounded-xl border bg-white px-3 text-sm"

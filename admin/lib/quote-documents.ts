@@ -1,16 +1,112 @@
 import type {
   MoneyValue,
+  QuoteDocumentType,
   QuoteDocument,
   QuoteFormLineItem,
   QuoteFormState,
   QuotePayload,
   QuoteRequest,
 } from "@/types/api";
+import { quoteBranding } from "@/lib/quote-branding";
 
 const gbpFormatter = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "GBP",
 });
+
+export const quoteDocumentTypeOptions: Array<{
+  value: QuoteDocumentType;
+  label: string;
+}> = [
+  { value: "HOUSE_CLEANING_QUOTE", label: "House Cleaning Quote" },
+  { value: "OFFICE_CLEANING_QUOTE", label: "Office Cleaning Quote" },
+  { value: "DEEP_CLEANING_QUOTE", label: "Deep Cleaning Quote" },
+  {
+    value: "END_OF_TENANCY_CLEANING_QUOTE",
+    label: "End of Tenancy Cleaning Quote",
+  },
+  {
+    value: "AFTER_BUILDERS_CLEANING_QUOTE",
+    label: "After Builders Cleaning Quote",
+  },
+  { value: "COMMERCIAL_CLEANING_QUOTE", label: "Commercial Cleaning Quote" },
+  { value: "CARPET_CLEANING_QUOTE", label: "Carpet Cleaning Quote" },
+  {
+    value: "MOVE_IN_MOVE_OUT_CLEANING_QUOTE",
+    label: "Move-In / Move-Out Cleaning Quote",
+  },
+  { value: "GENERAL_CLEANING_QUOTE", label: "General Cleaning Quote" },
+  { value: "HOUSE_CLEANING_ESTIMATE", label: "House Cleaning Estimate" },
+];
+
+const generalIncluded =
+  "General cleaning of reachable surfaces, agreed rooms/areas, kitchen or welfare areas where applicable, bathroom/toilet areas, vacuuming, mopping, and bins emptied.";
+const generalExcluded =
+  "Carpet shampooing, external windows, deep stain removal, mould removal, specialist cleaning, hazardous waste, and cleaning inside appliances unless agreed in writing.";
+
+const quoteScopes: Record<
+  QuoteDocumentType,
+  { included: string; excluded: string }
+> = {
+  HOUSE_CLEANING_QUOTE: {
+    included:
+      "General cleaning of reachable surfaces, kitchen, bathrooms, bedrooms, living areas, vacuuming, mopping, and bins emptied.",
+    excluded:
+      "Carpet shampooing, external windows, mould removal, specialist stain removal, and hazardous waste unless agreed in writing.",
+  },
+  HOUSE_CLEANING_ESTIMATE: {
+    included:
+      "General cleaning of reachable surfaces, kitchen, bathrooms, bedrooms, living areas, vacuuming, mopping, and bins emptied.",
+    excluded:
+      "Carpet shampooing, external windows, mould removal, specialist stain removal, and hazardous waste unless agreed in writing.",
+  },
+  OFFICE_CLEANING_QUOTE: {
+    included:
+      "General cleaning of reachable surfaces, desks/work surfaces, reception areas, office areas, kitchen surfaces, bathroom/toilet areas, vacuuming, mopping, and bins emptied.",
+    excluded:
+      "Carpet shampooing, external windows, deep stain removal, mould removal, specialist cleaning, hazardous waste, and cleaning inside appliances unless agreed in writing.",
+  },
+  DEEP_CLEANING_QUOTE: {
+    included:
+      "Detailed cleaning of reachable surfaces, kitchens, bathrooms, internal cupboards where agreed, skirting boards, door frames, switches, floors, vacuuming, mopping, and bins emptied.",
+    excluded:
+      "External windows, carpet shampooing, mould remediation, specialist stain removal, pest treatment, hazardous waste, and heavy furniture moving unless agreed in writing.",
+  },
+  END_OF_TENANCY_CLEANING_QUOTE: {
+    included:
+      "End-of-tenancy cleaning of agreed rooms, kitchen surfaces, bathroom/toilet areas, reachable internal surfaces, floors, skirting boards, and appliances where agreed in writing.",
+    excluded:
+      "Carpet shampooing, external windows, wall washing, rubbish removal, mould remediation, pest treatment, and specialist stain removal unless agreed in writing.",
+  },
+  AFTER_BUILDERS_CLEANING_QUOTE: {
+    included:
+      "Post-construction dust removal from reachable surfaces, vacuuming, mopping, wiping fixtures, kitchen/bathroom surface cleaning, and removal of light builder residue where safe.",
+    excluded:
+      "Heavy rubble removal, hazardous materials, paint/plaster scraping, specialist restoration, external windows, and high-level access cleaning unless agreed in writing.",
+  },
+  COMMERCIAL_CLEANING_QUOTE: {
+    included:
+      "General cleaning of agreed commercial areas, reachable surfaces, workspaces, reception/customer areas, kitchens, toilets, floors, vacuuming, mopping, and bins emptied.",
+    excluded:
+      "Carpet shampooing, external windows, specialist equipment cleaning, hazardous waste, deep stain removal, and high-level cleaning unless agreed in writing.",
+  },
+  CARPET_CLEANING_QUOTE: {
+    included:
+      "Carpet cleaning of agreed areas, pre-inspection, vacuuming where required, spot attention where suitable, machine cleaning, and basic deodorising where agreed.",
+    excluded:
+      "Furniture removal, specialist stain guarantees, repairs, dyeing, pest treatment, mould remediation, and drying equipment hire unless agreed in writing.",
+  },
+  MOVE_IN_MOVE_OUT_CLEANING_QUOTE: {
+    included:
+      "Move-in/move-out cleaning of agreed rooms, reachable surfaces, kitchens, bathrooms, cupboards where agreed, floors, vacuuming, mopping, and bins emptied.",
+    excluded:
+      "Carpet shampooing, rubbish removal, external windows, mould remediation, specialist stain removal, and cleaning behind heavy furniture unless agreed in writing.",
+  },
+  GENERAL_CLEANING_QUOTE: {
+    included: generalIncluded,
+    excluded: generalExcluded,
+  },
+};
 
 export function createEmptyLineItem(): QuoteFormLineItem {
   return {
@@ -23,6 +119,8 @@ export function createEmptyLineItem(): QuoteFormLineItem {
 }
 
 export function createDefaultQuoteDraft(): QuoteFormState {
+  const scope = getDefaultQuoteScope("HOUSE_CLEANING_QUOTE");
+
   return {
     documentType: "HOUSE_CLEANING_QUOTE",
     customerName: "",
@@ -32,14 +130,12 @@ export function createDefaultQuoteDraft(): QuoteFormState {
     serviceAddress: "",
     issueDate: toDateInputValue(new Date()),
     expiryDate: toDateInputValue(addDays(new Date(), 14)),
-    preparedBy: "UltraSpark Cleaning",
+    preparedBy: quoteBranding.companyName,
     status: "DRAFT",
     paymentTerms: "Payment is due on completion unless agreed otherwise.",
     specialInstructions: "",
-    included:
-      "General cleaning of reachable surfaces, kitchen, bathrooms, bedrooms, living areas, vacuuming, mopping, and bins emptied.",
-    excluded:
-      "Carpet shampooing, external windows, mould removal, specialist stain removal, and hazardous waste unless agreed in writing.",
+    included: scope.included,
+    excluded: scope.excluded,
     notes:
       "This quote is based on the information provided and may be updated if the service scope changes.",
     showSignature: true,
@@ -57,8 +153,12 @@ export function createDefaultQuoteDraft(): QuoteFormState {
   };
 }
 
-export function createQuoteDraftFromRequest(request: QuoteRequest): QuoteFormState {
+export function createQuoteDraftFromRequest(
+  request: QuoteRequest,
+): QuoteFormState {
   const draft = createDefaultQuoteDraft();
+  const documentType = inferQuoteDocumentTypeFromService(request.service?.name);
+  const scope = getDefaultQuoteScope(documentType);
   const customerName = [request.customer?.firstName, request.customer?.lastName]
     .filter(Boolean)
     .join(" ")
@@ -80,12 +180,17 @@ export function createQuoteDraftFromRequest(request: QuoteRequest): QuoteFormSta
 
   return {
     ...draft,
+    documentType,
     customerName,
     customerEmail: request.customer?.email ?? "",
     customerPhone: request.customer?.phone ?? "",
     customerAddress: request.postcode ?? "",
     serviceAddress: request.postcode ?? "",
-    specialInstructions: [requestedDate, propertySummary].filter(Boolean).join("\n"),
+    included: scope.included,
+    excluded: scope.excluded,
+    specialInstructions: [requestedDate, propertySummary]
+      .filter(Boolean)
+      .join("\n"),
     notes: [
       `Created from website quote request ${request.id}.`,
       requestedDate,
@@ -98,7 +203,9 @@ export function createQuoteDraftFromRequest(request: QuoteRequest): QuoteFormSta
       {
         id: createEmptyLineItem().id,
         serviceName: request.service?.name ?? "Cleaning service",
-        description: request.details ?? "Website quote request. Confirm scope and pricing before sending.",
+        description:
+          request.details ??
+          "Website quote request. Confirm scope and pricing before sending.",
         rate: 0,
         quantity: 1,
       },
@@ -118,7 +225,7 @@ export function normalizeQuoteForForm(quote: QuoteDocument): QuoteFormState {
     serviceAddress: quote.serviceAddress ?? "",
     issueDate: toDateInputValue(quote.issueDate),
     expiryDate: toDateInputValue(quote.expiryDate),
-    preparedBy: quote.preparedBy ?? "UltraSpark Cleaning",
+    preparedBy: quote.preparedBy ?? quoteBranding.companyName,
     status: quote.status,
     paymentTerms: quote.paymentTerms ?? "",
     specialInstructions: quote.specialInstructions ?? "",
@@ -214,9 +321,47 @@ export function formatQuantity(value?: MoneyValue | null) {
 }
 
 export function documentTypeLabel(value: QuoteFormState["documentType"]) {
-  return value === "HOUSE_CLEANING_ESTIMATE"
-    ? "House Cleaning Estimate"
-    : "House Cleaning Quote";
+  return (
+    quoteDocumentTypeOptions.find((option) => option.value === value)?.label ??
+    "General Cleaning Quote"
+  );
+}
+
+export function getDefaultQuoteScope(documentType: QuoteDocumentType) {
+  return quoteScopes[documentType] ?? quoteScopes.GENERAL_CLEANING_QUOTE;
+}
+
+export function inferQuoteDocumentTypeFromService(
+  serviceName?: string | null,
+): QuoteDocumentType {
+  const normalized = (serviceName ?? "").toLowerCase();
+
+  if (normalized.includes("office")) return "OFFICE_CLEANING_QUOTE";
+  if (normalized.includes("commercial")) return "COMMERCIAL_CLEANING_QUOTE";
+  if (normalized.includes("deep")) return "DEEP_CLEANING_QUOTE";
+  if (
+    normalized.includes("end of tenancy") ||
+    normalized.includes("end-of-tenancy")
+  ) {
+    return "END_OF_TENANCY_CLEANING_QUOTE";
+  }
+  if (normalized.includes("after builder") || normalized.includes("builders")) {
+    return "AFTER_BUILDERS_CLEANING_QUOTE";
+  }
+  if (normalized.includes("carpet")) return "CARPET_CLEANING_QUOTE";
+  if (
+    normalized.includes("move-in") ||
+    normalized.includes("move in") ||
+    normalized.includes("move-out") ||
+    normalized.includes("move out")
+  ) {
+    return "MOVE_IN_MOVE_OUT_CLEANING_QUOTE";
+  }
+  if (normalized.includes("home") || normalized.includes("house")) {
+    return "HOUSE_CLEANING_QUOTE";
+  }
+
+  return "GENERAL_CLEANING_QUOTE";
 }
 
 export function statusLabel(value: string) {

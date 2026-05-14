@@ -1,9 +1,5 @@
-import {
-  emailColors,
-  escapeHtml,
-  templateValue,
-} from './sharedEmailStyles';
-import type { EmailTemplateResult, EmailTemplateVariables } from './types';
+import { emailColors, escapeHtml, templateValue } from "./sharedEmailStyles";
+import type { EmailTemplateResult, EmailTemplateVariables } from "./types";
 
 type QuoteEmailLineItem = {
   serviceName: string;
@@ -45,14 +41,14 @@ export function quoteDocumentTemplate({
   quote,
   variables,
 }: QuoteDocumentTemplateInput): EmailTemplateResult {
-  const isEstimate = quote.documentType === 'HOUSE_CLEANING_ESTIMATE';
-  const documentLabel = isEstimate ? 'estimate' : 'quote';
-  const title = `Your UltraSpark Cleaning ${isEstimate ? 'Estimate' : 'Quote'}`;
-  const previewText = `Your UltraSpark Cleaning ${documentLabel} ${quote.quoteNumber} is ready.`;
-  const companyEmail = templateValue(variables, 'companyEmail');
-  const companyPhone = templateValue(variables, 'companyPhone');
-  const companyWebsite = templateValue(variables, 'companyWebsite');
-  const logoUrl = templateValue(variables, 'logoUrl');
+  const documentTitle = documentTypeLabel(quote.documentType);
+  const documentLabel = documentTitle.toLowerCase();
+  const title = `Your UltraSpark Cleaning ${documentTitle}`;
+  const previewText = `Your UltraSpark Cleaning ${documentTitle} ${quote.quoteNumber} is ready.`;
+  const companyEmail = templateValue(variables, "companyEmail");
+  const companyPhone = templateValue(variables, "companyPhone");
+  const companyWebsite = templateValue(variables, "companyWebsite");
+  const logoUrl = templateValue(variables, "logoUrl");
 
   const lineRows = quote.lineItems
     .map(
@@ -65,7 +61,7 @@ export function quoteDocumentTemplate({
             ${
               item.description
                 ? `<p style="margin:0;font-family:Inter,Arial,sans-serif;font-size:12px;line-height:18px;color:${emailColors.muted};">${renderMultiline(item.description)}</p>`
-                : ''
+                : ""
             }
           </td>
           <td align="right" style="padding:13px 12px;border-bottom:1px solid ${emailColors.border};font-family:Inter,Arial,sans-serif;font-size:13px;line-height:20px;color:${emailColors.text};vertical-align:top;white-space:nowrap;">
@@ -80,14 +76,14 @@ export function quoteDocumentTemplate({
         </tr>
       `,
     )
-    .join('');
+    .join("");
 
   const notesHtml = renderNotesSection([
-    ['Payment terms', quote.paymentTerms],
-    ['Special instructions', quote.specialInstructions],
-    ['Included', quote.included],
-    ['Excluded', quote.excluded],
-    ['Notes', quote.notes],
+    ["Payment terms", quote.paymentTerms],
+    ["Special instructions", quote.specialInstructions],
+    ["Included", quote.included],
+    ["Excluded", quote.excluded],
+    ["Notes", quote.notes],
   ]);
 
   const html = `
@@ -170,9 +166,9 @@ export function quoteDocumentTemplate({
                 <tr>
                   <td align="right" style="padding:0 30px 24px 30px;">
                     <table role="presentation" width="300" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
-                      ${renderTotalRow('Subtotal', quote.subtotal)}
-                      ${toNumber(quote.discount) > 0 ? renderTotalRow('Discount', quote.discount, true) : ''}
-                      ${toNumber(quote.tax) > 0 ? renderTotalRow('Tax', quote.tax) : ''}
+                      ${renderTotalRow("Subtotal", quote.subtotal)}
+                      ${toNumber(quote.discount) > 0 ? renderTotalRow("Discount", quote.discount, true) : ""}
+                      ${toNumber(quote.tax) > 0 ? renderTotalRow("Tax", quote.tax) : ""}
                       <tr>
                         <td style="padding:13px 0 0 0;border-top:2px solid ${emailColors.heading};font-family:Inter,Arial,sans-serif;font-size:16px;line-height:22px;color:${emailColors.heading};font-weight:800;">Grand total</td>
                         <td align="right" style="padding:13px 0 0 0;border-top:2px solid ${emailColors.heading};font-family:Inter,Arial,sans-serif;font-size:20px;line-height:26px;color:${emailColors.greenDark};font-weight:800;">${formatMoney(quote.total)}</td>
@@ -223,7 +219,7 @@ function renderTotalRow(label: string, value: unknown, negative = false) {
   return `
     <tr>
       <td style="padding:6px 0;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:19px;color:${emailColors.muted};">${escapeHtml(label)}</td>
-      <td align="right" style="padding:6px 0;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:19px;color:${emailColors.text};font-weight:700;">${negative ? '-' : ''}${formatMoney(value)}</td>
+      <td align="right" style="padding:6px 0;font-family:Inter,Arial,sans-serif;font-size:13px;line-height:19px;color:${emailColors.text};font-weight:700;">${negative ? "-" : ""}${formatMoney(value)}</td>
     </tr>
   `;
 }
@@ -236,12 +232,12 @@ function renderNotesSection(items: Array<[string, string | null | undefined]>) {
         <tr>
           <td style="padding:0 30px 12px 30px;">
             <p style="margin:0 0 5px 0;font-family:Inter,Arial,sans-serif;font-size:12px;line-height:16px;letter-spacing:0.08em;text-transform:uppercase;color:${emailColors.greenDark};font-weight:800;">${escapeHtml(label)}</p>
-            <p style="margin:0;font-family:Inter,Arial,sans-serif;font-size:14px;line-height:22px;color:${emailColors.text};">${renderMultiline(value ?? '')}</p>
+            <p style="margin:0;font-family:Inter,Arial,sans-serif;font-size:14px;line-height:22px;color:${emailColors.text};">${renderMultiline(value ?? "")}</p>
           </td>
         </tr>
       `,
     )
-    .join('');
+    .join("");
 
   return rows;
 }
@@ -252,77 +248,94 @@ function renderText(
   documentLabel: string,
   title: string,
 ) {
-  const companyEmail = templateValue(variables, 'companyEmail');
-  const companyPhone = templateValue(variables, 'companyPhone');
-  const companyWebsite = templateValue(variables, 'companyWebsite');
+  const companyEmail = templateValue(variables, "companyEmail");
+  const companyPhone = templateValue(variables, "companyPhone");
+  const companyWebsite = templateValue(variables, "companyWebsite");
   const lineItems = quote.lineItems
     .map(
       (item) =>
         `- ${item.serviceName}: ${formatMoney(item.rate)} x ${formatQuantity(item.quantity)} = ${formatMoney(item.total)}`,
     )
-    .join('\n');
+    .join("\n");
 
   return [
     title,
-    '',
+    "",
     `Hi ${firstName(quote.customerName)}, your UltraSpark Cleaning ${documentLabel} is ready.`,
-    '',
+    "",
     `Quote number: ${quote.quoteNumber}`,
     `Issued: ${formatDate(quote.issueDate)}`,
-    quote.expiryDate ? `Expires: ${formatDate(quote.expiryDate)}` : '',
+    quote.expiryDate ? `Expires: ${formatDate(quote.expiryDate)}` : "",
     `Customer: ${quote.customerName}`,
-    `Service address: ${quote.serviceAddress || quote.customerAddress || 'Not provided'}`,
-    '',
-    'Services',
+    `Service address: ${quote.serviceAddress || quote.customerAddress || "Not provided"}`,
+    "",
+    "Services",
     lineItems,
-    '',
+    "",
     `Subtotal: ${formatMoney(quote.subtotal)}`,
     `Discount: ${formatMoney(quote.discount)}`,
     `Tax: ${formatMoney(quote.tax)}`,
     `Grand total: ${formatMoney(quote.total)}`,
-    '',
-    quote.paymentTerms ? `Payment terms: ${quote.paymentTerms}` : '',
+    "",
+    quote.paymentTerms ? `Payment terms: ${quote.paymentTerms}` : "",
     quote.specialInstructions
       ? `Special instructions: ${quote.specialInstructions}`
-      : '',
-    quote.included ? `Included: ${quote.included}` : '',
-    quote.excluded ? `Excluded: ${quote.excluded}` : '',
-    quote.notes ? `Notes: ${quote.notes}` : '',
-    '',
-    'To confirm or book, reply to this email.',
-    '',
-    'UltraSpark Cleaning',
+      : "",
+    quote.included ? `Included: ${quote.included}` : "",
+    quote.excluded ? `Excluded: ${quote.excluded}` : "",
+    quote.notes ? `Notes: ${quote.notes}` : "",
+    "",
+    "To confirm or book, reply to this email.",
+    "",
+    "UltraSpark Cleaning",
     companyEmail,
     companyPhone,
     companyWebsite,
   ]
     .filter(Boolean)
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n');
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n");
+}
+
+function documentTypeLabel(value: string) {
+  const labels: Record<string, string> = {
+    HOUSE_CLEANING_QUOTE: "House Cleaning Quote",
+    HOUSE_CLEANING_ESTIMATE: "House Cleaning Estimate",
+    OFFICE_CLEANING_QUOTE: "Office Cleaning Quote",
+    DEEP_CLEANING_QUOTE: "Deep Cleaning Quote",
+    END_OF_TENANCY_CLEANING_QUOTE: "End of Tenancy Cleaning Quote",
+    AFTER_BUILDERS_CLEANING_QUOTE: "After Builders Cleaning Quote",
+    COMMERCIAL_CLEANING_QUOTE: "Commercial Cleaning Quote",
+    CARPET_CLEANING_QUOTE: "Carpet Cleaning Quote",
+    MOVE_IN_MOVE_OUT_CLEANING_QUOTE: "Move-In / Move-Out Cleaning Quote",
+    GENERAL_CLEANING_QUOTE: "General Cleaning Quote",
+  };
+
+  return labels[value] ?? "General Cleaning Quote";
 }
 
 function firstName(value: string) {
-  return value.trim().split(/\s+/)[0] || 'there';
+  return value.trim().split(/\s+/)[0] || "there";
 }
 
 function renderMultiline(value: string) {
-  return escapeHtml(value).replace(/\n/g, '<br />');
+  return escapeHtml(value).replace(/\n/g, "<br />");
 }
 
 function formatDate(value?: Date | string | null) {
   if (!value) {
-    return 'N/A';
+    return "N/A";
   }
 
-  const date = typeof value === 'string' ? new Date(value) : value;
+  const date = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) {
-    return 'N/A';
+    return "N/A";
   }
 
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   }).format(date);
 }
 
@@ -331,23 +344,23 @@ function formatQuantity(value: unknown) {
 }
 
 function formatMoney(value: unknown) {
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
   }).format(toNumber(value));
 }
 
 function toNumber(value: unknown) {
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return Number.isFinite(value) ? value : 0;
   }
 
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
-  if (value && typeof value === 'object' && 'toNumber' in value) {
+  if (value && typeof value === "object" && "toNumber" in value) {
     return (value as { toNumber: () => number }).toNumber();
   }
 

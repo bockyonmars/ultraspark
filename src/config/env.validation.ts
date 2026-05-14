@@ -17,24 +17,18 @@ const productionEmailVars = [
   'EMAIL_REPLY_TO',
 ] as const;
 
-const productionStorageVars = ['STORAGE_PROVIDER'] as const;
-
 export function validateEnv(config: EnvShape) {
   const missing: string[] = [...requiredEnvVars].filter((key) => !config[key]);
   const isProduction = config.NODE_ENV === 'production';
+  const emailProvider = config.EMAIL_PROVIDER?.toLowerCase();
 
   if (isProduction) {
     missing.push(
       ...productionEmailVars.filter((key) => !config[key]),
-      ...productionStorageVars.filter((key) => !config[key]),
-      ...(!config.EMAIL_API_KEY && !config.RESEND_API_KEY
+      ...(emailProvider !== 'log' && !config.EMAIL_API_KEY && !config.RESEND_API_KEY
         ? (['EMAIL_API_KEY'] as const)
         : []),
     );
-
-    if ((config.STORAGE_PROVIDER ?? 'local') === 'local' && !config.STORAGE_LOCAL_ROOT) {
-      missing.push('STORAGE_LOCAL_ROOT');
-    }
   }
 
   if (missing.length > 0) {

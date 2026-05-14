@@ -8,6 +8,7 @@ import {
   QuoteDocumentType,
   QuoteStatus,
   CustomerActivityType,
+  EmailLogStatus,
 } from '@prisma/client';
 import { splitFullName } from '../../common/utils/public-form-payload.util';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
@@ -327,7 +328,7 @@ export class QuotesService {
 
     if (!result) {
       throw new BadRequestException(
-        'Quote email could not be sent. Check email configuration and logs.',
+        `Quote email could not be sent: ${await this.getLastQuoteEmailFailureReason(id)}`,
       );
     }
 
@@ -402,6 +403,42 @@ export class QuotesService {
     if (existing && existing.id !== currentId) {
       throw new BadRequestException('Quote number is already in use');
     }
+  }
+
+  private async getLastQuoteEmailFailureReason(quoteId: string) {
+    const failure = await this.prisma.emailLog.findFirst({
+      where: {
+        quoteId,
+        type: 'CUSTOMER_QUOTE_DOCUMENT',
+        status: EmailLogStatus.FAILED,
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { errorMessage: true },
+    });
+
+    return this.safeEmailFailureReason(failure?.errorMessage);
+  }
+
+  private safeEmailFailureReason(message?: string | null) {
+    const lower = message?.toLowerCase() ?? '';
+
+    if (!message) {
+      return 'Check email configuration and logs.';
+    }
+
+    if (
+      lower.includes('not configured') ||
+      lower.includes('missing') ||
+      lower.includes('api key')
+    ) {
+      return 'Email provider is not configured.';
+    }
+
+    if (lower.includes('unsupported email provider')) {
+      return 'Email provider is not supported by this deployment.';
+    }
+
+    return 'Email provider rejected the request. Check email logs for details.';
   }
 
   private normalizeLineItems(items: CreateQuoteLineItemDto[]) {

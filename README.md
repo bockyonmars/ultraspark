@@ -79,9 +79,9 @@ Production email sending also requires:
 - `EMAIL_PROVIDER`
 - `EMAIL_FROM_ADDRESS`
 - `EMAIL_REPLY_TO`
-- `EMAIL_API_KEY` or `RESEND_API_KEY`
+- `EMAIL_API_KEY` or `RESEND_API_KEY` when `EMAIL_PROVIDER` is a real provider such as `resend`
 
-Production invoice PDF storage also requires:
+Production invoice PDF uploads require persistent storage configuration:
 
 - `STORAGE_PROVIDER`
 - `STORAGE_LOCAL_ROOT` when `STORAGE_PROVIDER=local`
@@ -104,9 +104,9 @@ DATABASE_URL=postgresql://postgres.aqoaypumjfxbrlwjtgad:YOUR_ENCODED_PASSWORD@aw
 JWT_SECRET=ultraspark-local-jwt-secret-change-later-123456789
 JWT_EXPIRES_IN=1d
 
-RESEND_API_KEY=your_resend_key_here
-EMAIL_PROVIDER=resend
-EMAIL_API_KEY=your_provider_api_key_here
+EMAIL_PROVIDER=log
+EMAIL_API_KEY=
+RESEND_API_KEY=
 EMAIL_FROM_NAME=UltraSpark Cleaning
 EMAIL_FROM_ADDRESS=info@ultrasparkcleaning.co.uk
 EMAIL_REPLY_TO=info@ultrasparkcleaning.co.uk
@@ -235,7 +235,21 @@ If email sending fails, the API stores a failed `EmailLog`, records an `EMAIL_FA
 
 ## Email Provider Setup
 
-The email layer uses a provider abstraction with Resend implemented. Configure:
+The email layer uses a provider abstraction with Resend implemented.
+
+For staging or smoke tests without a real provider, configure log mode:
+
+```dotenv
+EMAIL_PROVIDER=log
+EMAIL_FROM_NAME=UltraSpark Cleaning
+EMAIL_FROM_ADDRESS=info@ultrasparkcleaning.co.uk
+EMAIL_REPLY_TO=info@ultrasparkcleaning.co.uk
+```
+
+Log mode treats sends as successful, writes a `SENT` `EmailLog` with provider
+`log`, and does not call an external email API.
+
+For production delivery through Resend, configure:
 
 ```dotenv
 EMAIL_PROVIDER=resend
@@ -246,7 +260,17 @@ EMAIL_FROM_ADDRESS=info@ultrasparkcleaning.co.uk
 EMAIL_REPLY_TO=info@ultrasparkcleaning.co.uk
 ```
 
-In development, if a provider key is missing the invoice email path can run in log-only mode. In production, invoice email sends fail clearly unless a provider and API key are configured.
+In production, real providers require a provider API key. If the provider is
+set to `log`, quote and invoice emails complete as log-only sends; this is
+useful for staging but customers will not receive real email.
+
+If quote email sending fails, check:
+
+- `EMAIL_PROVIDER` is `log` or a supported real provider such as `resend`.
+- Real providers have `EMAIL_API_KEY` or `RESEND_API_KEY`.
+- `EMAIL_FROM_ADDRESS` and `EMAIL_REPLY_TO` are set to `info@ultrasparkcleaning.co.uk` or the verified sending address.
+- The quote has a customer email and at least one line item.
+- The latest `EmailLog` for the quote has the safe failure reason.
 
 ## Invoice PDF Storage
 
@@ -287,6 +311,16 @@ clear admin-facing error naming the existing quote number.
 
 Admins can still create quotes manually through `POST /api/v1/admin/quotes`.
 Manual quotes simply have no `quoteRequestId`.
+
+Formal quote documents support service-specific `QuoteDocumentType` values:
+House Cleaning Quote, Office Cleaning Quote, Deep Cleaning Quote, End of
+Tenancy Cleaning Quote, After Builders Cleaning Quote, Commercial Cleaning
+Quote, Carpet Cleaning Quote, Move-In / Move-Out Cleaning Quote, and General
+Cleaning Quote. Request conversion infers the document type from the selected
+service, so an Office Cleaning website request becomes an Office Cleaning Quote
+by default. The admin can still change the document type before saving, and the
+selected label is used in the admin preview, print output, quote detail view,
+and customer quote email.
 
 ## Render Deployment
 

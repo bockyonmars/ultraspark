@@ -1,45 +1,50 @@
-import { BadRequestException } from '@nestjs/common';
-import { GUARDS_METADATA } from '@nestjs/common/constants';
-import { QuoteDocumentType, QuoteRequestStatus, QuoteStatus, Prisma } from '@prisma/client';
-import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
-import { AuditLogsService } from '../src/modules/audit-logs/audit-logs.service';
-import { AnalyticsService } from '../src/modules/analytics/analytics.service';
-import { CustomersService } from '../src/modules/customers/customers.service';
-import { EmailService } from '../src/modules/email/email.service';
-import { QuoteRequestsController } from '../src/modules/quote-requests/quote-requests.controller';
-import { QuoteRequestsService } from '../src/modules/quote-requests/quote-requests.service';
-import { QuotesService } from '../src/modules/quotes/quotes.service';
-import { PrismaService } from '../src/modules/prisma.service';
-import { ServicesService } from '../src/modules/services/services.service';
-import { CustomerActivitiesService } from '../src/modules/customer-activities/customer-activities.service';
+import { BadRequestException } from "@nestjs/common";
+import { GUARDS_METADATA } from "@nestjs/common/constants";
+import {
+  QuoteDocumentType,
+  QuoteRequestStatus,
+  QuoteStatus,
+  Prisma,
+} from "@prisma/client";
+import { JwtAuthGuard } from "../src/common/guards/jwt-auth.guard";
+import { AuditLogsService } from "../src/modules/audit-logs/audit-logs.service";
+import { AnalyticsService } from "../src/modules/analytics/analytics.service";
+import { CustomersService } from "../src/modules/customers/customers.service";
+import { EmailService } from "../src/modules/email/email.service";
+import { QuoteRequestsController } from "../src/modules/quote-requests/quote-requests.controller";
+import { QuoteRequestsService } from "../src/modules/quote-requests/quote-requests.service";
+import { QuotesService } from "../src/modules/quotes/quotes.service";
+import { PrismaService } from "../src/modules/prisma.service";
+import { ServicesService } from "../src/modules/services/services.service";
+import { CustomerActivitiesService } from "../src/modules/customer-activities/customer-activities.service";
 
-const adminUser = { id: 'admin-1' };
+const adminUser = { id: "admin-1" };
 
 function createQuoteRequestRecord(overrides: Record<string, any> = {}) {
   return {
-    id: 'request-1',
-    customerId: 'customer-1',
-    serviceId: 'service-1',
-    postcode: '12 Spark Street, London',
-    propertyType: 'Flat',
+    id: "request-1",
+    customerId: "customer-1",
+    serviceId: "service-1",
+    postcode: "12 Spark Street, London",
+    propertyType: "Flat",
     bedrooms: 2,
     bathrooms: 1,
-    preferredDate: new Date('2026-05-25T09:00:00.000Z'),
-    details: 'Please include the oven and inside kitchen cupboards.',
+    preferredDate: new Date("2026-05-25T09:00:00.000Z"),
+    details: "Please include the oven and inside kitchen cupboards.",
     status: QuoteRequestStatus.NEW,
-    createdAt: new Date('2026-05-14T10:00:00.000Z'),
-    updatedAt: new Date('2026-05-14T10:00:00.000Z'),
+    createdAt: new Date("2026-05-14T10:00:00.000Z"),
+    updatedAt: new Date("2026-05-14T10:00:00.000Z"),
     customer: {
-      id: 'customer-1',
-      firstName: 'Maya',
-      lastName: 'Carter',
-      email: 'maya@example.com',
-      phone: '+447700900123',
+      id: "customer-1",
+      firstName: "Maya",
+      lastName: "Carter",
+      email: "maya@example.com",
+      phone: "+447700900123",
     },
     service: {
-      id: 'service-1',
-      name: 'House Cleaning',
-      slug: 'house-cleaning',
+      id: "service-1",
+      name: "House Cleaning",
+      slug: "house-cleaning",
     },
     createdQuote: null,
     emailLogs: [],
@@ -60,26 +65,28 @@ function createQuoteRequestsService(overrides: Record<string, any> = {}) {
     },
   };
   const quotesService = {
-    create: jest.fn(async (_payload: any, _adminUserId?: string, quoteRequestId?: string) => ({
-      id: 'quote-1',
-      quoteRequestId,
-      quoteNumber: 'USQ-20260514-0001',
-      documentType: QuoteDocumentType.HOUSE_CLEANING_QUOTE,
-      customerId: quoteRequest.customerId,
-      customerName: 'Maya Carter',
-      customerEmail: 'maya@example.com',
-      status: QuoteStatus.DRAFT,
-      lineItems: [
-        {
-          id: 'line-1',
-          serviceName: quoteRequest.service.name,
-          rate: new Prisma.Decimal(0),
-          quantity: new Prisma.Decimal(1),
-          total: new Prisma.Decimal(0),
-        },
-      ],
-      sourceQuoteRequest: quoteRequest,
-    })),
+    create: jest.fn(
+      async (payload: any, _adminUserId?: string, quoteRequestId?: string) => ({
+        id: "quote-1",
+        quoteRequestId,
+        quoteNumber: "USQ-20260514-0001",
+        documentType: payload.documentType,
+        customerId: quoteRequest.customerId,
+        customerName: "Maya Carter",
+        customerEmail: "maya@example.com",
+        status: QuoteStatus.DRAFT,
+        lineItems: [
+          {
+            id: "line-1",
+            serviceName: quoteRequest.service.name,
+            rate: new Prisma.Decimal(0),
+            quantity: new Prisma.Decimal(1),
+            total: new Prisma.Decimal(0),
+          },
+        ],
+        sourceQuoteRequest: quoteRequest,
+      }),
+    ),
   };
   const auditLogsService = { create: jest.fn() };
   const service = new QuoteRequestsService(
@@ -95,57 +102,57 @@ function createQuoteRequestsService(overrides: Record<string, any> = {}) {
   return { service, prisma, quotesService, auditLogsService, quoteRequest };
 }
 
-describe('Quote request workflow', () => {
-  it('keeps admin quote request endpoints behind the JWT guard', () => {
+describe("Quote request workflow", () => {
+  it("keeps admin quote request endpoints behind the JWT guard", () => {
     const controller = new QuoteRequestsController({} as QuoteRequestsService);
 
-    expect(Reflect.getMetadata(GUARDS_METADATA, controller.findAllAdmin)).toContain(
-      JwtAuthGuard,
-    );
+    expect(
+      Reflect.getMetadata(GUARDS_METADATA, controller.findAllAdmin),
+    ).toContain(JwtAuthGuard);
     expect(
       Reflect.getMetadata(GUARDS_METADATA, controller.createQuoteFromRequest),
     ).toContain(JwtAuthGuard);
   });
 
-  it('lists website quote requests with linked quote information', async () => {
+  it("lists website quote requests with linked quote information", async () => {
     const { service } = createQuoteRequestsService();
 
     const list = await service.findAll();
 
     expect(list).toEqual([
       expect.objectContaining({
-        id: 'request-1',
-        customer: expect.objectContaining({ email: 'maya@example.com' }),
-        service: expect.objectContaining({ name: 'House Cleaning' }),
+        id: "request-1",
+        customer: expect.objectContaining({ email: "maya@example.com" }),
+        service: expect.objectContaining({ name: "House Cleaning" }),
         createdQuote: null,
       }),
     ]);
   });
 
-  it('reads quote request detail with email logs and source data', async () => {
+  it("reads quote request detail with email logs and source data", async () => {
     const { service } = createQuoteRequestsService();
 
-    const detail = await service.findOne('request-1');
+    const detail = await service.findOne("request-1");
 
     expect(detail).toMatchObject({
-      id: 'request-1',
-      postcode: '12 Spark Street, London',
-      details: 'Please include the oven and inside kitchen cupboards.',
+      id: "request-1",
+      postcode: "12 Spark Street, London",
+      details: "Please include the oven and inside kitchen cupboards.",
       emailLogs: [],
     });
   });
 
-  it('creates a formal quote from a website quote request', async () => {
+  it("creates a formal quote from a website quote request", async () => {
     const { service, prisma, quotesService, auditLogsService } =
       createQuoteRequestsService();
 
     const quote = await service.createQuoteFromRequest(
-      'request-1',
+      "request-1",
       {
         lineItems: [
           {
-            serviceName: 'House cleaning',
-            description: 'Confirmed scope from the request.',
+            serviceName: "House cleaning",
+            description: "Confirmed scope from the request.",
             rate: 45,
             quantity: 3,
           },
@@ -155,61 +162,94 @@ describe('Quote request workflow', () => {
     );
 
     expect(quote).toMatchObject({
-      id: 'quote-1',
-      quoteRequestId: 'request-1',
-      quoteNumber: 'USQ-20260514-0001',
+      id: "quote-1",
+      quoteRequestId: "request-1",
+      quoteNumber: "USQ-20260514-0001",
     });
     expect(quotesService.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        customerName: 'Maya Carter',
-        customerEmail: 'maya@example.com',
-        serviceAddress: '12 Spark Street, London',
+        documentType: QuoteDocumentType.HOUSE_CLEANING_QUOTE,
+        customerName: "Maya Carter",
+        customerEmail: "maya@example.com",
+        serviceAddress: "12 Spark Street, London",
         status: QuoteStatus.DRAFT,
       }),
       adminUser.id,
-      'request-1',
+      "request-1",
     );
     expect(prisma.quoteRequest.update).toHaveBeenCalledWith({
-      where: { id: 'request-1' },
+      where: { id: "request-1" },
       data: { status: QuoteRequestStatus.QUOTED },
     });
     expect(auditLogsService.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        entityType: 'QuoteRequest',
-        entityId: 'request-1',
+        entityType: "QuoteRequest",
+        entityId: "request-1",
       }),
     );
   });
 
-  it('blocks duplicate quote creation from the same website request', async () => {
+  it("creates an Office Cleaning Quote from an office cleaning website request", async () => {
+    const { service, quotesService } = createQuoteRequestsService({
+      quoteRequest: createQuoteRequestRecord({
+        service: {
+          id: "service-1",
+          name: "Office Cleaning",
+          slug: "office-cleaning",
+        },
+      }),
+    });
+
+    const quote = await service.createQuoteFromRequest(
+      "request-1",
+      {},
+      adminUser.id,
+    );
+
+    expect(quote.documentType).toBe(QuoteDocumentType.OFFICE_CLEANING_QUOTE);
+    expect(quotesService.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        documentType: QuoteDocumentType.OFFICE_CLEANING_QUOTE,
+        included:
+          "General cleaning of reachable surfaces, desks/work surfaces, reception areas, office areas, kitchen surfaces, bathroom/toilet areas, vacuuming, mopping, and bins emptied.",
+        excluded:
+          "Carpet shampooing, external windows, deep stain removal, mould removal, specialist cleaning, hazardous waste, and cleaning inside appliances unless agreed in writing.",
+      }),
+      adminUser.id,
+      "request-1",
+    );
+  });
+
+  it("blocks duplicate quote creation from the same website request", async () => {
     const { service } = createQuoteRequestsService({
       quoteRequest: createQuoteRequestRecord({
         createdQuote: {
-          id: 'quote-1',
-          quoteNumber: 'USQ-20260514-0001',
+          id: "quote-1",
+          quoteNumber: "USQ-20260514-0001",
         },
       }),
     });
 
     await expect(
-      service.createQuoteFromRequest('request-1', {}, adminUser.id),
+      service.createQuoteFromRequest("request-1", {}, adminUser.id),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('returns formal quote detail with line items and the linked source request', async () => {
+  it("returns formal quote detail with line items and the linked source request", async () => {
     const quote = {
-      id: 'quote-1',
-      quoteNumber: 'USQ-20260514-0001',
-      quoteRequestId: 'request-1',
-      customerId: 'customer-1',
-      customerName: 'Maya Carter',
-      customerEmail: 'maya@example.com',
+      id: "quote-1",
+      quoteNumber: "USQ-20260514-0001",
+      documentType: QuoteDocumentType.OFFICE_CLEANING_QUOTE,
+      quoteRequestId: "request-1",
+      customerId: "customer-1",
+      customerName: "Maya Carter",
+      customerEmail: "maya@example.com",
       status: QuoteStatus.DRAFT,
       total: new Prisma.Decimal(135),
       lineItems: [
         {
-          id: 'line-1',
-          serviceName: 'House cleaning',
+          id: "line-1",
+          serviceName: "House cleaning",
           rate: new Prisma.Decimal(45),
           quantity: new Prisma.Decimal(3),
           total: new Prisma.Decimal(135),
@@ -232,14 +272,15 @@ describe('Quote request workflow', () => {
       {} as AuditLogsService,
     );
 
-    const detail = await service.findOne('quote-1');
+    const detail = await service.findOne("quote-1");
 
     expect(detail).toMatchObject({
-      id: 'quote-1',
-      lineItems: [expect.objectContaining({ serviceName: 'House cleaning' })],
+      id: "quote-1",
+      documentType: QuoteDocumentType.OFFICE_CLEANING_QUOTE,
+      lineItems: [expect.objectContaining({ serviceName: "House cleaning" })],
       sourceQuoteRequest: expect.objectContaining({
-        id: 'request-1',
-        service: expect.objectContaining({ name: 'House Cleaning' }),
+        id: "request-1",
+        service: expect.objectContaining({ name: "House Cleaning" }),
       }),
     });
   });

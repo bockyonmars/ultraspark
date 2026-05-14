@@ -474,7 +474,6 @@ export class EmailService {
   async sendProviderEmail(
     input: ProviderSendEmailInput,
   ): Promise<ProviderSendEmailResult> {
-    const nodeEnv = this.configService.get<string>("app.nodeEnv") ?? "development";
     const emailApiKey =
       this.configService.get<string>("app.emailApiKey") ??
       this.configService.get<string>("app.resendApiKey");
@@ -484,11 +483,7 @@ export class EmailService {
     ).toLowerCase();
     const recipients = Array.isArray(input.to) ? input.to : [input.to];
 
-    if (provider === "log" || !emailApiKey) {
-      if (nodeEnv === "production") {
-        throw new Error("Email provider is not configured");
-      }
-
+    if (provider === "log") {
       this.logger.log(
         `Log-only email to ${recipients.join(", ")}: ${input.subject}`,
       );
@@ -497,6 +492,10 @@ export class EmailService {
         provider: "log",
         providerMessageId: `log-${Date.now()}`,
       };
+    }
+
+    if (!emailApiKey) {
+      throw new Error("Email provider is not configured");
     }
 
     if (provider !== "resend") {
