@@ -83,7 +83,10 @@ export default function QuoteDetailsPage({
   const addLineItem = useCallback(() => {
     setForm((current) =>
       current
-        ? { ...current, lineItems: [...current.lineItems, createEmptyLineItem()] }
+        ? {
+            ...current,
+            lineItems: [...current.lineItems, createEmptyLineItem()],
+          }
         : current,
     );
   }, []);
@@ -117,7 +120,9 @@ export default function QuoteDetailsPage({
       setMessage("Draft saved.");
       return updated;
     } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : "Unable to save quote");
+      setMessage(
+        error instanceof ApiError ? error.message : "Unable to save quote",
+      );
       return null;
     } finally {
       setIsSaving(false);
@@ -146,7 +151,9 @@ export default function QuoteDetailsPage({
       setForm(normalizeQuoteForForm(sent));
       setMessage("Quote sent to the customer.");
     } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : "Unable to send quote");
+      setMessage(
+        error instanceof ApiError ? error.message : "Unable to send quote",
+      );
     } finally {
       setIsSending(false);
     }
@@ -193,7 +200,9 @@ export default function QuoteDetailsPage({
   }
 
   if (detailState.error || !detailState.data) {
-    return <ErrorState description={detailState.error ?? "Unable to load quote"} />;
+    return (
+      <ErrorState description={detailState.error ?? "Unable to load quote"} />
+    );
   }
 
   if (!form) {
@@ -207,8 +216,8 @@ export default function QuoteDetailsPage({
 
   return (
     <div className="space-y-6">
-      <div className="admin-no-print flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="admin-no-print flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <Link
             href="/quotes"
             className="mb-2 inline-flex items-center text-sm font-semibold text-slate-600 hover:text-primary"
@@ -220,15 +229,16 @@ export default function QuoteDetailsPage({
             {quote.quoteNumber}
           </h1>
           <p className="text-sm text-slate-500">
-            {statusLabel(quote.status)} - Created {formatDateTime(quote.createdAt)}
+            {statusLabel(quote.status)} - Created{" "}
+            {formatDateTime(quote.createdAt)}
             {quote.sentAt ? ` - Sent ${formatDateTime(quote.sentAt)}` : ""}
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:gap-3">
           {quote.invoices?.[0] ? (
             <Link
               href={`/invoices/${quote.invoices[0].id}`}
-              className="inline-flex h-10 items-center justify-center rounded-xl border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+              className="inline-flex h-10 w-full items-center justify-center rounded-xl border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted sm:w-auto"
             >
               <ReceiptText className="mr-2 h-4 w-4" />
               View linked invoice
@@ -296,7 +306,8 @@ export default function QuoteDetailsPage({
           label="Source website request"
           title={
             quote.sourceQuoteRequest
-              ? quote.sourceQuoteRequest.service?.name ?? "Website quote request"
+              ? (quote.sourceQuoteRequest.service?.name ??
+                "Website quote request")
               : "No source request linked"
           }
           description={
@@ -331,11 +342,15 @@ export default function QuoteDetailsPage({
               ? `Status ${quote.invoices[0].status}`
               : "Create an invoice once the quote is accepted."
           }
-          href={quote.invoices?.[0] ? `/invoices/${quote.invoices[0].id}` : undefined}
+          href={
+            quote.invoices?.[0]
+              ? `/invoices/${quote.invoices[0].id}`
+              : undefined
+          }
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.92fr)] xl:items-start">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.92fr)] xl:items-start">
         <QuoteForm
           form={form}
           totals={totals}
@@ -383,9 +398,14 @@ function LinkedRecordCard({
   );
 }
 
-function getCustomerName(customer?: {
-  firstName?: string | null;
-  lastName?: string | null;
-} | null) {
-  return `${customer?.firstName ?? ""} ${customer?.lastName ?? ""}`.trim() || "Unknown customer";
+function getCustomerName(
+  customer?: {
+    firstName?: string | null;
+    lastName?: string | null;
+  } | null,
+) {
+  return (
+    `${customer?.firstName ?? ""} ${customer?.lastName ?? ""}`.trim() ||
+    "Unknown customer"
+  );
 }

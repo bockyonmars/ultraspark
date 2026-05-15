@@ -12,7 +12,7 @@ export function InvoicePdfUpload({
   onUpload,
 }: InvoicePdfUploadProps) {
   return (
-    <label className="inline-flex">
+    <label className="inline-flex w-full sm:w-auto">
       <input
         type="file"
         accept="application/pdf,.pdf"
@@ -23,7 +23,7 @@ export function InvoicePdfUpload({
           event.target.value = "";
         }}
       />
-      <span className="inline-flex h-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+      <span className="inline-flex h-10 w-full cursor-pointer items-center justify-center rounded-xl border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted sm:w-auto">
         <Upload className="mr-2 h-4 w-4" />
         {isUploading ? "Uploading..." : "Upload PDF"}
       </span>

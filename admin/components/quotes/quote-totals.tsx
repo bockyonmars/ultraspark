@@ -39,7 +39,7 @@ export const QuoteTotals = memo(function QuoteTotals({
               {formatMoney(subtotal)}
             </span>
           </div>
-          <label className="grid grid-cols-[1fr_9rem] items-center gap-4 text-sm text-slate-500">
+          <label className="grid grid-cols-[1fr_7.5rem] items-center gap-3 text-sm text-slate-500 sm:grid-cols-[1fr_9rem] sm:gap-4">
             <span>Discount</span>
             <Input
               type="number"
@@ -53,14 +53,16 @@ export const QuoteTotals = memo(function QuoteTotals({
               className="text-right"
             />
           </label>
-          <label className="grid grid-cols-[1fr_9rem] items-center gap-4 text-sm text-slate-500">
+          <label className="grid grid-cols-[1fr_7.5rem] items-center gap-3 text-sm text-slate-500 sm:grid-cols-[1fr_9rem] sm:gap-4">
             <span>Tax</span>
             <Input
               type="number"
               min="0"
               step="0.01"
               value={tax}
-              onChange={(event) => onChange({ tax: Number(event.target.value) })}
+              onChange={(event) =>
+                onChange({ tax: Number(event.target.value) })
+              }
               disabled={readOnly}
               className="text-right"
             />

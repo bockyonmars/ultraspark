@@ -1,10 +1,10 @@
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export function SearchInput({
   value,
   onChange,
-  placeholder = 'Search...',
+  placeholder = "Search...",
 }: {
   value: string;
   onChange: (value: string) => void;

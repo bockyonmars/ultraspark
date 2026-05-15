@@ -23,11 +23,12 @@ export function QuoteActions({
   onSend,
 }: QuoteActionsProps) {
   return (
-    <div className="admin-no-print flex flex-wrap items-center gap-3 rounded-xl border bg-white p-4 shadow-soft">
+    <div className="admin-no-print grid w-full gap-2 rounded-xl border bg-white p-3 shadow-soft sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-3 sm:p-4">
       <Button
         type="button"
         onClick={onSave}
         disabled={!canEdit || isSaving}
+        className="w-full sm:w-auto"
       >
         <Save className="mr-2 h-4 w-4" />
         {isSaving ? "Saving..." : "Save draft"}
@@ -36,8 +37,9 @@ export function QuoteActions({
         onSend={onSend}
         disabled={!canSend}
         isSending={isSending}
+        className="w-full sm:w-auto"
       />
-      <PrintButton />
+      <PrintButton className="w-full sm:w-auto" />
     </div>
   );
 }

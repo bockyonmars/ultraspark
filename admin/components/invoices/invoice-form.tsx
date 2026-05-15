@@ -1,7 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { BookingRequest, Customer, InvoicePayload, QuoteDocument, SupportTicket } from "@/types/api";
+import type {
+  BookingRequest,
+  Customer,
+  InvoicePayload,
+  QuoteDocument,
+  SupportTicket,
+} from "@/types/api";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getName } from "@/lib/utils";
@@ -26,20 +32,28 @@ export function InvoiceForm({
 }: InvoiceFormProps) {
   return (
     <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
-      <section className="rounded-xl border bg-white p-5 shadow-soft">
-        <h2 className="text-base font-semibold text-slate-900">Invoice details</h2>
+      <section className="rounded-xl border bg-white p-4 shadow-soft sm:p-5">
+        <h2 className="text-base font-semibold text-slate-900">
+          Invoice details
+        </h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Field label="Invoice number">
             <Input
               value={value.invoiceNumber ?? ""}
-              onChange={(event) => onChange({ invoiceNumber: event.target.value })}
+              onChange={(event) =>
+                onChange({ invoiceNumber: event.target.value })
+              }
               placeholder="Auto-generated on save"
             />
           </Field>
           <Field label="Status">
             <select
               value={value.status ?? "DRAFT"}
-              onChange={(event) => onChange({ status: event.target.value as InvoicePayload["status"] })}
+              onChange={(event) =>
+                onChange({
+                  status: event.target.value as InvoicePayload["status"],
+                })
+              }
               className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
             >
               {invoiceStatusOptions().map((status) => (
@@ -53,14 +67,18 @@ export function InvoiceForm({
             <Input
               type="date"
               value={value.invoiceDate ?? ""}
-              onChange={(event) => onChange({ invoiceDate: event.target.value })}
+              onChange={(event) =>
+                onChange({ invoiceDate: event.target.value })
+              }
             />
           </Field>
           <Field label="Due date">
             <Input
               type="date"
               value={value.dueDate ?? ""}
-              onChange={(event) => onChange({ dueDate: event.target.value || null })}
+              onChange={(event) =>
+                onChange({ dueDate: event.target.value || null })
+              }
             />
           </Field>
           <Field label="Amount">
@@ -69,19 +87,27 @@ export function InvoiceForm({
               min="0.01"
               step="0.01"
               value={value.amount}
-              onChange={(event) => onChange({ amount: Number(event.target.value) })}
+              onChange={(event) =>
+                onChange({ amount: Number(event.target.value) })
+              }
             />
           </Field>
           <Field label="Currency">
             <Input
               value={value.currency ?? "GBP"}
-              onChange={(event) => onChange({ currency: event.target.value.toUpperCase().slice(0, 3) })}
+              onChange={(event) =>
+                onChange({
+                  currency: event.target.value.toUpperCase().slice(0, 3),
+                })
+              }
             />
           </Field>
           <Field label="Payment link" className="md:col-span-2">
             <Input
               value={value.paymentLink ?? ""}
-              onChange={(event) => onChange({ paymentLink: event.target.value })}
+              onChange={(event) =>
+                onChange({ paymentLink: event.target.value })
+              }
               placeholder="https://..."
             />
           </Field>
@@ -95,7 +121,7 @@ export function InvoiceForm({
         </div>
       </section>
 
-      <section className="rounded-xl border bg-white p-5 shadow-soft">
+      <section className="rounded-xl border bg-white p-4 shadow-soft sm:p-5">
         <h2 className="text-base font-semibold text-slate-900">Links</h2>
         <p className="mt-1 text-sm text-slate-500">
           Link this invoice to customer records and related operations.
@@ -104,7 +130,9 @@ export function InvoiceForm({
           <Field label="Customer">
             <select
               value={value.customerId ?? ""}
-              onChange={(event) => onChange({ customerId: event.target.value || undefined })}
+              onChange={(event) =>
+                onChange({ customerId: event.target.value || undefined })
+              }
               className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
             >
               <option value="">Create or match from details below</option>
@@ -118,7 +146,9 @@ export function InvoiceForm({
           <Field label="Quote">
             <select
               value={value.quoteId ?? ""}
-              onChange={(event) => onChange({ quoteId: event.target.value || undefined })}
+              onChange={(event) =>
+                onChange({ quoteId: event.target.value || undefined })
+              }
               className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
             >
               <option value="">No quote linked</option>
@@ -132,13 +162,16 @@ export function InvoiceForm({
           <Field label="Booking">
             <select
               value={value.bookingId ?? ""}
-              onChange={(event) => onChange({ bookingId: event.target.value || undefined })}
+              onChange={(event) =>
+                onChange({ bookingId: event.target.value || undefined })
+              }
               className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
             >
               <option value="">No booking linked</option>
               {bookings.map((booking) => (
                 <option key={booking.id} value={booking.id}>
-                  {booking.service?.name ?? "Booking"} - {getName(booking.customer ?? undefined)}
+                  {booking.service?.name ?? "Booking"} -{" "}
+                  {getName(booking.customer ?? undefined)}
                 </option>
               ))}
             </select>
@@ -146,7 +179,9 @@ export function InvoiceForm({
           <Field label="Support ticket">
             <select
               value={value.supportTicketId ?? ""}
-              onChange={(event) => onChange({ supportTicketId: event.target.value || undefined })}
+              onChange={(event) =>
+                onChange({ supportTicketId: event.target.value || undefined })
+              }
               className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
             >
               <option value="">No ticket linked</option>
@@ -162,20 +197,26 @@ export function InvoiceForm({
               <Field label="Customer name">
                 <Input
                   value={value.customerName ?? ""}
-                  onChange={(event) => onChange({ customerName: event.target.value })}
+                  onChange={(event) =>
+                    onChange({ customerName: event.target.value })
+                  }
                 />
               </Field>
               <Field label="Customer email">
                 <Input
                   type="email"
                   value={value.customerEmail ?? ""}
-                  onChange={(event) => onChange({ customerEmail: event.target.value })}
+                  onChange={(event) =>
+                    onChange({ customerEmail: event.target.value })
+                  }
                 />
               </Field>
               <Field label="Customer phone">
                 <Input
                   value={value.customerPhone ?? ""}
-                  onChange={(event) => onChange({ customerPhone: event.target.value })}
+                  onChange={(event) =>
+                    onChange({ customerPhone: event.target.value })
+                  }
                 />
               </Field>
             </>

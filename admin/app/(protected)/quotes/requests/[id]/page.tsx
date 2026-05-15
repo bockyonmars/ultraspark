@@ -55,8 +55,8 @@ export default function QuoteRequestDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <Link
             href="/quotes"
             className="mb-2 inline-flex items-center text-sm font-semibold text-slate-600 hover:text-primary"
@@ -71,29 +71,34 @@ export default function QuoteRequestDetailPage({
             Submitted {formatDateTime(request.createdAt)}
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:gap-3">
           {request.createdQuote ? (
             <Link
               href={`/quotes/${request.createdQuote.id}`}
-              className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
+              className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 sm:w-auto"
             >
               View Quote
             </Link>
           ) : (
             <Link
               href={`/quotes/new?requestId=${request.id}`}
-              className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
+              className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 sm:w-auto"
             >
               <FilePlus2 className="mr-2 h-4 w-4" />
               Create Quote
             </Link>
           )}
-          <Button type="button" variant="outline" onClick={() => void markReviewed()}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void markReviewed()}
+            className="w-full sm:w-auto"
+          >
             Mark reviewed
           </Button>
           <Link
             href="/support"
-            className="inline-flex h-10 items-center justify-center rounded-xl border bg-white px-4 py-2 text-sm font-semibold hover:bg-muted"
+            className="inline-flex h-10 w-full items-center justify-center rounded-xl border bg-white px-4 py-2 text-sm font-semibold hover:bg-muted sm:w-auto"
           >
             <LifeBuoy className="mr-2 h-4 w-4" />
             Support
@@ -108,11 +113,22 @@ export default function QuoteRequestDetailPage({
       ) : null}
 
       <section className="grid gap-4 md:grid-cols-4">
-        <SummaryCard label="Customer" value={getName(request.customer ?? undefined)} />
-        <SummaryCard label="Service" value={request.service?.name ?? "Unknown"} />
-        <SummaryCard label="Requested date" value={formatDate(request.preferredDate)} />
+        <SummaryCard
+          label="Customer"
+          value={getName(request.customer ?? undefined)}
+        />
+        <SummaryCard
+          label="Service"
+          value={request.service?.name ?? "Unknown"}
+        />
+        <SummaryCard
+          label="Requested date"
+          value={formatDate(request.preferredDate)}
+        />
         <div className="rounded-xl border bg-white p-4 shadow-soft">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            Status
+          </p>
           <div className="mt-2">
             <StatusBadge status={request.status} />
           </div>
@@ -199,7 +215,7 @@ export default function QuoteRequestDetailPage({
                 </p>
                 <Link
                   href={`/quotes/${request.createdQuote.id}`}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border bg-white px-4 py-2 text-sm font-semibold hover:bg-muted"
+                  className="inline-flex h-10 w-full items-center justify-center rounded-xl border bg-white px-4 py-2 text-sm font-semibold hover:bg-muted sm:w-auto"
                 >
                   View Quote
                 </Link>
@@ -211,7 +227,7 @@ export default function QuoteRequestDetailPage({
                 </p>
                 <Link
                   href={`/quotes/new?requestId=${request.id}`}
-                  className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
+                  className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 sm:w-auto"
                 >
                   Create Quote
                 </Link>
@@ -220,14 +236,18 @@ export default function QuoteRequestDetailPage({
           </div>
 
           <div className="rounded-xl border bg-white p-5 shadow-soft">
-            <h2 className="text-base font-semibold text-slate-900">
-              Source
-            </h2>
+            <h2 className="text-base font-semibold text-slate-900">Source</h2>
             <dl className="mt-4 space-y-3 text-sm">
               <Detail label="Form type" value="Website quote request" />
               <Detail label="Request ID" value={request.id} />
-              <Detail label="Submitted" value={formatDateTime(request.createdAt)} />
-              <Detail label="Updated" value={formatDateTime(request.updatedAt)} />
+              <Detail
+                label="Submitted"
+                value={formatDateTime(request.createdAt)}
+              />
+              <Detail
+                label="Updated"
+                value={formatDateTime(request.updatedAt)}
+              />
             </dl>
           </div>
         </aside>
@@ -245,13 +265,7 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Detail({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | null;
-}) {
+function Detail({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
       <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">

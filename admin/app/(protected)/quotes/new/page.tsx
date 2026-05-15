@@ -109,7 +109,9 @@ export default function NewQuotePage() {
       router.replace(`/quotes/${saved.id}`);
       return saved;
     } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : "Unable to save quote");
+      setMessage(
+        error instanceof ApiError ? error.message : "Unable to save quote",
+      );
       return null;
     } finally {
       setIsSaving(false);
@@ -132,7 +134,9 @@ export default function NewQuotePage() {
       );
       router.replace(`/quotes/${sent.id}`);
     } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : "Unable to send quote");
+      setMessage(
+        error instanceof ApiError ? error.message : "Unable to send quote",
+      );
     } finally {
       setIsSending(false);
     }
@@ -145,8 +149,8 @@ export default function NewQuotePage() {
 
   return (
     <div className="space-y-6">
-      <div className="admin-no-print flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="admin-no-print flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <Link
             href="/quotes"
             className="mb-2 inline-flex items-center text-sm font-semibold text-slate-600 hover:text-primary"
@@ -154,9 +158,7 @@ export default function NewQuotePage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to quotes
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Create quote
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">Create quote</h1>
           <p className="text-sm text-slate-500">
             {requestId
               ? "Review the prefilled website request details, confirm pricing, then save the formal quote."
@@ -178,7 +180,7 @@ export default function NewQuotePage() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.92fr)] xl:items-start">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(560px,0.92fr)] xl:items-start">
         <QuoteForm
           form={form}
           totals={totals}

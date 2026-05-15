@@ -1,21 +1,22 @@
-'use client';
+"use client";
 
-import { api } from '@/lib/api';
-import { useApiData } from '@/lib/use-api-data';
-import { DataTable } from '@/components/shared/data-table';
-import { ErrorState } from '@/components/shared/error-state';
-import { LoadingSpinner } from '@/components/shared/loading-spinner';
-import type { AuditLog } from '@/types/api';
-import { formatDateTime, getName, toTitleCase } from '@/lib/utils';
+import { api } from "@/lib/api";
+import { useApiData } from "@/lib/use-api-data";
+import { DataTable } from "@/components/shared/data-table";
+import { ErrorState } from "@/components/shared/error-state";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
+import type { AuditLog } from "@/types/api";
+import { formatDateTime, getName, toTitleCase } from "@/lib/utils";
 
 export default function AuditLogsPage() {
   const { data, isLoading, error } = useApiData<AuditLog[]>(
-    () => api.get<AuditLog[]>('/audit-logs'),
+    () => api.get<AuditLog[]>("/audit-logs"),
     [],
   );
 
   if (isLoading) return <LoadingSpinner label="Loading audit logs..." />;
-  if (error || !data) return <ErrorState description={error ?? 'Unable to load audit logs'} />;
+  if (error || !data)
+    return <ErrorState description={error ?? "Unable to load audit logs"} />;
 
   return (
     <DataTable
@@ -25,33 +26,38 @@ export default function AuditLogsPage() {
       emptyDescription="Admin and system events will appear here."
       columns={[
         {
-          key: 'actor',
-          title: 'Actor',
+          key: "actor",
+          title: "Actor",
           render: (row) => (
             <div>
-              <p className="font-medium">{getName(row.adminUser ?? undefined)}</p>
-              <p className="text-xs text-slate-500">{row.adminUser?.email ?? 'System event'}</p>
+              <p className="font-medium">
+                {getName(row.adminUser ?? undefined)}
+              </p>
+              <p className="text-xs text-slate-500">
+                {row.adminUser?.email ?? "System event"}
+              </p>
             </div>
           ),
         },
         {
-          key: 'action',
-          title: 'Action',
+          key: "action",
+          title: "Action",
           render: (row) => toTitleCase(row.action),
         },
         {
-          key: 'entity',
-          title: 'Entity',
-          render: (row) => `${row.entityType ?? 'Unknown'} ${row.entityId ? `• ${row.entityId}` : ''}`,
+          key: "entity",
+          title: "Entity",
+          render: (row) =>
+            `${row.entityType ?? "Unknown"} ${row.entityId ? `• ${row.entityId}` : ""}`,
         },
         {
-          key: 'description',
-          title: 'Description',
-          render: (row) => row.description ?? 'No description',
+          key: "description",
+          title: "Description",
+          render: (row) => row.description ?? "No description",
         },
         {
-          key: 'createdAt',
-          title: 'Timestamp',
+          key: "createdAt",
+          title: "Timestamp",
           render: (row) => formatDateTime(row.createdAt),
         },
       ]}

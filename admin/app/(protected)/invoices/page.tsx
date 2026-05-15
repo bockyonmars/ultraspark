@@ -62,33 +62,41 @@ export default function InvoicesPage() {
         {},
       );
       listState.setData((current) =>
-        (current ?? []).map((item) => (item.id === updated.id ? updated : item)),
+        (current ?? []).map((item) =>
+          item.id === updated.id ? updated : item,
+        ),
       );
       setMessage(`${updated.invoiceNumber} marked as paid.`);
     } catch (error) {
       setMessage(
-        error instanceof ApiError ? error.message : "Unable to mark invoice paid",
+        error instanceof ApiError
+          ? error.message
+          : "Unable to mark invoice paid",
       );
     }
   }
 
-  if (listState.isLoading) return <LoadingSpinner label="Loading invoices..." />;
+  if (listState.isLoading)
+    return <LoadingSpinner label="Loading invoices..." />;
   if (listState.error || !listState.data) {
-    return <ErrorState description={listState.error ?? "Unable to load invoices"} />;
+    return (
+      <ErrorState description={listState.error ?? "Unable to load invoices"} />
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
           <p className="text-sm text-slate-500">
-            Store invoice records, PDFs, payment links, email history, and follow-up status.
+            Store invoice records, PDFs, payment links, email history, and
+            follow-up status.
           </p>
         </div>
         <Link
           href="/invoices/new"
-          className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+          className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 sm:w-auto"
         >
           <FilePlus2 className="mr-2 h-4 w-4" />
           Create invoice
@@ -113,11 +121,13 @@ export default function InvoicesPage() {
             onChange={(event) =>
               setStatusFilter(event.target.value as (typeof statuses)[number])
             }
-            className="h-10 rounded-xl border bg-white px-3 text-sm"
+            className="h-10 w-full rounded-xl border bg-white px-3 text-sm lg:w-auto"
           >
             {statuses.map((status) => (
               <option key={status} value={status}>
-                {status === "ALL" ? "All statuses" : formatInvoiceStatus(status)}
+                {status === "ALL"
+                  ? "All statuses"
+                  : formatInvoiceStatus(status)}
               </option>
             ))}
           </select>
@@ -135,7 +145,9 @@ export default function InvoicesPage() {
             title: "Invoice",
             render: (row) => (
               <Link href={`/invoices/${row.id}`} className="block">
-                <p className="font-semibold text-primary">{row.invoiceNumber}</p>
+                <p className="font-semibold text-primary">
+                  {row.invoiceNumber}
+                </p>
                 <p className="text-xs text-slate-500">
                   {row.pdfFileName ? "PDF uploaded" : "No PDF"}
                 </p>
@@ -147,7 +159,9 @@ export default function InvoicesPage() {
             title: "Customer",
             render: (row) => (
               <div>
-                <p className="font-medium">{getName(row.customer ?? undefined)}</p>
+                <p className="font-medium">
+                  {getName(row.customer ?? undefined)}
+                </p>
                 <p className="text-xs text-slate-500">
                   {row.customer?.email ?? "No email"}
                 </p>

@@ -7,11 +7,26 @@
 }
 
 body {
-  @apply bg-background text-foreground antialiased;
+  @apply overflow-x-hidden bg-background text-foreground antialiased;
 }
 
 * {
   @apply border-border;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 .dashboard-grid {

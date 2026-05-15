@@ -29,14 +29,14 @@ export const DocumentTemplateLayout = memo(function DocumentTemplateLayout({
   const title = documentTypeLabel(quote.documentType);
 
   return (
-    <article className="quote-print-area mx-auto w-full max-w-[794px] bg-white text-[#102117] shadow-soft">
-      <div className="quote-document-page min-h-[1123px] border border-slate-200 bg-white p-8 print:min-h-0 print:border-0 print:p-0">
+    <article className="quote-print-area mx-auto w-full max-w-[794px] overflow-hidden bg-white text-[#102117] shadow-soft">
+      <div className="quote-document-page min-h-[1123px] border border-slate-200 bg-white p-4 print:min-h-0 print:border-0 print:p-0 sm:p-8">
         <header className="grid gap-6 border-b-4 border-primary pb-6 sm:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.85fr)] sm:items-start">
           <div className="min-w-0">
             <div className="flex items-start gap-4">
               <QuoteBrandMark />
               <div className="min-w-0 pt-1">
-                <p className="text-2xl font-bold leading-tight text-[#102117]">
+                <p className="text-xl font-bold leading-tight text-[#102117] sm:text-2xl">
                   {quoteBranding.companyName}
                 </p>
                 <p className="mt-1 text-sm font-semibold leading-5 text-primary">
@@ -54,7 +54,7 @@ export const DocumentTemplateLayout = memo(function DocumentTemplateLayout({
             <p className="text-xs font-semibold uppercase text-primary">
               {title}
             </p>
-            <h1 className="mt-2 text-2xl font-bold">
+            <h1 className="mt-2 break-words text-xl font-bold sm:text-2xl">
               {quote.quoteNumber || "Auto-generated"}
             </h1>
             <dl className="mt-4 space-y-2 text-slate-600">
@@ -115,7 +115,7 @@ export const DocumentTemplateLayout = memo(function DocumentTemplateLayout({
         </section>
 
         <section className="mt-7">
-          <table className="w-full border-collapse text-left text-sm">
+          <table className="hidden w-full border-collapse text-left text-sm print:table sm:table">
             <thead>
               <tr className="bg-[#102117] text-white">
                 <th className="px-3 py-3 font-semibold">Service</th>
@@ -152,6 +152,41 @@ export const DocumentTemplateLayout = memo(function DocumentTemplateLayout({
               ))}
             </tbody>
           </table>
+          <div className="space-y-3 print:hidden sm:hidden">
+            {quote.lineItems.map((item) => (
+              <div
+                key={item.id}
+                className="rounded border border-slate-200 p-3 text-sm"
+              >
+                <p className="font-semibold">
+                  {item.serviceName || "Service name"}
+                </p>
+                {item.description ? (
+                  <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-5 text-slate-600">
+                    {item.description}
+                  </p>
+                ) : null}
+                <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                  <div>
+                    <dt className="text-slate-500">Rate</dt>
+                    <dd className="font-semibold">{formatMoney(item.rate)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-500">Qty</dt>
+                    <dd className="font-semibold">
+                      {formatQuantity(item.quantity)}
+                    </dd>
+                  </div>
+                  <div className="text-right">
+                    <dt className="text-slate-500">Total</dt>
+                    <dd className="font-semibold">
+                      {formatMoney(item.rate * item.quantity)}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="mt-6 grid gap-5 sm:grid-cols-[1fr_18rem]">
@@ -170,7 +205,9 @@ export const DocumentTemplateLayout = memo(function DocumentTemplateLayout({
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between gap-4">
                 <dt className="text-slate-600">Subtotal</dt>
-                <dd className="font-semibold">{formatMoney(totals.subtotal)}</dd>
+                <dd className="font-semibold">
+                  {formatMoney(totals.subtotal)}
+                </dd>
               </div>
               {totals.discount > 0 ? (
                 <div className="flex justify-between gap-4">

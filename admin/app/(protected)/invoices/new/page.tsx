@@ -86,8 +86,8 @@ export default function NewInvoicePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <Link
             href="/invoices"
             className="mb-2 inline-flex items-center text-sm font-semibold text-slate-600 hover:text-primary"
@@ -97,10 +97,16 @@ export default function NewInvoicePage() {
           </Link>
           <h1 className="text-2xl font-bold tracking-tight">Create invoice</h1>
           <p className="text-sm text-slate-500">
-            Store the invoice generated externally and connect it to the customer record.
+            Store the invoice generated externally and connect it to the
+            customer record.
           </p>
         </div>
-        <Button type="button" onClick={() => void saveInvoice()} disabled={isSaving}>
+        <Button
+          type="button"
+          onClick={() => void saveInvoice()}
+          disabled={isSaving}
+          className="w-full sm:w-auto"
+        >
           <Save className="mr-2 h-4 w-4" />
           {isSaving ? "Saving..." : "Save invoice"}
         </Button>
@@ -118,7 +124,9 @@ export default function NewInvoicePage() {
         quotes={quotesState.data}
         bookings={bookingsState.data}
         supportTickets={ticketsState.data}
-        onChange={(patch) => setPayload((current) => ({ ...current, ...patch }))}
+        onChange={(patch) =>
+          setPayload((current) => ({ ...current, ...patch }))
+        }
       />
     </div>
   );

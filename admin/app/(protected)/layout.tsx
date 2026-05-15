@@ -1,6 +1,6 @@
-import { AppSidebar } from '@/components/layout/app-sidebar';
-import { ProtectedRoute } from '@/components/layout/protected-route';
-import { Topbar } from '@/components/layout/topbar';
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { ProtectedRoute } from "@/components/layout/protected-route";
+import { Topbar } from "@/components/layout/topbar";
 
 export default function ProtectedLayout({
   children,
@@ -11,9 +11,9 @@ export default function ProtectedLayout({
     <ProtectedRoute>
       <div className="min-h-screen bg-background lg:grid lg:grid-cols-[18rem_1fr]">
         <AppSidebar />
-        <div className="min-w-0">
+        <div className="min-w-0 overflow-x-hidden">
           <Topbar />
-          <main className="space-y-6 p-4 lg:p-8">{children}</main>
+          <main className="space-y-6 px-3 py-4 sm:px-4 lg:p-8">{children}</main>
         </div>
       </div>
     </ProtectedRoute>

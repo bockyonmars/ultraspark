@@ -41,7 +41,7 @@ export const QuoteForm = memo(function QuoteForm({
       className="admin-no-print space-y-6"
       onSubmit={(event) => event.preventDefault()}
     >
-      <section className="rounded-xl border bg-white p-5 shadow-soft">
+      <section className="rounded-xl border bg-white p-4 shadow-soft sm:p-5">
         <div className="mb-4">
           <h2 className="text-base font-semibold text-slate-900">
             Customer information
@@ -118,7 +118,7 @@ export const QuoteForm = memo(function QuoteForm({
         </div>
       </section>
 
-      <section className="rounded-xl border bg-white p-5 shadow-soft">
+      <section className="rounded-xl border bg-white p-4 shadow-soft sm:p-5">
         <div className="mb-4">
           <h2 className="text-base font-semibold text-slate-900">
             Quote information
@@ -209,7 +209,7 @@ export const QuoteForm = memo(function QuoteForm({
         </div>
       </section>
 
-      <section className="rounded-xl border bg-white p-5 shadow-soft">
+      <section className="rounded-xl border bg-white p-4 shadow-soft sm:p-5">
         <QuoteLineItems
           items={form.lineItems}
           readOnly={readOnly}
@@ -219,7 +219,7 @@ export const QuoteForm = memo(function QuoteForm({
         />
       </section>
 
-      <section className="rounded-xl border bg-white p-5 shadow-soft">
+      <section className="rounded-xl border bg-white p-4 shadow-soft sm:p-5">
         <QuoteTotals
           subtotal={totals.subtotal}
           discount={form.discount}
@@ -230,7 +230,7 @@ export const QuoteForm = memo(function QuoteForm({
         />
       </section>
 
-      <section className="rounded-xl border bg-white p-5 shadow-soft">
+      <section className="rounded-xl border bg-white p-4 shadow-soft sm:p-5">
         <div className="mb-4">
           <h2 className="text-base font-semibold text-slate-900">
             Notes and scope

@@ -15,7 +15,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChartColumn, LifeBuoy, MousePointerClick, Repeat, Siren, TrendingUp, Users } from "lucide-react";
+import {
+  ChartColumn,
+  LifeBuoy,
+  MousePointerClick,
+  Repeat,
+  Siren,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { useApiData } from "@/lib/use-api-data";
 import { ChartCard } from "@/components/shared/chart-card";
@@ -51,17 +59,23 @@ const chartColors = ["#1f6b47", "#6ba17d", "#d59b38", "#1f4d8c", "#c94f4f"];
 
 export default function AnalyticsPage() {
   const { data, isLoading, error } = useApiData<AnalyticsPayload>(async () => {
-    const [overview, marketingSummary, customers, contacts, quotes, bookings] = await Promise.all(
-      [
+    const [overview, marketingSummary, customers, contacts, quotes, bookings] =
+      await Promise.all([
         api.get<AnalyticsOverview>("/analytics/overview"),
         api.get<MarketingAnalyticsSummary>("/analytics/marketing/summary"),
         api.get<Customer[]>("/customers"),
         api.get<ContactMessage[]>("/contact-messages"),
         api.get<QuoteRequest[]>("/quotes"),
         api.get<BookingRequest[]>("/bookings"),
-      ],
-    );
-    return { overview, marketingSummary, customers, contacts, quotes, bookings };
+      ]);
+    return {
+      overview,
+      marketingSummary,
+      customers,
+      contacts,
+      quotes,
+      bookings,
+    };
   }, []);
 
   const derived = useMemo(() => {
@@ -209,7 +223,11 @@ export default function AnalyticsPage() {
 
       {!data.marketingSummary.configured ? (
         <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-slate-600">
-          <strong className="text-slate-900">Connect Google Analytics and Google Ads</strong> to view live traffic and campaign performance. Backend form submissions and support metrics are still available.
+          <strong className="text-slate-900">
+            Connect Google Analytics and Google Ads
+          </strong>{" "}
+          to view live traffic and campaign performance. Backend form
+          submissions and support metrics are still available.
         </div>
       ) : null}
 

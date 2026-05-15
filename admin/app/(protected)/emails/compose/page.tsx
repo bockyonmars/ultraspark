@@ -191,7 +191,11 @@ export default function ComposeEmailPage() {
                 </label>
               </div>
 
-              <Button type="submit" disabled={isSending}>
+              <Button
+                type="submit"
+                disabled={isSending}
+                className="w-full sm:w-auto"
+              >
                 <Send className="mr-2 h-4 w-4" />
                 {isSending ? "Sending..." : "Send email"}
               </Button>
@@ -217,14 +221,14 @@ export default function ComposeEmailPage() {
               <p className="text-xs uppercase tracking-wide text-slate-500">
                 To
               </p>
-              <p className="mt-1 text-sm font-medium">
+              <p className="mt-1 break-words text-sm font-medium">
                 {recipientName || "Customer"} &lt;
                 {recipientEmail || "customer@example.com"}&gt;
               </p>
               <p className="mt-4 text-xs uppercase tracking-wide text-slate-500">
                 Subject
               </p>
-              <p className="mt-1 text-sm font-medium">
+              <p className="mt-1 break-words text-sm font-medium">
                 {subject || "Follow-up from UltraSpark Cleaning"}
               </p>
               <div className="mt-4 rounded-xl bg-white p-4 text-sm leading-6 text-slate-700 shadow-sm">

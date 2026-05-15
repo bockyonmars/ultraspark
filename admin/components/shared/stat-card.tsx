@@ -1,5 +1,5 @@
-import { LucideIcon } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LucideIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function StatCard({
   title,
@@ -21,7 +21,9 @@ export function StatCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-semibold">{value}</div>
+        <div className="break-words text-2xl font-semibold sm:text-3xl">
+          {value}
+        </div>
         <p className="mt-2 text-sm text-slate-500">{description}</p>
       </CardContent>
     </Card>

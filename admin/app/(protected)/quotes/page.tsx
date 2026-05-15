@@ -98,13 +98,15 @@ export default function QuotesPage() {
 
   if (listState.isLoading) return <LoadingSpinner label="Loading quotes..." />;
   if (listState.error || !listState.data) {
-    return <ErrorState description={listState.error ?? "Unable to load quotes"} />;
+    return (
+      <ErrorState description={listState.error ?? "Unable to load quotes"} />
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight">
             Quotes / Estimates
           </h1>
@@ -114,7 +116,7 @@ export default function QuotesPage() {
         </div>
         <Link
           href="/quotes/new"
-          className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+          className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 sm:w-auto"
         >
           <FilePlus2 className="mr-2 h-4 w-4" />
           Create Quote
@@ -129,7 +131,7 @@ export default function QuotesPage() {
 
       <Card>
         <CardContent className="space-y-4 pt-6">
-          <div className="flex flex-wrap gap-2">
+          <div className="grid gap-2 sm:flex sm:flex-wrap">
             <Button
               type="button"
               variant={activeTab === "created" ? "default" : "outline"}
@@ -148,22 +150,24 @@ export default function QuotesPage() {
             </Button>
           </div>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-          <SearchInput
-            value={query}
-            onChange={setQuery}
-            placeholder={
-              activeTab === "created"
-                ? "Search by customer, email, quote number, or service"
-                : "Search website requests by customer, email, service, address, or linked quote"
-            }
-          />
+            <SearchInput
+              value={query}
+              onChange={setQuery}
+              placeholder={
+                activeTab === "created"
+                  ? "Search by customer, email, quote number, or service"
+                  : "Search website requests by customer, email, service, address, or linked quote"
+              }
+            />
             {activeTab === "created" ? (
               <select
                 value={statusFilter}
                 onChange={(event) =>
-                  setStatusFilter(event.target.value as (typeof statuses)[number])
+                  setStatusFilter(
+                    event.target.value as (typeof statuses)[number],
+                  )
                 }
-                className="h-10 rounded-xl border bg-white px-3 text-sm"
+                className="h-10 w-full rounded-xl border bg-white px-3 text-sm lg:w-auto"
               >
                 {statuses.map((status) => (
                   <option key={status} value={status}>
@@ -188,7 +192,9 @@ export default function QuotesPage() {
               title: "Quote",
               render: (row) => (
                 <Link href={`/quotes/${row.id}`} className="block text-left">
-                  <p className="font-semibold text-primary">{row.quoteNumber}</p>
+                  <p className="font-semibold text-primary">
+                    {row.quoteNumber}
+                  </p>
                   <p className="text-xs text-slate-500">
                     {documentTypeLabel(row.documentType)}
                   </p>
@@ -287,7 +293,9 @@ export default function QuotesPage() {
               title: "Customer",
               render: (row) => (
                 <div>
-                  <p className="font-medium">{getName(row.customer ?? undefined)}</p>
+                  <p className="font-medium">
+                    {getName(row.customer ?? undefined)}
+                  </p>
                   <p className="text-xs text-slate-500">
                     {row.customer?.email ?? "No email"}
                   </p>

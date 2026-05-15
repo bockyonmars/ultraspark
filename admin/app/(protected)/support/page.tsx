@@ -398,7 +398,7 @@ export default function SupportPage() {
             create manual tickets for admin-led follow-up.
           </p>
         </div>
-        <Button onClick={openCreateDrawer}>
+        <Button onClick={openCreateDrawer} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Create Ticket
         </Button>
@@ -422,7 +422,7 @@ export default function SupportPage() {
             onChange={(event) =>
               setStatusFilter(event.target.value as (typeof statuses)[number])
             }
-            className="h-10 rounded-xl border bg-white px-3 text-sm"
+            className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
           >
             {statuses.map((status) => (
               <option key={status} value={status}>
@@ -437,7 +437,7 @@ export default function SupportPage() {
                 event.target.value as (typeof priorities)[number],
               )
             }
-            className="h-10 rounded-xl border bg-white px-3 text-sm"
+            className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
           >
             {priorities.map((priority) => (
               <option key={priority} value={priority}>
@@ -452,7 +452,7 @@ export default function SupportPage() {
                 event.target.value as (typeof categories)[number],
               )
             }
-            className="h-10 rounded-xl border bg-white px-3 text-sm"
+            className="h-10 w-full rounded-xl border bg-white px-3 text-sm"
           >
             {categories.map((category) => (
               <option key={category} value={category}>
@@ -650,10 +650,15 @@ export default function SupportPage() {
               variant="outline"
               onClick={() => setIsCreateOpen(false)}
               disabled={isCreating}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isCreating}>
+            <Button
+              type="submit"
+              disabled={isCreating}
+              className="w-full sm:w-auto"
+            >
               {isCreating ? "Creating..." : "Create ticket"}
             </Button>
           </div>
@@ -770,7 +775,10 @@ export default function SupportPage() {
                   onChange={(event) => setAssignmentAdminId(event.target.value)}
                   placeholder="Admin user ID, or blank to unassign"
                 />
-                <Button onClick={() => void assignTicket(selected.id)}>
+                <Button
+                  onClick={() => void assignTicket(selected.id)}
+                  className="w-full sm:w-auto"
+                >
                   Save
                 </Button>
               </div>
@@ -803,9 +811,15 @@ export default function SupportPage() {
               {(selected.invoices ?? []).length ? (
                 <ul className="space-y-2 text-sm">
                   {selected.invoices?.map((invoice) => (
-                    <li key={invoice.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-3">
+                    <li
+                      key={invoice.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-3"
+                    >
                       <span>{invoice.invoiceNumber}</span>
-                      <Link href={`/invoices/${invoice.id}`} className="font-semibold text-primary">
+                      <Link
+                        href={`/invoices/${invoice.id}`}
+                        className="font-semibold text-primary"
+                      >
                         View invoice
                       </Link>
                     </li>
@@ -882,7 +896,7 @@ export default function SupportPage() {
                   )}&relatedCustomerId=${encodeURIComponent(
                     selected.customerId ?? "",
                   )}`}
-                  className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+                  className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 sm:w-auto"
                 >
                   Compose email
                 </Link>
@@ -900,6 +914,7 @@ export default function SupportPage() {
                 onClick={() =>
                   void addMessage(selected.id, "CUSTOMER_REPLY", replyMessage)
                 }
+                className="w-full sm:w-auto"
               >
                 Send reply
               </Button>
@@ -917,6 +932,7 @@ export default function SupportPage() {
                 onClick={() =>
                   void addMessage(selected.id, "INTERNAL_NOTE", internalNote)
                 }
+                className="w-full sm:w-auto"
               >
                 Add note
               </Button>

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+export const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/traffic", label: "Traffic", icon: Activity },
   { href: "/contacts", label: "Contacts", icon: ClipboardList },
@@ -39,7 +39,7 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-full border-r border-border bg-white lg:w-72">
+    <aside className="hidden w-full border-r border-border bg-white lg:block lg:w-72">
       <div className="flex h-full flex-col p-4">
         <div className="mb-6 rounded-2xl bg-gradient-to-br from-primary to-emerald-700 p-5 text-white">
           <p className="text-xs uppercase tracking-[0.2em] text-emerald-100">

@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export function ChartCard({
   title,
@@ -15,7 +21,7 @@ export function ChartCard({
         <CardTitle>{title}</CardTitle>
         {description ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="min-w-0 overflow-hidden">{children}</CardContent>
     </Card>
   );
 }

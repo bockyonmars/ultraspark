@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -11,23 +11,29 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
-import { api } from '@/lib/api';
-import { useApiData } from '@/lib/use-api-data';
-import { ChartCard } from '@/components/shared/chart-card';
-import { DateRangeFilter } from '@/components/shared/date-range-filter';
-import { EmptyState } from '@/components/shared/empty-state';
-import { ErrorState } from '@/components/shared/error-state';
-import { LoadingSpinner } from '@/components/shared/loading-spinner';
-import { StatCard } from '@/components/shared/stat-card';
-import type { BookingRequest, ContactMessage, MarketingAnalyticsSummary, MarketingTraffic, QuoteRequest } from '@/types/api';
+} from "recharts";
+import { api } from "@/lib/api";
+import { useApiData } from "@/lib/use-api-data";
+import { ChartCard } from "@/components/shared/chart-card";
+import { DateRangeFilter } from "@/components/shared/date-range-filter";
+import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { LoadingSpinner } from "@/components/shared/loading-spinner";
+import { StatCard } from "@/components/shared/stat-card";
+import type {
+  BookingRequest,
+  ContactMessage,
+  MarketingAnalyticsSummary,
+  MarketingTraffic,
+  QuoteRequest,
+} from "@/types/api";
 import {
   aggregatePeriodCounts,
   aggregateServices,
   aggregateSources,
   groupRecordsByDay,
-} from '@/lib/dashboard-data';
-import { Activity, CalendarCheck2, FileText, NotebookPen } from 'lucide-react';
+} from "@/lib/dashboard-data";
+import { Activity, CalendarCheck2, FileText, NotebookPen } from "lucide-react";
 
 type TrafficPayload = {
   contacts: ContactMessage[];
@@ -38,34 +44,35 @@ type TrafficPayload = {
 };
 
 export default function TrafficPage() {
-  const [range, setRange] = useState('30d');
-  const { data, isLoading, error } = useApiData<TrafficPayload>(
-    async () => {
-      const [contacts, quotes, bookings, marketingSummary, marketingTraffic] = await Promise.all([
-        api.get<ContactMessage[]>('/contact-messages'),
-        api.get<QuoteRequest[]>('/quotes'),
-        api.get<BookingRequest[]>('/bookings'),
-        api.get<MarketingAnalyticsSummary>('/analytics/marketing/summary'),
-        api.get<MarketingTraffic>('/analytics/marketing/traffic'),
+  const [range, setRange] = useState("30d");
+  const { data, isLoading, error } = useApiData<TrafficPayload>(async () => {
+    const [contacts, quotes, bookings, marketingSummary, marketingTraffic] =
+      await Promise.all([
+        api.get<ContactMessage[]>("/contact-messages"),
+        api.get<QuoteRequest[]>("/quotes"),
+        api.get<BookingRequest[]>("/bookings"),
+        api.get<MarketingAnalyticsSummary>("/analytics/marketing/summary"),
+        api.get<MarketingTraffic>("/analytics/marketing/traffic"),
       ]);
-      return { contacts, quotes, bookings, marketingSummary, marketingTraffic };
-    },
-    [],
-  );
+    return { contacts, quotes, bookings, marketingSummary, marketingTraffic };
+  }, []);
 
   const derived = useMemo(() => {
     const contacts = data?.contacts ?? [];
     const quotes = data?.quotes ?? [];
     const bookings = data?.bookings ?? [];
     const all = [...contacts, ...quotes, ...bookings];
-    const days = range === '7d' ? 7 : range === '90d' ? 90 : range === 'all' ? 180 : 30;
+    const days =
+      range === "7d" ? 7 : range === "90d" ? 90 : range === "all" ? 180 : 30;
     return {
       funnel: [
-        { name: 'Contact forms', value: contacts.length },
-        { name: 'Quote forms', value: quotes.length },
-        { name: 'Booking forms', value: bookings.length },
+        { name: "Contact forms", value: contacts.length },
+        { name: "Quote forms", value: quotes.length },
+        { name: "Booking forms", value: bookings.length },
       ],
-      timeline: data?.marketingTraffic.timeline?.length ? data.marketingTraffic.timeline : groupRecordsByDay(all, days > 60 ? 60 : days),
+      timeline: data?.marketingTraffic.timeline?.length
+        ? data.marketingTraffic.timeline
+        : groupRecordsByDay(all, days > 60 ? 60 : days),
       sources: aggregateSources(contacts),
       services: aggregateServices(quotes, bookings).slice(0, 6),
       periods: aggregatePeriodCounts(all),
@@ -73,7 +80,8 @@ export default function TrafficPage() {
   }, [data, range]);
 
   if (isLoading) return <LoadingSpinner label="Loading traffic view..." />;
-  if (error || !data) return <ErrorState description={error ?? 'Unable to load traffic view'} />;
+  if (error || !data)
+    return <ErrorState description={error ?? "Unable to load traffic view"} />;
 
   return (
     <div className="space-y-6">
@@ -81,31 +89,83 @@ export default function TrafficPage() {
         <div>
           <h3 className="text-lg font-semibold">Lead funnel</h3>
           <p className="text-sm text-slate-500">
-            Website traffic, backend lead events, and Google Ads performance will appear here as integrations connect.
+            Website traffic, backend lead events, and Google Ads performance
+            will appear here as integrations connect.
           </p>
         </div>
         <DateRangeFilter value={range} onChange={setRange} />
       </div>
 
       <section className="dashboard-grid">
-        <StatCard title="Website users" value={data.marketingSummary.website?.users ?? '—'} description="GA4 users once connected" icon={Activity} />
-        <StatCard title="Page views" value={data.marketingSummary.website?.pageViews ?? '—'} description="GA4 page views once connected" icon={FileText} />
-        <StatCard title="Ad clicks" value={data.marketingSummary.ads?.clicks ?? '—'} description="Google Ads clicks once connected" icon={NotebookPen} />
-        <StatCard title="Ad spend" value={data.marketingSummary.ads ? `£${data.marketingSummary.ads.cost}` : '—'} description="Google Ads spend once connected" icon={CalendarCheck2} />
-        <StatCard title="Lead events today" value={derived.periods.day} description="All inbound events recorded today" icon={Activity} />
-        <StatCard title="Lead events this week" value={derived.periods.week} description="Submission activity this week" icon={FileText} />
-        <StatCard title="Quote submissions" value={data.marketingSummary.forms?.quotes ?? data.quotes.length} description="Quote form conversion count" icon={NotebookPen} />
-        <StatCard title="Booking submissions" value={data.marketingSummary.forms?.bookings ?? data.bookings.length} description="Booking intent count" icon={CalendarCheck2} />
+        <StatCard
+          title="Website users"
+          value={data.marketingSummary.website?.users ?? "—"}
+          description="GA4 users once connected"
+          icon={Activity}
+        />
+        <StatCard
+          title="Page views"
+          value={data.marketingSummary.website?.pageViews ?? "—"}
+          description="GA4 page views once connected"
+          icon={FileText}
+        />
+        <StatCard
+          title="Ad clicks"
+          value={data.marketingSummary.ads?.clicks ?? "—"}
+          description="Google Ads clicks once connected"
+          icon={NotebookPen}
+        />
+        <StatCard
+          title="Ad spend"
+          value={
+            data.marketingSummary.ads
+              ? `£${data.marketingSummary.ads.cost}`
+              : "—"
+          }
+          description="Google Ads spend once connected"
+          icon={CalendarCheck2}
+        />
+        <StatCard
+          title="Lead events today"
+          value={derived.periods.day}
+          description="All inbound events recorded today"
+          icon={Activity}
+        />
+        <StatCard
+          title="Lead events this week"
+          value={derived.periods.week}
+          description="Submission activity this week"
+          icon={FileText}
+        />
+        <StatCard
+          title="Quote submissions"
+          value={data.marketingSummary.forms?.quotes ?? data.quotes.length}
+          description="Quote form conversion count"
+          icon={NotebookPen}
+        />
+        <StatCard
+          title="Booking submissions"
+          value={data.marketingSummary.forms?.bookings ?? data.bookings.length}
+          description="Booking intent count"
+          icon={CalendarCheck2}
+        />
       </section>
 
       {!data.marketingSummary.configured ? (
         <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-slate-600">
-          <strong className="text-slate-900">Connect Google Analytics and Google Ads</strong> to view live traffic and campaign performance. Internal backend form metrics are still shown below.
+          <strong className="text-slate-900">
+            Connect Google Analytics and Google Ads
+          </strong>{" "}
+          to view live traffic and campaign performance. Internal backend form
+          metrics are still shown below.
         </div>
       ) : null}
 
       <section className="grid gap-6 xl:grid-cols-2">
-        <ChartCard title="Lead volume over time" description="Submission activity based on backend events">
+        <ChartCard
+          title="Lead volume over time"
+          description="Submission activity based on backend events"
+        >
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={derived.timeline}>
@@ -119,13 +179,21 @@ export default function TrafficPage() {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Area type="monotone" dataKey="total" stroke="#1f6b47" fill="url(#colorTotal)" />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#1f6b47"
+                  fill="url(#colorTotal)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </ChartCard>
 
-        <ChartCard title="Funnel by request type" description="Current submissions by inbound flow">
+        <ChartCard
+          title="Funnel by request type"
+          description="Current submissions by inbound flow"
+        >
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={derived.funnel}>
@@ -166,7 +234,11 @@ export default function TrafficPage() {
           {derived.services.length ? (
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={derived.services} layout="vertical" margin={{ left: 20 }}>
+                <BarChart
+                  data={derived.services}
+                  layout="vertical"
+                  margin={{ left: 20 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" width={140} />
@@ -190,8 +262,8 @@ export default function TrafficPage() {
       >
         <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-slate-600">
           {data.marketingSummary.configured
-            ? 'Google marketing configuration is present. Live reporting can be wired to the Google APIs next.'
-            : `Connect Google Analytics and Google Ads to view traffic and campaign performance. Missing: ${data.marketingSummary.missingConfig?.join(', ') || 'Google config'}.`}
+            ? "Google marketing configuration is present. Live reporting can be wired to the Google APIs next."
+            : `Connect Google Analytics and Google Ads to view traffic and campaign performance. Missing: ${data.marketingSummary.missingConfig?.join(", ") || "Google config"}.`}
         </div>
       </ChartCard>
     </div>

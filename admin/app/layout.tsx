@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
-import { AuthProvider } from '@/lib/auth-context';
-import './globals.css';
+import type { Metadata } from "next";
+import { AuthProvider } from "@/lib/auth-context";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'UltraSpark Admin',
-  description: 'Admin dashboard for UltraSpark Cleaning',
+  title: "UltraSpark Admin",
+  description: "Admin dashboard for UltraSpark Cleaning",
 };
 
 export default function RootLayout({

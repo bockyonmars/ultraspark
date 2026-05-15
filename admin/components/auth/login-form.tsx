@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import type { AdminUser } from '@/types/api';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import type { AdminUser } from "@/types/api";
 
 type LoginResponse = {
   accessToken: string;
@@ -17,26 +23,26 @@ type LoginResponse = {
 export function LoginForm() {
   const router = useRouter();
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       const data = await api.post<LoginResponse>(
-        '/auth/login',
+        "/auth/login",
         { email, password },
         true,
       );
       login(data.accessToken, data.adminUser);
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to log in');
+      setError(err instanceof Error ? err.message : "Unable to log in");
     } finally {
       setIsSubmitting(false);
     }
@@ -74,7 +80,7 @@ export function LoginForm() {
           </div>
           {error ? <p className="text-sm text-danger">{error}</p> : null}
           <Button className="w-full" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in...' : 'Sign in'}
+            {isSubmitting ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </CardContent>

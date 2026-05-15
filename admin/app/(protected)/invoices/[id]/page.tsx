@@ -96,7 +96,9 @@ export default function InvoiceDetailPage({
       setIsEditing(false);
       setMessage("Invoice saved.");
     } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : "Unable to save invoice");
+      setMessage(
+        error instanceof ApiError ? error.message : "Unable to save invoice",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -115,7 +117,9 @@ export default function InvoiceDetailPage({
       detailState.setData(updated);
       setMessage("Invoice PDF uploaded.");
     } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : "Unable to upload PDF");
+      setMessage(
+        error instanceof ApiError ? error.message : "Unable to upload PDF",
+      );
     } finally {
       setIsUploading(false);
     }
@@ -133,7 +137,11 @@ export default function InvoiceDetailPage({
       setEmailOpen(false);
       setMessage("Invoice email sent.");
     } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : "Unable to send invoice email");
+      setMessage(
+        error instanceof ApiError
+          ? error.message
+          : "Unable to send invoice email",
+      );
     } finally {
       setIsSending(false);
     }
@@ -149,7 +157,9 @@ export default function InvoiceDetailPage({
       detailState.setData(updated);
       setMessage("Invoice marked as paid.");
     } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : "Unable to mark paid");
+      setMessage(
+        error instanceof ApiError ? error.message : "Unable to mark paid",
+      );
     }
   }
 
@@ -159,21 +169,26 @@ export default function InvoiceDetailPage({
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : "Unable to open PDF");
+      setMessage(
+        error instanceof ApiError ? error.message : "Unable to open PDF",
+      );
     }
   }
 
-  if (detailState.isLoading) return <LoadingSpinner label="Loading invoice..." />;
+  if (detailState.isLoading)
+    return <LoadingSpinner label="Loading invoice..." />;
   if (detailState.error || !detailState.data) {
-    return <ErrorState description={detailState.error ?? "Unable to load invoice"} />;
+    return (
+      <ErrorState description={detailState.error ?? "Unable to load invoice"} />
+    );
   }
 
   const invoice = detailState.data;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <Link
             href="/invoices"
             className="mb-2 inline-flex items-center text-sm font-semibold text-slate-600 hover:text-primary"
@@ -185,22 +200,34 @@ export default function InvoiceDetailPage({
             {invoice.invoiceNumber}
           </h1>
           <p className="text-sm text-slate-500">
-            Created {formatDateTime(invoice.createdAt)} - Updated {formatDateTime(invoice.updatedAt)}
+            Created {formatDateTime(invoice.createdAt)} - Updated{" "}
+            {formatDateTime(invoice.updatedAt)}
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Button type="button" variant="outline" onClick={() => setEmailOpen(true)}>
+        <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setEmailOpen(true)}
+            className="w-full sm:w-auto"
+          >
             <Mail className="mr-2 h-4 w-4" />
             Send email
           </Button>
           {invoice.status !== "PAID" ? (
-            <Button type="button" variant="outline" onClick={() => void markPaid()}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void markPaid()}
+              className="w-full sm:w-auto"
+            >
               <CheckCircle2 className="mr-2 h-4 w-4" />
               Mark paid
             </Button>
           ) : null}
           <Button
             type="button"
+            className="w-full sm:w-auto"
             onClick={() => {
               setDraft(invoiceToPayload(invoice));
               setIsEditing((current) => !current);
@@ -218,11 +245,16 @@ export default function InvoiceDetailPage({
       ) : null}
 
       <section className="grid gap-4 md:grid-cols-4">
-        <SummaryCard label="Customer" value={getName(invoice.customer ?? undefined)} />
+        <SummaryCard
+          label="Customer"
+          value={getName(invoice.customer ?? undefined)}
+        />
         <SummaryCard label="Amount" value={formatInvoiceMoney(invoice)} />
         <SummaryCard label="Due date" value={formatDate(invoice.dueDate)} />
         <div className="rounded-xl border bg-white p-4 shadow-soft">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Status</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            Status
+          </p>
           <div className="mt-2">
             <StatusBadge status={invoice.status} />
           </div>
@@ -234,22 +266,34 @@ export default function InvoiceDetailPage({
           <div className="rounded-xl border bg-white p-5 shadow-soft">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-base font-semibold text-slate-900">Invoice PDF</h2>
+                <h2 className="text-base font-semibold text-slate-900">
+                  Invoice PDF
+                </h2>
                 <p className="text-sm text-slate-500">
                   Upload the invoice PDF generated from Monzo or another tool.
                 </p>
               </div>
-              <InvoicePdfUpload isUploading={isUploading} onUpload={(file) => void uploadPdf(file)} />
+              <InvoicePdfUpload
+                isUploading={isUploading}
+                onUpload={(file) => void uploadPdf(file)}
+              />
             </div>
             {invoice.pdfFileName ? (
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-slate-50 p-4 text-sm">
                 <div>
                   <p className="font-semibold">{invoice.pdfFileName}</p>
                   <p className="text-slate-500">
-                    {invoice.pdfFileSize ? `${Math.round(invoice.pdfFileSize / 1024)} KB` : "Uploaded"}
+                    {invoice.pdfFileSize
+                      ? `${Math.round(invoice.pdfFileSize / 1024)} KB`
+                      : "Uploaded"}
                   </p>
                 </div>
-                <Button type="button" variant="outline" onClick={() => void openPdf()}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void openPdf()}
+                  className="w-full sm:w-auto"
+                >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Open PDF
                 </Button>
@@ -270,10 +314,18 @@ export default function InvoiceDetailPage({
                 bookings={bookingsState.data}
                 supportTickets={ticketsState.data}
                 onChange={(patch) =>
-                  setDraft((current) => ({ ...(current ?? formValue), ...patch }))
+                  setDraft((current) => ({
+                    ...(current ?? formValue),
+                    ...patch,
+                  }))
                 }
               />
-              <Button type="button" onClick={() => void saveInvoice()} disabled={isSaving}>
+              <Button
+                type="button"
+                onClick={() => void saveInvoice()}
+                disabled={isSaving}
+                className="w-full sm:w-auto"
+              >
                 <Save className="mr-2 h-4 w-4" />
                 {isSaving ? "Saving..." : "Save changes"}
               </Button>
@@ -281,7 +333,9 @@ export default function InvoiceDetailPage({
           ) : null}
 
           <div className="rounded-xl border bg-white p-5 shadow-soft">
-            <h2 className="text-base font-semibold text-slate-900">Email history</h2>
+            <h2 className="text-base font-semibold text-slate-900">
+              Email history
+            </h2>
             <div className="mt-4 space-y-3">
               {(invoice.emailLogs ?? []).length ? (
                 invoice.emailLogs?.map((email) => (
@@ -294,7 +348,9 @@ export default function InvoiceDetailPage({
                       <StatusBadge status={email.status} />
                     </div>
                     <p className="mt-2 text-xs text-slate-500">
-                      {email.sentAt ? `Sent ${formatDateTime(email.sentAt)}` : formatDateTime(email.createdAt)}
+                      {email.sentAt
+                        ? `Sent ${formatDateTime(email.sentAt)}`
+                        : formatDateTime(email.createdAt)}
                       {email.provider ? ` via ${email.provider}` : ""}
                     </p>
                     {email.errorMessage ? (
@@ -314,22 +370,47 @@ export default function InvoiceDetailPage({
         <aside className="space-y-6">
           <div className="rounded-xl border bg-white p-5 shadow-soft">
             <h2 className="text-base font-semibold text-slate-900">Customer</h2>
-            <p className="mt-3 font-medium">{getName(invoice.customer ?? undefined)}</p>
-            <p className="text-sm text-slate-500">{invoice.customer?.email ?? "No email"}</p>
-            <p className="text-sm text-slate-500">{invoice.customer?.phone ?? "No phone"}</p>
+            <p className="mt-3 font-medium">
+              {getName(invoice.customer ?? undefined)}
+            </p>
+            <p className="text-sm text-slate-500">
+              {invoice.customer?.email ?? "No email"}
+            </p>
+            <p className="text-sm text-slate-500">
+              {invoice.customer?.phone ?? "No phone"}
+            </p>
           </div>
 
           <div className="rounded-xl border bg-white p-5 shadow-soft">
             <h2 className="text-base font-semibold text-slate-900">Links</h2>
             <dl className="mt-3 space-y-3 text-sm">
-              <LinkedRow label="Quote" value={invoice.quote?.quoteNumber} href={invoice.quoteId ? `/quotes/${invoice.quoteId}` : undefined} />
-              <LinkedRow label="Booking" value={invoice.booking?.service?.name} />
-              <LinkedRow label="Support ticket" value={invoice.supportTicket?.ticketNumber} href={invoice.supportTicketId ? `/support?q=${invoice.supportTicket?.ticketNumber}` : undefined} />
+              <LinkedRow
+                label="Quote"
+                value={invoice.quote?.quoteNumber}
+                href={
+                  invoice.quoteId ? `/quotes/${invoice.quoteId}` : undefined
+                }
+              />
+              <LinkedRow
+                label="Booking"
+                value={invoice.booking?.service?.name}
+              />
+              <LinkedRow
+                label="Support ticket"
+                value={invoice.supportTicket?.ticketNumber}
+                href={
+                  invoice.supportTicketId
+                    ? `/support?q=${invoice.supportTicket?.ticketNumber}`
+                    : undefined
+                }
+              />
             </dl>
           </div>
 
           <div className="rounded-xl border bg-white p-5 shadow-soft">
-            <h2 className="text-base font-semibold text-slate-900">Payment link</h2>
+            <h2 className="text-base font-semibold text-slate-900">
+              Payment link
+            </h2>
             {invoice.paymentLink ? (
               <div className="mt-3 space-y-3">
                 <p className="break-all rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
@@ -338,14 +419,21 @@ export default function InvoiceDetailPage({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => void navigator.clipboard.writeText(invoice.paymentLink ?? "")}
+                  onClick={() =>
+                    void navigator.clipboard.writeText(
+                      invoice.paymentLink ?? "",
+                    )
+                  }
+                  className="w-full sm:w-auto"
                 >
                   <Copy className="mr-2 h-4 w-4" />
                   Copy payment link
                 </Button>
               </div>
             ) : (
-              <p className="mt-3 text-sm text-slate-500">No payment link saved.</p>
+              <p className="mt-3 text-sm text-slate-500">
+                No payment link saved.
+              </p>
             )}
           </div>
         </aside>
@@ -391,7 +479,7 @@ function LinkedRow({
             {value}
           </Link>
         ) : (
-          value ?? "N/A"
+          (value ?? "N/A")
         )}
       </dd>
     </div>
