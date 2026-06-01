@@ -2,9 +2,9 @@ export const BRAND_NAME = "UltraSpark Cleaning Services";
 
 export const CONTACT = {
   email: "info@ultrasparkcleaning.co.uk",
-  phoneDisplay: "+44 07445 948269",
-  phoneHref: "tel:+447445948269",
-  whatsappUrl: "https://wa.me/447445948269",
+  phoneDisplay: "0330 094 6682",
+  phoneHref: "tel:03300946682",
+  whatsappUrl: "https://wa.me/443300946682",
 };
 
 export const SERVICE_AREA = "London, Bristol, and Edinburgh";
