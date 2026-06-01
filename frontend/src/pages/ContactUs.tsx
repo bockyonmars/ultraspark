@@ -6,6 +6,7 @@ import {
   TextField,
 } from "../components/FormFields";
 import { SiteLayout } from "../components/Layout";
+import { companyContact } from "../lib/companyContact";
 import { useSubmitForm } from "../lib/useSubmitForm";
 
 const initialContact = {
@@ -43,11 +44,11 @@ export default function ContactUs() {
           <p>We're here to assist you.</p>
           <h2>Contact Information</h2>
           <h3>Email</h3>
-          <a href="mailto:info@ultrasparkcleaning.co.uk">
-            info@ultrasparkcleaning.co.uk
+          <a href={`mailto:${companyContact.email}`}>
+            {companyContact.email}
           </a>
           <h3>Phone</h3>
-          <a href="https://wa.me/447445948269" target="_blank" rel="noopener noreferrer" aria-label="Chat with UltraSpark on WhatsApp">Chat on WhatsApp</a>
+          <a href={companyContact.phoneHref}>{companyContact.phoneDisplay}</a>
           <h3>Location</h3>
           <p>London, UK</p>
         </aside>

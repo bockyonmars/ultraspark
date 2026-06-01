@@ -362,7 +362,7 @@ function createTestContext() {
         'app.frontendUrl': 'https://ultrasparkcleaning.co.uk',
         'app.emailReplyTo': 'info@ultrasparkcleaning.co.uk',
         'app.emailFromAddress': 'info@ultrasparkcleaning.co.uk',
-        'app.companyPhone': '+44 07445 948269',
+        'app.companyPhone': '0330 094 6682',
       };
       return values[key];
     }),

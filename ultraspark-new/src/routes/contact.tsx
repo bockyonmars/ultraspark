@@ -15,7 +15,7 @@ export const Route = createFileRoute("/contact")({
 });
 
 const items = [
-  { icon: WhatsAppIcon, label: "WhatsApp", value: CONTACT.phoneDisplay, href: CONTACT.whatsappUrl },
+  { icon: WhatsAppIcon, label: "Phone", value: CONTACT.phoneDisplay, href: CONTACT.phoneHref },
   { icon: Mail, label: "Email", value: CONTACT.email, href: `mailto:${CONTACT.email}` },
   { icon: MapPin, label: "Service Area", value: SERVICE_AREA_SHORT },
 ];
@@ -59,7 +59,7 @@ function ContactPage() {
                   href={href}
                   target={href.startsWith("http") ? "_blank" : undefined}
                   rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-                  aria-label={label === "WhatsApp" ? "Chat with UltraSpark on WhatsApp" : undefined}
+                  aria-label={label === "Phone" ? "Call UltraSpark Cleaning" : undefined}
                 >
                   {inner}
                 </a>

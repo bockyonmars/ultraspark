@@ -18,6 +18,7 @@ import {
   customerTicketResolvedTemplate,
 } from "./templates/supportTicketTemplates";
 import type { EmailTemplateVariables } from "./templates/types";
+import { COMPANY_CONTACT } from "../../config/company-contact";
 
 type SendEmailInput = {
   type: string;
@@ -643,7 +644,7 @@ export class EmailService {
     return {
       companyPhone:
         this.configService.get<string>("app.companyPhone") ??
-        "+44 07445 948269",
+        COMPANY_CONTACT.phone,
       companyEmail,
       companyWebsite,
       logoUrl,
@@ -672,7 +673,7 @@ export class EmailService {
       "UltraSpark Cleaning";
     const address =
       this.configService.get<string>("app.emailFromAddress") ??
-      "info@ultrasparkcleaning.co.uk";
+      COMPANY_CONTACT.email;
 
     return `${name} <${address}>`;
   }

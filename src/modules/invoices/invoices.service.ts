@@ -11,6 +11,7 @@ import {
   Prisma,
 } from '@prisma/client';
 import { splitFullName } from '../../common/utils/public-form-payload.util';
+import { COMPANY_CONTACT } from '../../config/company-contact';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CustomerActivitiesService } from '../customer-activities/customer-activities.service';
 import { CustomersService } from '../customers/customers.service';
@@ -779,11 +780,11 @@ export class InvoicesService {
     return {
       companyPhone:
         this.configService.get<string>('app.companyPhone') ??
-        '+44 07445 948269',
+        COMPANY_CONTACT.phone,
       companyEmail:
         this.configService.get<string>('app.emailReplyTo') ??
         this.configService.get<string>('app.emailFromAddress') ??
-        'info@ultrasparkcleaning.co.uk',
+        COMPANY_CONTACT.email,
       companyWebsite,
       logoUrl,
       watermarkLogoUrl: logoUrl,

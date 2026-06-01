@@ -76,10 +76,8 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href={CONTACT.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Chat with UltraSpark on WhatsApp"
+                  href={CONTACT.phoneHref}
+                  aria-label="Call UltraSpark Cleaning"
                   className="flex items-start gap-2 text-primary-foreground/80 hover:text-primary-glow"
                 >
                   <WhatsAppIcon className="mt-0.5 h-4 w-4 shrink-0" />

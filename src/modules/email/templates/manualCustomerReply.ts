@@ -5,6 +5,7 @@ import {
   templateValue,
 } from "./sharedEmailStyles";
 import type { EmailTemplateResult, EmailTemplateVariables } from "./types";
+import { COMPANY_CONTACT } from "../../../config/company-contact";
 
 export type ManualCustomerReplyTemplateVariables = EmailTemplateVariables & {
   title?: string;
@@ -46,13 +47,13 @@ export function manualCustomerReplyTemplate(
       companyEmail:
         variables.footerContactEmail ||
         variables.companyEmail ||
-        "info@ultrasparkcleaning.co.uk",
+        COMPANY_CONTACT.email,
       companyPhone:
-        variables.footerPhone || variables.companyPhone || "+44 07445 948269",
+        variables.footerPhone || variables.companyPhone || COMPANY_CONTACT.phone,
       companyWebsite:
         variables.websiteUrl ||
         variables.companyWebsite ||
-        "https://ultrasparkcleaning.co.uk",
+        COMPANY_CONTACT.website,
     },
     ctaLabel: variables.ctaLabel,
     ctaUrl: variables.ctaUrl,

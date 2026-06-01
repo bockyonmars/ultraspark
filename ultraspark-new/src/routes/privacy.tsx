@@ -76,7 +76,7 @@ function PrivacyPage() {
                 </a>
               </div>
               <div className="mt-1">
-                <span className="font-semibold text-primary">WhatsApp:</span> {CONTACT.phoneDisplay}
+                <span className="font-semibold text-primary">Phone:</span> {CONTACT.phoneDisplay}
               </div>
               <div className="mt-1">
                 <span className="font-semibold text-primary">Service area:</span>{" "}

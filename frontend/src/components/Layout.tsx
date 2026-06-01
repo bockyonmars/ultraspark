@@ -1,7 +1,7 @@
-import { Mail } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { ReactNode } from "react";
-import { WhatsAppIcon } from "./icons/WhatsAppIcon";
 import { ButtonLink } from "./Buttons";
+import { companyContact } from "../lib/companyContact";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -32,17 +32,21 @@ export function Header() {
   return (
     <header>
       <div className="topbar">
-        <a href="mailto:info@ultrasparkcleaning.co.uk" className="topbar-link">
+        <a href={`mailto:${companyContact.email}`} className="topbar-link">
           <span className="topbar-icon" aria-hidden="true">
             <Mail size={16} />
           </span>
-          info@ultrasparkcleaning.co.uk
+          {companyContact.email}
         </a>
-        <a href="https://wa.me/447445948269" className="topbar-link" target="_blank" rel="noopener noreferrer" aria-label="Chat with UltraSpark on WhatsApp">
+        <a
+          href={companyContact.phoneHref}
+          className="topbar-link"
+          aria-label="Call UltraSpark Cleaning"
+        >
           <span className="topbar-icon" aria-hidden="true">
-            <WhatsAppIcon width={16} height={16} />
+            <Phone size={16} />
           </span>
-          +44 07445 948269
+          {companyContact.phoneDisplay}
         </a>
         <ButtonLink href="/get-quote" variant="secondary" className="topbar-cta">
           Get a quote
@@ -119,10 +123,12 @@ export function Footer() {
         </div>
         <div>
           <h3>Contact</h3>
-          <a href="mailto:info@ultrasparkcleaning.co.uk">
-            Email: info@ultrasparkcleaning.co.uk
+          <a href={`mailto:${companyContact.email}`}>
+            Email: {companyContact.email}
           </a>
-          <a href="https://wa.me/447445948269" target="_blank" rel="noopener noreferrer" aria-label="Chat with UltraSpark on WhatsApp">Chat on WhatsApp</a>
+          <a href={companyContact.phoneHref}>
+            Phone: {companyContact.phoneDisplay}
+          </a>
           <p>Location: London, UK</p>
         </div>
       </div>

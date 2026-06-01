@@ -43,7 +43,7 @@ describe("Manual customer emails", () => {
       "app.frontendUrl": "https://ultrasparkcleaning.co.uk",
       "app.emailFrom": "UltraSpark Cleaning <info@ultrasparkcleaning.co.uk>",
       "app.adminNotificationEmail": "info@ultrasparkcleaning.co.uk",
-      "app.companyPhone": "+44 07445 948269",
+      "app.companyPhone": "0330 094 6682",
     };
     const config = {
       get: jest.fn((key: string): string | undefined => values[key]),

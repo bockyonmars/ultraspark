@@ -1,4 +1,5 @@
 import { registerAs } from '@nestjs/config';
+import { COMPANY_CONTACT } from './company-contact';
 
 export default registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV ?? 'development',
@@ -12,16 +13,16 @@ export default registerAs('app', () => ({
   resendApiKey: process.env.RESEND_API_KEY ?? process.env.EMAIL_API_KEY ?? '',
   emailFromName: process.env.EMAIL_FROM_NAME ?? 'UltraSpark Cleaning',
   emailFromAddress:
-    process.env.EMAIL_FROM_ADDRESS ?? 'info@ultrasparkcleaning.co.uk',
-  emailReplyTo: process.env.EMAIL_REPLY_TO ?? 'info@ultrasparkcleaning.co.uk',
+    process.env.EMAIL_FROM_ADDRESS ?? COMPANY_CONTACT.email,
+  emailReplyTo: process.env.EMAIL_REPLY_TO ?? COMPANY_CONTACT.email,
   emailFrom:
     process.env.EMAIL_FROM ??
-    'UltraSpark Cleaning <info@ultrasparkcleaning.co.uk>',
+    `UltraSpark Cleaning <${COMPANY_CONTACT.email}>`,
   adminNotificationEmail:
-    process.env.ADMIN_NOTIFICATION_EMAIL ?? 'info@ultrasparkcleaning.co.uk',
-  companyPhone: process.env.COMPANY_PHONE ?? '+44 07445 948269',
+    process.env.ADMIN_NOTIFICATION_EMAIL ?? COMPANY_CONTACT.email,
+  companyPhone: process.env.COMPANY_PHONE ?? COMPANY_CONTACT.phone,
   emailLogoUrl: process.env.EMAIL_LOGO_URL,
-  frontendUrl: process.env.FRONTEND_URL ?? 'https://ultrasparkcleaning.co.uk',
+  frontendUrl: process.env.FRONTEND_URL ?? COMPANY_CONTACT.website,
   adminUrl: process.env.ADMIN_URL ?? 'https://admin.ultrasparkcleaning.co.uk',
   appBaseUrl:
     process.env.APP_BASE_URL ??
