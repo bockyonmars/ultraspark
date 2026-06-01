@@ -68,7 +68,7 @@ export function Header() {
             className="flex items-center gap-2 text-sm font-medium text-primary hover:text-secondary"
           >
             <WhatsAppIcon className="h-5 w-5" />
-            {CONTACT.whatsappNumber}
+            WhatsApp
           </a>
           <Link
             to="/booking"
@@ -112,7 +112,7 @@ export function Header() {
               aria-label="Chat with UltraSpark on WhatsApp"
               className="mt-2 flex items-center gap-2 px-4 py-2 text-sm font-semibold text-primary"
             >
-              <WhatsAppIcon className="h-5 w-5" /> {CONTACT.whatsappNumber}
+              <WhatsAppIcon className="h-5 w-5" /> Contact us on WhatsApp
             </a>
             <Link
               to="/booking"

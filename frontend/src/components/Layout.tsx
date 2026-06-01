@@ -49,7 +49,7 @@ export function Header() {
           <span className="topbar-icon" aria-hidden="true">
             <WhatsAppIcon width={16} height={16} />
           </span>
-          {companyContact.whatsappNumber}
+          Contact us on WhatsApp
         </a>
         <ButtonLink href="/get-quote" variant="secondary" className="topbar-cta">
           Get a quote
