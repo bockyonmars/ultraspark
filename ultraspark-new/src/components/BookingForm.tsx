@@ -276,7 +276,7 @@ export function BookingForm({ initialKind = "quote" }: { initialKind?: RequestKi
         type: "error",
         message: publicFormErrorMessage(
           error,
-          `We could not send your request just now. Please try again or call us on ${CONTACT.phoneDisplay}.`,
+          `We could not send your request just now. Please try again or message us on WhatsApp at ${CONTACT.whatsappNumber}.`,
         ),
       });
     } finally {
@@ -536,7 +536,7 @@ export function ContactForm() {
         type: "error",
         message: publicFormErrorMessage(
           error,
-          `We could not send your message just now. Please try again or call us on ${CONTACT.phoneDisplay}.`,
+          `We could not send your message just now. Please try again or message us on WhatsApp at ${CONTACT.whatsappNumber}.`,
         ),
       });
     } finally {
@@ -620,7 +620,7 @@ export function ContactForm() {
         {submitting ? "Sending..." : "Send Message"}
       </button>
       <p className="mt-3 text-center text-xs text-muted-foreground">
-        Prefer to call? Reach us on {CONTACT.phoneDisplay}.
+        Prefer WhatsApp? Message us on {CONTACT.whatsappNumber}.
       </p>
     </form>
   );

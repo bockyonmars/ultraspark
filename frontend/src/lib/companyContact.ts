@@ -1,5 +1,7 @@
 export const companyContact = {
   email: "info@ultrasparkcleaning.co.uk",
-  phoneDisplay: "0330 094 6682",
-  phoneHref: "tel:03300946682",
+  callNumber: "0330 094 6682",
+  callHref: "tel:+443300946682",
+  whatsappNumber: "+44 7445 948269",
+  whatsappHref: "https://wa.me/447445948269",
 } as const;

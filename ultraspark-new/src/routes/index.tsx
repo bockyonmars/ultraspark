@@ -273,7 +273,7 @@ function Home() {
               Get a Free Quote
             </Link>
             <a
-              href={CONTACT.whatsappUrl}
+              href={CONTACT.whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Chat with UltraSpark on WhatsApp"

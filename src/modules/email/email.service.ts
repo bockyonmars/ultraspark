@@ -644,7 +644,7 @@ export class EmailService {
     return {
       companyPhone:
         this.configService.get<string>("app.companyPhone") ??
-        COMPANY_CONTACT.phone,
+        COMPANY_CONTACT.callNumber,
       companyEmail,
       companyWebsite,
       logoUrl,

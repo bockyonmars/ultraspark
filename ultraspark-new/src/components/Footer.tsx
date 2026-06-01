@@ -1,7 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Mail, MapPin } from "lucide-react";
-
-import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { Mail, MapPin, Phone } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { CONTACT, SERVICE_AREA_SHORT } from "@/lib/constants";
 
@@ -76,12 +74,12 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href={CONTACT.phoneHref}
+                  href={CONTACT.callHref}
                   aria-label="Call UltraSpark Cleaning"
                   className="flex items-start gap-2 text-primary-foreground/80 hover:text-primary-glow"
                 >
-                  <WhatsAppIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                  {CONTACT.phoneDisplay}
+                  <Phone className="mt-0.5 h-4 w-4 shrink-0" />
+                  {CONTACT.callNumber}
                 </a>
               </li>
               <li className="flex items-start gap-2 text-primary-foreground/80">

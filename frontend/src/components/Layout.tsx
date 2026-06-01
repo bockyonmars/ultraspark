@@ -1,6 +1,7 @@
-import { Mail, Phone } from "lucide-react";
+import { Mail } from "lucide-react";
 import { ReactNode } from "react";
 import { ButtonLink } from "./Buttons";
+import { WhatsAppIcon } from "./icons/WhatsAppIcon";
 import { companyContact } from "../lib/companyContact";
 
 const navItems = [
@@ -39,14 +40,16 @@ export function Header() {
           {companyContact.email}
         </a>
         <a
-          href={companyContact.phoneHref}
+          href={companyContact.whatsappHref}
           className="topbar-link"
-          aria-label="Call UltraSpark Cleaning"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Chat with UltraSpark on WhatsApp"
         >
           <span className="topbar-icon" aria-hidden="true">
-            <Phone size={16} />
+            <WhatsAppIcon width={16} height={16} />
           </span>
-          {companyContact.phoneDisplay}
+          {companyContact.whatsappNumber}
         </a>
         <ButtonLink href="/get-quote" variant="secondary" className="topbar-cta">
           Get a quote
@@ -126,8 +129,8 @@ export function Footer() {
           <a href={`mailto:${companyContact.email}`}>
             Email: {companyContact.email}
           </a>
-          <a href={companyContact.phoneHref}>
-            Phone: {companyContact.phoneDisplay}
+          <a href={companyContact.callHref}>
+            Phone: {companyContact.callNumber}
           </a>
           <p>Location: London, UK</p>
         </div>

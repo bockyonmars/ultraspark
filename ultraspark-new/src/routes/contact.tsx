@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { metaFor } from "@/lib/seo";
-import { Clock, Mail, MapPin } from "lucide-react";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { ContactForm } from "@/components/BookingForm";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { CONTACT, SERVICE_AREA_SHORT } from "@/lib/constants";
@@ -9,13 +9,14 @@ export const Route = createFileRoute("/contact")({
   head: () =>
     metaFor(
       "Contact",
-      `Contact UltraSpark Cleaning Services in ${SERVICE_AREA_SHORT} by WhatsApp or email. We respond Monday to Saturday.`,
+      `Contact UltraSpark Cleaning Services in ${SERVICE_AREA_SHORT} by phone, WhatsApp, or email. We respond Monday to Saturday.`,
     ),
   component: ContactPage,
 });
 
 const items = [
-  { icon: WhatsAppIcon, label: "Phone", value: CONTACT.phoneDisplay, href: CONTACT.phoneHref },
+  { icon: Phone, label: "Phone", value: CONTACT.callNumber, href: CONTACT.callHref },
+  { icon: WhatsAppIcon, label: "WhatsApp", value: CONTACT.whatsappNumber, href: CONTACT.whatsappHref },
   { icon: Mail, label: "Email", value: CONTACT.email, href: `mailto:${CONTACT.email}` },
   { icon: MapPin, label: "Service Area", value: SERVICE_AREA_SHORT },
 ];
@@ -30,8 +31,8 @@ function ContactPage() {
             Let's talk about your space
           </h1>
           <p className="mt-5 text-muted-foreground md:text-lg">
-            Get in touch on WhatsApp, email, or send us your details below. We will get back to you
-            fast.
+            Call, message us on WhatsApp, email, or send us your details below. We will get back to
+            you fast.
           </p>
         </div>
       </section>
@@ -59,7 +60,13 @@ function ContactPage() {
                   href={href}
                   target={href.startsWith("http") ? "_blank" : undefined}
                   rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-                  aria-label={label === "Phone" ? "Call UltraSpark Cleaning" : undefined}
+                  aria-label={
+                    label === "Phone"
+                      ? "Call UltraSpark Cleaning"
+                      : label === "WhatsApp"
+                        ? "Chat with UltraSpark on WhatsApp"
+                        : undefined
+                  }
                 >
                   {inner}
                 </a>

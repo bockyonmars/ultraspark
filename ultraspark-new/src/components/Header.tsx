@@ -61,12 +61,14 @@ export function Header() {
 
         <div className="hidden items-center gap-3 lg:flex">
           <a
-            href={CONTACT.phoneHref}
-            aria-label="Call UltraSpark Cleaning"
+            href={CONTACT.whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Chat with UltraSpark on WhatsApp"
             className="flex items-center gap-2 text-sm font-medium text-primary hover:text-secondary"
           >
             <WhatsAppIcon className="h-5 w-5" />
-            {CONTACT.phoneDisplay}
+            {CONTACT.whatsappNumber}
           </a>
           <Link
             to="/booking"
@@ -104,11 +106,13 @@ export function Header() {
               </Link>
             ))}
             <a
-              href={CONTACT.phoneHref}
-              aria-label="Call UltraSpark Cleaning"
+              href={CONTACT.whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Chat with UltraSpark on WhatsApp"
               className="mt-2 flex items-center gap-2 px-4 py-2 text-sm font-semibold text-primary"
             >
-              <WhatsAppIcon className="h-5 w-5" /> {CONTACT.phoneDisplay}
+              <WhatsAppIcon className="h-5 w-5" /> {CONTACT.whatsappNumber}
             </a>
             <Link
               to="/booking"

@@ -780,7 +780,7 @@ export class InvoicesService {
     return {
       companyPhone:
         this.configService.get<string>('app.companyPhone') ??
-        COMPANY_CONTACT.phone,
+        COMPANY_CONTACT.callNumber,
       companyEmail:
         this.configService.get<string>('app.emailReplyTo') ??
         this.configService.get<string>('app.emailFromAddress') ??

@@ -4,7 +4,7 @@ import { CONTACT } from "@/lib/constants";
 export function WhatsAppFloat() {
   return (
     <a
-      href={CONTACT.whatsappUrl}
+      href={CONTACT.whatsappHref}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with UltraSpark on WhatsApp"

@@ -78,7 +78,7 @@ function ThankYouPage() {
             Back to Homepage <ArrowRight className="h-4 w-4" />
           </Link>
           <a
-            href={CONTACT.whatsappUrl}
+            href={CONTACT.whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Chat with UltraSpark on WhatsApp"

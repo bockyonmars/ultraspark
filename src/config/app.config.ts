@@ -20,7 +20,7 @@ export default registerAs('app', () => ({
     `UltraSpark Cleaning <${COMPANY_CONTACT.email}>`,
   adminNotificationEmail:
     process.env.ADMIN_NOTIFICATION_EMAIL ?? COMPANY_CONTACT.email,
-  companyPhone: process.env.COMPANY_PHONE ?? COMPANY_CONTACT.phone,
+  companyPhone: process.env.COMPANY_PHONE ?? COMPANY_CONTACT.callNumber,
   emailLogoUrl: process.env.EMAIL_LOGO_URL,
   frontendUrl: process.env.FRONTEND_URL ?? COMPANY_CONTACT.website,
   adminUrl: process.env.ADMIN_URL ?? 'https://admin.ultrasparkcleaning.co.uk',

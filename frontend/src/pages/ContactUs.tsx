@@ -48,7 +48,7 @@ export default function ContactUs() {
             {companyContact.email}
           </a>
           <h3>Phone</h3>
-          <a href={companyContact.phoneHref}>{companyContact.phoneDisplay}</a>
+          <a href={companyContact.callHref}>{companyContact.callNumber}</a>
           <h3>Location</h3>
           <p>London, UK</p>
         </aside>

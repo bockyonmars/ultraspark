@@ -49,7 +49,9 @@ export function manualCustomerReplyTemplate(
         variables.companyEmail ||
         COMPANY_CONTACT.email,
       companyPhone:
-        variables.footerPhone || variables.companyPhone || COMPANY_CONTACT.phone,
+        variables.footerPhone ||
+        variables.companyPhone ||
+        COMPANY_CONTACT.callNumber,
       companyWebsite:
         variables.websiteUrl ||
         variables.companyWebsite ||
